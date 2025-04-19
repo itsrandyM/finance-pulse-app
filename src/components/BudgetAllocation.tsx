@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -24,6 +23,8 @@ import { useBudget } from '@/contexts/BudgetContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Trash2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
+import SubItemInput from './budget/SubItemInput';
 
 const BudgetAllocation: React.FC = () => {
   const { 
@@ -31,6 +32,8 @@ const BudgetAllocation: React.FC = () => {
     budgetItems, 
     addBudgetItem, 
     deleteBudgetItem,
+    addSubItem,
+    deleteSubItem,
     getTotalAllocated 
   } = useBudget();
   const { toast } = useToast();
@@ -149,33 +152,35 @@ const BudgetAllocation: React.FC = () => {
             <CardTitle className="text-xl text-finance-text">Budget Items</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {budgetItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                    <TableCell className="text-right w-10">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteItem(item.id)}
-                        className="h-8 w-8 text-finance-danger"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="space-y-4">
+              {budgetItems.map((item) => (
+                <Collapsible key={item.id}>
+                  <div className="flex items-center justify-between">
+                    <CollapsibleTrigger className="flex-1 flex items-center justify-between py-2 hover:bg-gray-50 rounded px-2">
+                      <span className="font-medium">{item.name}</span>
+                      <span>{formatCurrency(item.amount)}</span>
+                    </CollapsibleTrigger>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteItem(item.id)}
+                      className="h-8 w-8 text-finance-danger ml-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <CollapsibleContent>
+                    <SubItemInput
+                      budgetItemId={item.id}
+                      subItems={item.subItems}
+                      onAddSubItem={addSubItem}
+                      onDeleteSubItem={deleteSubItem}
+                      budgetItemAmount={item.amount}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+            </div>
           </CardContent>
           <CardFooter className="flex justify-end">
             <Button 

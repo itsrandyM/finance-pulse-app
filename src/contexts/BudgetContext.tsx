@@ -1,13 +1,19 @@
-
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 export type BudgetPeriod = 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'semi-annually' | 'annually' | 'custom';
+
+export interface SubBudgetItem {
+  id: string;
+  name: string;
+  amount: number;
+}
 
 export interface BudgetItem {
   id: string;
   name: string;
   amount: number;
   spent: number;
+  subItems: SubBudgetItem[];
 }
 
 interface BudgetContextType {
@@ -19,6 +25,8 @@ interface BudgetContextType {
   addBudgetItem: (name: string, amount: number) => void;
   updateBudgetItem: (id: string, updates: Partial<BudgetItem>) => void;
   deleteBudgetItem: (id: string) => void;
+  addSubItem: (budgetItemId: string, name: string, amount: number) => void;
+  deleteSubItem: (budgetItemId: string, subItemId: string) => void;
   addExpense: (itemId: string, amount: number) => void;
   resetBudget: () => void;
   getRemainingBudget: () => number;
@@ -40,9 +48,39 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         id: Date.now().toString(),
         name,
         amount,
-        spent: 0
+        spent: 0,
+        subItems: []
       }
     ]);
+  };
+
+  const addSubItem = (budgetItemId: string, name: string, amount: number) => {
+    setBudgetItems(budgetItems.map(item => {
+      if (item.id === budgetItemId) {
+        const newSubItem: SubBudgetItem = {
+          id: Date.now().toString(),
+          name,
+          amount
+        };
+        return {
+          ...item,
+          subItems: [...item.subItems, newSubItem]
+        };
+      }
+      return item;
+    }));
+  };
+
+  const deleteSubItem = (budgetItemId: string, subItemId: string) => {
+    setBudgetItems(budgetItems.map(item => {
+      if (item.id === budgetItemId) {
+        return {
+          ...item,
+          subItems: item.subItems.filter(subItem => subItem.id !== subItemId)
+        };
+      }
+      return item;
+    }));
   };
 
   const updateBudgetItem = (id: string, updates: Partial<BudgetItem>) => {
@@ -96,6 +134,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         addBudgetItem,
         updateBudgetItem,
         deleteBudgetItem,
+        addSubItem,
+        deleteSubItem,
         addExpense,
         resetBudget,
         getRemainingBudget,
