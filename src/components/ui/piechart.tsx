@@ -46,7 +46,7 @@ export const PieChart: React.FC<PieChartProps> = ({
             ))}
           </Pie>
           <Tooltip 
-            formatter={(value) => valueFormatter(value)}
+            formatter={(value: number | string) => valueFormatter(value)}
             labelFormatter={(label) => {
               const item = data.find(d => d[index as keyof typeof d] === label);
               return item ? item.name : label;
