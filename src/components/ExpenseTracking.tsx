@@ -20,7 +20,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useBudget } from '@/contexts/BudgetContext';
 import { useToast } from '@/components/ui/use-toast';
-import { PieChart } from '@/components/ui/chart';
+import { PieChart } from '@/components/ui/piechart';
 import { DollarSign } from 'lucide-react';
 
 const ExpenseTracking: React.FC = () => {
