@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { BudgetItem } from '@/contexts/BudgetContext';
 import { ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { PieChart } from '@/components/ui/piechart';
 
 interface SpendingProgressCardProps {
   budgetItems: BudgetItem[];
@@ -28,45 +27,31 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
     return 'bg-finance-danger';
   };
 
-  // Prepare data for pie chart
-  const chartData = budgetItems.map(item => ({
-    name: item.name,
-    value: item.amount,
-  }));
-
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-xl text-finance-text">Spending Progress</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Chart Section */}
-        <div className="mb-8 aspect-square max-w-xs mx-auto">
-          <PieChart
-            data={chartData}
-            index="name"
-            categories={['value']}
-            valueFormatter={formatCurrency}
-            colors={['#3b82f6', '#0ea5e9', '#22c55e', '#f97316', '#ef4444', '#8b5cf6', '#ec4899']}
-            className="h-full"
-          />
-        </div>
-
-        {/* Progress Bars Section */}
         <div className="space-y-6">
           {budgetItems.map((item) => {
             const progressPercent = calculateProgress(item.spent, item.amount);
             const progressColorClass = getProgressColor(item.spent, item.amount);
             const isOverBudget = item.spent > item.amount;
+            const hasSubItems = item.subItems.length > 0;
             
             return (
               <Collapsible key={item.id}>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <CollapsibleTrigger className="flex items-center gap-2 hover:text-finance-accent">
-                      <ChevronDown className="h-4 w-4" />
-                      <span className="font-medium">{item.name}</span>
-                    </CollapsibleTrigger>
+                    {hasSubItems ? (
+                      <CollapsibleTrigger className="flex items-center gap-2 hover:text-finance-accent">
+                        <ChevronDown className="h-4 w-4" />
+                        <span className="font-medium">{item.name}</span>
+                      </CollapsibleTrigger>
+                    ) : (
+                      <span className="font-medium pl-6">{item.name}</span>
+                    )}
                     <div className="text-sm">
                       <span className={isOverBudget ? "text-finance-danger" : ""}>
                         {formatCurrency(item.spent)}
@@ -93,8 +78,8 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
                     </div>
                   )}
 
-                  <CollapsibleContent>
-                    {item.subItems.length > 0 ? (
+                  {hasSubItems && (
+                    <CollapsibleContent>
                       <div className="pl-6 mt-2 space-y-2">
                         {item.subItems.map((subItem) => (
                           <div 
@@ -106,12 +91,8 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <div className="pl-6 mt-2 text-sm text-gray-500">
-                        No sub-items added
-                      </div>
-                    )}
-                  </CollapsibleContent>
+                    </CollapsibleContent>
+                  )}
                 </div>
               </Collapsible>
             );
