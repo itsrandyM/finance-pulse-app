@@ -1,10 +1,12 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -58,7 +60,7 @@ const BudgetAllocation: React.FC = () => {
       return;
     }
     
-    addBudgetItem(name, numericAmount);
+    addBudgetItem(name, numericAmount, false); // Added the third parameter 'false' for isImpulse
     setName('');
     setAmount('');
   };
