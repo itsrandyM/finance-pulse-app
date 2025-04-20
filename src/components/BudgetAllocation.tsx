@@ -1,29 +1,24 @@
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle,
-  CardFooter
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon, Plus } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useNavigate } from 'react-router-dom';
 import { useBudget } from '@/contexts/BudgetContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Trash2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import SubItemInput from './budget/SubItemInput';
 
 const BudgetAllocation: React.FC = () => {
@@ -34,13 +29,16 @@ const BudgetAllocation: React.FC = () => {
     deleteBudgetItem,
     addSubItem,
     deleteSubItem,
-    getTotalAllocated 
+    getTotalAllocated,
+    updateItemDeadline
   } = useBudget();
   const { toast } = useToast();
   const navigate = useNavigate();
   
   const [name, setName] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
+  const [showSubItems, setShowSubItems] = useState<{ [key: string]: boolean }>({});
+  const [selectedItemForDeadline, setSelectedItemForDeadline] = useState<string | null>(null);
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,28 +154,54 @@ const BudgetAllocation: React.FC = () => {
               {budgetItems.map((item) => (
                 <Collapsible key={item.id}>
                   <div className="flex items-center justify-between">
-                    <CollapsibleTrigger className="flex-1 flex items-center justify-between py-2 hover:bg-gray-50 rounded px-2">
-                      <span className="font-medium">{item.name}</span>
+                    <div className="flex-1 flex items-center justify-between py-2 hover:bg-gray-50 rounded px-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{item.name}</span>
+                        {item.isImpulse && (
+                          <span className="px-2 py-1 text-xs bg-finance-warning text-white rounded-full">
+                            Impulse
+                          </span>
+                        )}
+                      </div>
                       <span>{formatCurrency(item.amount)}</span>
-                    </CollapsibleTrigger>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteItem(item.id)}
-                      className="h-8 w-8 text-finance-danger ml-2"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </div>
+                    <div className="flex gap-2 ml-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowSubItems(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                      >
+                        Add Items
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedItemForDeadline(item.id)}
+                      >
+                        <CalendarIcon className="h-4 w-4 mr-1" />
+                        {item.deadline ? format(new Date(item.deadline), 'PP') : 'Add Deadline'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteItem(item.id)}
+                        className="h-8 w-8 text-finance-danger"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <CollapsibleContent>
-                    <SubItemInput
-                      budgetItemId={item.id}
-                      subItems={item.subItems}
-                      onAddSubItem={addSubItem}
-                      onDeleteSubItem={deleteSubItem}
-                      budgetItemAmount={item.amount}
-                    />
-                  </CollapsibleContent>
+                  {showSubItems[item.id] && (
+                    <CollapsibleContent>
+                      <SubItemInput
+                        budgetItemId={item.id}
+                        subItems={item.subItems}
+                        onAddSubItem={addSubItem}
+                        onDeleteSubItem={deleteSubItem}
+                        budgetItemAmount={item.amount}
+                      />
+                    </CollapsibleContent>
+                  )}
                 </Collapsible>
               ))}
             </div>
@@ -193,6 +217,25 @@ const BudgetAllocation: React.FC = () => {
           </CardFooter>
         </Card>
       )}
+
+      <Dialog open={!!selectedItemForDeadline} onOpenChange={() => setSelectedItemForDeadline(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Deadline</DialogTitle>
+          </DialogHeader>
+          <Calendar
+            mode="single"
+            selected={budgetItems.find(item => item.id === selectedItemForDeadline)?.deadline}
+            onSelect={(date) => {
+              if (date && selectedItemForDeadline) {
+                updateItemDeadline(selectedItemForDeadline, date);
+                setSelectedItemForDeadline(null);
+              }
+            }}
+            className="pointer-events-auto"
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -14,6 +14,8 @@ export interface BudgetItem {
   amount: number;
   spent: number;
   subItems: SubBudgetItem[];
+  deadline?: Date;
+  isImpulse?: boolean;
 }
 
 interface BudgetContextType {
@@ -22,7 +24,7 @@ interface BudgetContextType {
   budgetItems: BudgetItem[];
   setPeriod: (period: BudgetPeriod) => void;
   setTotalBudget: (amount: number) => void;
-  addBudgetItem: (name: string, amount: number) => void;
+  addBudgetItem: (name: string, amount: number, isImpulse: boolean) => void;
   updateBudgetItem: (id: string, updates: Partial<BudgetItem>) => void;
   deleteBudgetItem: (id: string) => void;
   addSubItem: (budgetItemId: string, name: string, amount: number) => void;
@@ -32,6 +34,7 @@ interface BudgetContextType {
   getRemainingBudget: () => number;
   getTotalSpent: () => number;
   getTotalAllocated: () => number;
+  updateItemDeadline: (itemId: string, deadline: Date) => void;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -41,7 +44,15 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [totalBudget, setTotalBudget] = useState<number>(0);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
 
-  const addBudgetItem = (name: string, amount: number) => {
+  const updateItemDeadline = (itemId: string, deadline: Date) => {
+    setBudgetItems(
+      budgetItems.map(item =>
+        item.id === itemId ? { ...item, deadline } : item
+      )
+    );
+  };
+
+  const addBudgetItem = (name: string, amount: number, isImpulse: boolean = false) => {
     setBudgetItems([
       ...budgetItems,
       {
@@ -49,7 +60,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         name,
         amount,
         spent: 0,
-        subItems: []
+        subItems: [],
+        isImpulse
       }
     ]);
   };
@@ -140,7 +152,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         resetBudget,
         getRemainingBudget,
         getTotalSpent,
-        getTotalAllocated
+        getTotalAllocated,
+        updateItemDeadline
       }}
     >
       {children}
