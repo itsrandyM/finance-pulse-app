@@ -38,11 +38,16 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
       <h2 className="text-xl font-semibold mb-4">Expenditure</h2>
       <div className="space-y-4">
         {budgetItems.map((item) => (
-          <Collapsible key={item.id}>
+          <Collapsible key={item.id} open={showSubItems[item.id]}>
             <div className="flex items-center justify-between py-4 border-b">
               <div className="flex-1 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{item.name}</span>
+                  <button 
+                    onClick={() => onToggleSubItems(item.id)}
+                    className="flex items-center gap-2 hover:text-finance-primary transition-colors"
+                  >
+                    <span className="font-medium">{item.name}</span>
+                  </button>
                   {item.isImpulse && (
                     <span className="px-2 py-1 text-xs bg-finance-warning/10 text-finance-warning rounded-full">
                       Impulse
@@ -52,14 +57,6 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
                 <span>{formatCurrency(item.amount)}</span>
               </div>
               <div className="flex gap-2 ml-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onToggleSubItems(item.id)}
-                  className="border-b-2 border-t-0 border-x-0 rounded-none hover:bg-transparent"
-                >
-                  Add Items
-                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -79,17 +76,15 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
                 </Button>
               </div>
             </div>
-            {showSubItems[item.id] && (
-              <CollapsibleContent>
-                <SubItemInput
-                  budgetItemId={item.id}
-                  subItems={item.subItems}
-                  onAddSubItem={onAddSubItem}
-                  onDeleteSubItem={onDeleteSubItem}
-                  budgetItemAmount={item.amount}
-                />
-              </CollapsibleContent>
-            )}
+            <CollapsibleContent>
+              <SubItemInput
+                budgetItemId={item.id}
+                subItems={item.subItems}
+                onAddSubItem={onAddSubItem}
+                onDeleteSubItem={onDeleteSubItem}
+                budgetItemAmount={item.amount}
+              />
+            </CollapsibleContent>
           </Collapsible>
         ))}
       </div>
