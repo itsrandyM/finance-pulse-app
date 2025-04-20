@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -67,6 +66,13 @@ const BudgetAllocation: React.FC = () => {
 
   const handleDeleteItem = (id: string) => {
     deleteBudgetItem(id);
+  };
+
+  const handleAddSubItem = (budgetItemId: string, name: string, amount: number) => {
+    if (amount > 0) {
+      addSubItem(budgetItemId, name, amount);
+      setShowSubItems(prev => ({ ...prev, [budgetItemId]: false }));
+    }
   };
 
   const totalAllocated = getTotalAllocated();
@@ -198,7 +204,7 @@ const BudgetAllocation: React.FC = () => {
                       <SubItemInput
                         budgetItemId={item.id}
                         subItems={item.subItems}
-                        onAddSubItem={addSubItem}
+                        onAddSubItem={handleAddSubItem}
                         onDeleteSubItem={deleteSubItem}
                         budgetItemAmount={item.amount}
                       />

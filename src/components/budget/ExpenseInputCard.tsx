@@ -69,13 +69,15 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
       return;
     }
 
-    // Add new budget item with isImpulse flag
+    const newItemId = Date.now().toString(); // Generate a unique ID
     addBudgetItem(newItemName, amount, true);
+    onAddExpense(newItemId, amount); // Track the expense immediately
+    
     setNewItemName('');
     setExpenseAmount('');
     toast({
       title: "Expense Added",
-      description: `Added new impulse expense: ${newItemName}`,
+      description: `Added and tracked new impulse expense: ${newItemName}`,
     });
   };
 
