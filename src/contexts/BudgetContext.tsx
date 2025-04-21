@@ -1,11 +1,16 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 export type BudgetPeriod = 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'semi-annually' | 'annually' | 'custom';
+
+export type TagOption = string | null;
 
 export interface SubBudgetItem {
   id: string;
   name: string;
   amount: number;
+  note?: string;
+  tag?: TagOption;
 }
 
 export interface BudgetItem {
@@ -16,6 +21,8 @@ export interface BudgetItem {
   subItems: SubBudgetItem[];
   deadline?: Date;
   isImpulse?: boolean;
+  note?: string;
+  tag?: TagOption;
 }
 
 interface BudgetContextType {
@@ -29,6 +36,7 @@ interface BudgetContextType {
   deleteBudgetItem: (id: string) => void;
   addSubItem: (budgetItemId: string, name: string, amount: number) => void;
   deleteSubItem: (budgetItemId: string, subItemId: string) => void;
+  updateSubItem: (budgetItemId: string, subItemId: string, updates: Partial<SubBudgetItem>) => void;
   addExpense: (itemId: string, amount: number) => void;
   resetBudget: () => void;
   getRemainingBudget: () => number;
@@ -103,6 +111,21 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     );
   };
 
+  const updateSubItem = (budgetItemId: string, subItemId: string, updates: Partial<SubBudgetItem>) => {
+    setBudgetItems(
+      budgetItems.map(item =>
+        item.id === budgetItemId
+          ? { 
+              ...item, 
+              subItems: item.subItems.map(sub =>
+                sub.id === subItemId ? { ...sub, ...updates } : sub
+              )
+            }
+          : item
+      )
+    );
+  };
+
   const deleteBudgetItem = (id: string) => {
     setBudgetItems(budgetItems.filter(item => item.id !== id));
   };
@@ -148,6 +171,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         deleteBudgetItem,
         addSubItem,
         deleteSubItem,
+        updateSubItem,
         addExpense,
         resetBudget,
         getRemainingBudget,
@@ -168,3 +192,4 @@ export const useBudget = () => {
   }
   return context;
 };
+

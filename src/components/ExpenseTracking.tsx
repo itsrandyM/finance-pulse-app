@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useBudget } from '@/contexts/BudgetContext';
 import { DollarSign } from 'lucide-react';
 import BudgetSummaryCard from './budget/BudgetSummaryCard';
 import ExpenseInputCard from './budget/ExpenseInputCard';
 import SpendingProgressCard from './budget/SpendingProgressCard';
+import VisualSummaryCard from './budget/VisualSummaryCard';
 
 const ExpenseTracking: React.FC = () => {
   const { 
@@ -55,6 +56,10 @@ const ExpenseTracking: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {budgetItems.length > 0 && (
+        <VisualSummaryCard budgetItems={budgetItems} formatCurrency={formatCurrency} />
       )}
     </div>
   );

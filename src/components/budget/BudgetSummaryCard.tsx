@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { PieChart } from '@/components/ui/piechart';
 import { cn } from '@/lib/utils';
 
 interface BudgetSummaryCardProps {
@@ -22,11 +21,6 @@ const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
 }) => {
   const spentPercentage = (totalSpent / totalBudget) * 100;
   const isOverBudget = remainingBudget < 0;
-
-  const chartData = budgetItems.map(item => ({
-    name: item.name,
-    value: item.amount,
-  }));
 
   return (
     <Card>
@@ -54,21 +48,6 @@ const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
             )} 
           />
         </div>
-
-        {budgetItems.length > 0 && (
-          <div className="mt-6">
-            <div className="aspect-square max-w-xs mx-auto">
-              <PieChart
-                data={chartData}
-                index="name"
-                categories={['value']}
-                valueFormatter={(value) => formatCurrency(value as number)}
-                colors={['#3b82f6', '#0ea5e9', '#22c55e', '#f97316', '#ef4444', '#8b5cf6', '#ec4899']}
-                className="h-full"
-              />
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
