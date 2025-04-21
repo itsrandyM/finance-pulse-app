@@ -17,6 +17,8 @@ const BudgetAllocation: React.FC = () => {
     deleteBudgetItem,
     addSubItem,
     deleteSubItem,
+    updateBudgetItem,
+    updateSubItem,
     getTotalAllocated,
     updateItemDeadline
   } = useBudget();
@@ -35,7 +37,16 @@ const BudgetAllocation: React.FC = () => {
   const handleAddSubItem = (budgetItemId: string, name: string, amount: number) => {
     if (amount > 0) {
       addSubItem(budgetItemId, name, amount);
-      setShowSubItems(prev => ({ ...prev, [budgetItemId]: false }));
+      // Don't close the sub-item form anymore
+      // setShowSubItems(prev => ({ ...prev, [budgetItemId]: false }));
+    }
+  };
+
+  const handleSaveNoteTag = (type: 'item'|'subItem', id: string, note: string, tag: string|null, parentId?: string) => {
+    if (type === 'item') {
+      updateBudgetItem(id, { note, tag });
+    } else if (type === 'subItem' && parentId) {
+      updateSubItem(parentId, id, { note, tag });
     }
   };
 
@@ -63,6 +74,7 @@ const BudgetAllocation: React.FC = () => {
         onToggleSubItems={(itemId) => 
           setShowSubItems(prev => ({ ...prev, [itemId]: !prev[itemId] }))}
         onNavigateToTracking={() => navigate('/tracking')}
+        onSaveNoteTag={handleSaveNoteTag}
       />
 
       <Dialog open={!!selectedItemForDeadline} onOpenChange={() => setSelectedItemForDeadline(null)}>

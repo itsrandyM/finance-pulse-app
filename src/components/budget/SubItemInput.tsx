@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +35,7 @@ const SubItemInput: React.FC<SubItemInputProps> = ({
     }
 
     onAddSubItem(budgetItemId, name, numericAmount);
+    // Reset form but keep the form open
     setName('');
     setAmount('');
   };
