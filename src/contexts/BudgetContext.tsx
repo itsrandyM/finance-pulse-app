@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -74,7 +73,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [user]);
 
   // Initialize a new budget
-  const initializeBudget = async (budgetPeriod: BudgetPeriod, amount: number) => {
+  const initializeBudget = async (budgetPeriod: BudgetPeriod, amount: number): Promise<void> => {
     try {
       setIsLoading(true);
       const budget = await budgetService.createBudget(budgetPeriod, amount);
@@ -82,7 +81,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setPeriodState(budgetPeriod as BudgetPeriod);
       setTotalBudgetState(amount);
       setBudgetItems([]);
-      return budget;
     } catch (error: any) {
       toast({
         title: "Error creating budget",

@@ -9,6 +9,7 @@ import { BudgetItem } from '@/contexts/BudgetContext';
 import { useBudget } from '@/contexts/BudgetContext';
 import NewExpenseForm from './NewExpenseForm';
 import * as budgetService from '@/services/budgetService';
+import { cn } from '@/lib/utils';
 
 interface ExpenseInputCardProps {
   budgetItems: BudgetItem[];

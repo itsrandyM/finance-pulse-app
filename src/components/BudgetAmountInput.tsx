@@ -15,12 +15,16 @@ import { useBudget } from '@/contexts/BudgetContext';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
 
-const BudgetAmountInput: React.FC = () => {
-  const { period, setTotalBudget } = useBudget();
+interface BudgetAmountInputProps {
+  onSubmit: (amount: number) => Promise<void>;
+}
+
+const BudgetAmountInput: React.FC<BudgetAmountInputProps> = ({ onSubmit }) => {
+  const { period } = useBudget();
   const [amount, setAmount] = useState<string>('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const numericAmount = parseFloat(amount);
@@ -28,8 +32,7 @@ const BudgetAmountInput: React.FC = () => {
       return;
     }
     
-    setTotalBudget(numericAmount);
-    navigate('/budget');
+    await onSubmit(numericAmount);
   };
 
   const handleBack = () => {
