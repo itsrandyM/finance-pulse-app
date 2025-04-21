@@ -1,5 +1,8 @@
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from './AuthContext';
+import * as budgetService from '@/services/budgetService';
 
 export type BudgetPeriod = 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'semi-annually' | 'annually' | 'custom';
 
@@ -11,6 +14,7 @@ export interface SubBudgetItem {
   amount: number;
   note?: string;
   tag?: TagOption;
+  hasExpenses?: boolean;
 }
 
 export interface BudgetItem {
@@ -31,119 +35,348 @@ interface BudgetContextType {
   budgetItems: BudgetItem[];
   setPeriod: (period: BudgetPeriod) => void;
   setTotalBudget: (amount: number) => void;
-  addBudgetItem: (name: string, amount: number, isImpulse: boolean) => void;
-  updateBudgetItem: (id: string, updates: Partial<BudgetItem>) => void;
-  deleteBudgetItem: (id: string) => void;
-  addSubItem: (budgetItemId: string, name: string, amount: number) => void;
-  deleteSubItem: (budgetItemId: string, subItemId: string) => void;
-  updateSubItem: (budgetItemId: string, subItemId: string, updates: Partial<SubBudgetItem>) => void;
-  addExpense: (itemId: string, amount: number) => void;
+  addBudgetItem: (name: string, amount: number, isImpulse: boolean) => Promise<void>;
+  updateBudgetItem: (id: string, updates: Partial<BudgetItem>) => Promise<void>;
+  deleteBudgetItem: (id: string) => Promise<void>;
+  addSubItem: (budgetItemId: string, name: string, amount: number) => Promise<void>;
+  deleteSubItem: (budgetItemId: string, subItemId: string) => Promise<void>;
+  updateSubItem: (budgetItemId: string, subItemId: string, updates: Partial<SubBudgetItem>) => Promise<void>;
+  addExpense: (itemId: string, amount: number, subItemIds?: string[]) => Promise<void>;
   resetBudget: () => void;
   getRemainingBudget: () => number;
   getTotalSpent: () => number;
   getTotalAllocated: () => number;
-  updateItemDeadline: (itemId: string, deadline: Date) => void;
+  updateItemDeadline: (itemId: string, deadline: Date) => Promise<void>;
+  isLoading: boolean;
+  currentBudgetId: string | null;
+  initializeBudget: (period: BudgetPeriod, amount: number) => Promise<void>;
+  loadBudget: () => Promise<boolean>;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [period, setPeriod] = useState<BudgetPeriod | null>(null);
-  const [totalBudget, setTotalBudget] = useState<number>(0);
+  const [period, setPeriodState] = useState<BudgetPeriod | null>(null);
+  const [totalBudget, setTotalBudgetState] = useState<number>(0);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
+  const [currentBudgetId, setCurrentBudgetId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
-  const updateItemDeadline = (itemId: string, deadline: Date) => {
-    setBudgetItems(
-      budgetItems.map(item =>
-        item.id === itemId ? { ...item, deadline } : item
-      )
-    );
+  // Load user's budget when they log in
+  useEffect(() => {
+    if (user) {
+      loadBudget().catch(error => {
+        console.error("Failed to load budget:", error);
+      });
+    }
+  }, [user]);
+
+  // Initialize a new budget
+  const initializeBudget = async (budgetPeriod: BudgetPeriod, amount: number) => {
+    try {
+      setIsLoading(true);
+      const budget = await budgetService.createBudget(budgetPeriod, amount);
+      setCurrentBudgetId(budget.id);
+      setPeriodState(budgetPeriod as BudgetPeriod);
+      setTotalBudgetState(amount);
+      setBudgetItems([]);
+      return budget;
+    } catch (error: any) {
+      toast({
+        title: "Error creating budget",
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const addBudgetItem = (name: string, amount: number, isImpulse: boolean = false) => {
-    setBudgetItems([
-      ...budgetItems,
-      {
-        id: Date.now().toString(),
-        name,
-        amount,
-        spent: 0,
-        subItems: [],
+  // Load the user's current budget
+  const loadBudget = async (): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      setIsLoading(true);
+      const budget = await budgetService.getCurrentBudget();
+      
+      if (!budget) {
+        // No budget found
+        return false;
+      }
+      
+      setCurrentBudgetId(budget.id);
+      setPeriodState(budget.period as BudgetPeriod);
+      setTotalBudgetState(budget.total_budget);
+      
+      // Load budget items
+      const items = await budgetService.getBudgetItems(budget.id);
+      
+      // Process items to match our interface
+      const processedItems: BudgetItem[] = items.map((item: any) => {
+        const subItems = item.sub_items.map((subItem: any) => ({
+          id: subItem.id,
+          name: subItem.name,
+          amount: subItem.amount,
+          note: subItem.note || undefined,
+          tag: subItem.tag || null,
+        }));
+        
+        return {
+          id: item.id,
+          name: item.name,
+          amount: item.amount,
+          spent: item.spent,
+          subItems: subItems,
+          deadline: item.deadline ? new Date(item.deadline) : undefined,
+          isImpulse: item.is_impulse || false,
+          note: item.note || undefined,
+          tag: item.tag || null,
+        };
+      });
+      
+      setBudgetItems(processedItems);
+      return true;
+    } catch (error: any) {
+      console.error("Error loading budget:", error);
+      toast({
+        title: "Error loading budget",
+        description: error.message,
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const setPeriod = (newPeriod: BudgetPeriod) => {
+    setPeriodState(newPeriod);
+  };
+
+  const setTotalBudget = (amount: number) => {
+    setTotalBudgetState(amount);
+  };
+
+  const updateItemDeadline = async (itemId: string, deadline: Date) => {
+    try {
+      await budgetService.updateBudgetItem(itemId, { deadline });
+      setBudgetItems(
+        budgetItems.map(item =>
+          item.id === itemId ? { ...item, deadline } : item
+        )
+      );
+    } catch (error: any) {
+      toast({
+        title: "Error updating deadline",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addBudgetItem = async (name: string, amount: number, isImpulse: boolean = false) => {
+    if (!currentBudgetId) {
+      toast({
+        title: "Error adding budget item",
+        description: "No current budget found",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const newItem = await budgetService.createBudgetItem(
+        currentBudgetId, 
+        name, 
+        amount, 
         isImpulse
+      );
+      
+      setBudgetItems([
+        ...budgetItems,
+        {
+          id: newItem.id,
+          name: newItem.name,
+          amount: newItem.amount,
+          spent: 0,
+          subItems: [],
+          isImpulse: newItem.is_impulse
+        }
+      ]);
+    } catch (error: any) {
+      toast({
+        title: "Error adding budget item",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addSubItem = async (budgetItemId: string, name: string, amount: number) => {
+    try {
+      const newSubItem = await budgetService.createSubItem(budgetItemId, name, amount);
+      
+      setBudgetItems(budgetItems.map(item => {
+        if (item.id === budgetItemId) {
+          return {
+            ...item,
+            subItems: [...item.subItems, {
+              id: newSubItem.id,
+              name: newSubItem.name,
+              amount: newSubItem.amount,
+              note: newSubItem.note,
+              tag: newSubItem.tag,
+              hasExpenses: false
+            }]
+          };
+        }
+        return item;
+      }));
+    } catch (error: any) {
+      toast({
+        title: "Error adding sub-item",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteSubItem = async (budgetItemId: string, subItemId: string) => {
+    try {
+      await budgetService.deleteSubItem(subItemId);
+      
+      setBudgetItems(budgetItems.map(item => {
+        if (item.id === budgetItemId) {
+          return {
+            ...item,
+            subItems: item.subItems.filter(subItem => subItem.id !== subItemId)
+          };
+        }
+        return item;
+      }));
+    } catch (error: any) {
+      toast({
+        title: "Error deleting sub-item",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updateBudgetItem = async (id: string, updates: Partial<BudgetItem>) => {
+    try {
+      // Format updates to match DB schema
+      const dbUpdates: any = { ...updates };
+      if (updates.deadline) {
+        dbUpdates.deadline = updates.deadline;
       }
-    ]);
-  };
-
-  const addSubItem = (budgetItemId: string, name: string, amount: number) => {
-    setBudgetItems(budgetItems.map(item => {
-      if (item.id === budgetItemId) {
-        const newSubItem: SubBudgetItem = {
-          id: Date.now().toString(),
-          name,
-          amount
-        };
-        return {
-          ...item,
-          subItems: [...item.subItems, newSubItem]
-        };
+      if (updates.isImpulse !== undefined) {
+        dbUpdates.is_impulse = updates.isImpulse;
       }
-      return item;
-    }));
+      
+      await budgetService.updateBudgetItem(id, dbUpdates);
+      
+      setBudgetItems(
+        budgetItems.map(item => 
+          item.id === id ? { ...item, ...updates } : item
+        )
+      );
+    } catch (error: any) {
+      toast({
+        title: "Error updating budget item",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
-  const deleteSubItem = (budgetItemId: string, subItemId: string) => {
-    setBudgetItems(budgetItems.map(item => {
-      if (item.id === budgetItemId) {
-        return {
-          ...item,
-          subItems: item.subItems.filter(subItem => subItem.id !== subItemId)
-        };
+  const updateSubItem = async (budgetItemId: string, subItemId: string, updates: Partial<SubBudgetItem>) => {
+    try {
+      await budgetService.updateSubItem(subItemId, updates);
+      
+      setBudgetItems(
+        budgetItems.map(item =>
+          item.id === budgetItemId
+            ? { 
+                ...item, 
+                subItems: item.subItems.map(sub =>
+                  sub.id === subItemId ? { ...sub, ...updates } : sub
+                )
+              }
+            : item
+        )
+      );
+    } catch (error: any) {
+      toast({
+        title: "Error updating sub-item",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteBudgetItem = async (id: string) => {
+    try {
+      await budgetService.deleteBudgetItem(id);
+      setBudgetItems(budgetItems.filter(item => item.id !== id));
+    } catch (error: any) {
+      toast({
+        title: "Error deleting budget item",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
+    try {
+      if (subItemIds && subItemIds.length > 0) {
+        // If specific sub-items are being expensed
+        for (const subItemId of subItemIds) {
+          await budgetService.addExpense(itemId, amount, subItemId);
+        }
+      } else {
+        // Adding expense to the main item
+        await budgetService.addExpense(itemId, amount);
       }
-      return item;
-    }));
-  };
+      
+      setBudgetItems(
+        budgetItems.map(item => {
+          if (item.id === itemId) {
+            const newItem = { ...item, spent: item.spent + amount };
 
-  const updateBudgetItem = (id: string, updates: Partial<BudgetItem>) => {
-    setBudgetItems(
-      budgetItems.map(item => 
-        item.id === id ? { ...item, ...updates } : item
-      )
-    );
-  };
-
-  const updateSubItem = (budgetItemId: string, subItemId: string, updates: Partial<SubBudgetItem>) => {
-    setBudgetItems(
-      budgetItems.map(item =>
-        item.id === budgetItemId
-          ? { 
-              ...item, 
-              subItems: item.subItems.map(sub =>
-                sub.id === subItemId ? { ...sub, ...updates } : sub
-              )
+            // Mark sub-items as having expenses
+            if (subItemIds && subItemIds.length > 0) {
+              newItem.subItems = item.subItems.map(subItem => 
+                subItemIds.includes(subItem.id) 
+                  ? { ...subItem, hasExpenses: true } 
+                  : subItem
+              );
             }
-          : item
-      )
-    );
-  };
-
-  const deleteBudgetItem = (id: string) => {
-    setBudgetItems(budgetItems.filter(item => item.id !== id));
-  };
-
-  const addExpense = (itemId: string, amount: number) => {
-    setBudgetItems(
-      budgetItems.map(item => 
-        item.id === itemId 
-          ? { ...item, spent: item.spent + amount } 
-          : item
-      )
-    );
+            
+            return newItem;
+          }
+          return item;
+        })
+      );
+    } catch (error: any) {
+      toast({
+        title: "Error adding expense",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const resetBudget = () => {
-    setPeriod(null);
-    setTotalBudget(0);
+    setPeriodState(null);
+    setTotalBudgetState(0);
     setBudgetItems([]);
+    setCurrentBudgetId(null);
   };
 
   const getTotalAllocated = () => {
@@ -177,7 +410,11 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         getRemainingBudget,
         getTotalSpent,
         getTotalAllocated,
-        updateItemDeadline
+        updateItemDeadline,
+        isLoading,
+        currentBudgetId,
+        initializeBudget,
+        loadBudget
       }}
     >
       {children}
@@ -192,4 +429,3 @@ export const useBudget = () => {
   }
   return context;
 };
-

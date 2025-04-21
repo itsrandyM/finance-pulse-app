@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BudgetItem } from '@/contexts/BudgetContext';
 import { useBudget } from '@/contexts/BudgetContext';
 import NewExpenseForm from './NewExpenseForm';
-import SubItemExpenseForm from './SubItemExpenseForm';
+import * as budgetService from '@/services/budgetService';
 
 interface ExpenseInputCardProps {
   budgetItems: BudgetItem[];
-  onAddExpense: (itemId: string, amount: number) => void;
+  onAddExpense: (itemId: string, amount: number, subItemIds?: string[]) => Promise<void>;
 }
 
 const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
@@ -21,16 +20,40 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
   onAddExpense,
 }) => {
   const { toast } = useToast();
-  const { addBudgetItem, addSubItem } = useBudget();
+  const { addBudgetItem, addSubItem, currentBudgetId } = useBudget();
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [expenseAmount, setExpenseAmount] = useState<string>('');
   const [subItemExpenses, setSubItemExpenses] = useState<{ [key: string]: { amount: string; checked: boolean } }>({});
   const [showNewSubItemInput, setShowNewSubItemInput] = useState<boolean>(false);
   const [newSubItemName, setNewSubItemName] = useState<string>('');
   const [newSubItemAmount, setNewSubItemAmount] = useState<string>('');
+  const [trackedSubItems, setTrackedSubItems] = useState<Record<string, boolean>>({});
 
   const selectedItem = budgetItems.find(item => item.id === selectedItemId);
   const hasSubItems = selectedItem?.subItems.length > 0;
+
+  useEffect(() => {
+    const fetchSubItemExpenses = async () => {
+      if (!selectedItem) return;
+      
+      const tracked: Record<string, boolean> = {};
+      
+      for (const subItem of selectedItem.subItems) {
+        try {
+          const expenses = await budgetService.getExpensesBySubItem(subItem.id);
+          tracked[subItem.id] = expenses.length > 0;
+        } catch (error) {
+          console.error(`Error fetching expenses for sub-item ${subItem.id}:`, error);
+        }
+      }
+      
+      setTrackedSubItems(tracked);
+    };
+    
+    if (selectedItem) {
+      fetchSubItemExpenses();
+    }
+  }, [selectedItem]);
 
   const handleSubItemChange = (subItemId: string, value: string) => {
     setSubItemExpenses(prev => ({
@@ -38,7 +61,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
       [subItemId]: {
         ...prev[subItemId],
         amount: value,
-        checked: false
+        checked: true
       }
     }));
   };
@@ -53,17 +76,40 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
     }));
   };
 
-  const handleAddNewExpense = (name: string, amount: number) => {
-    const newItemId = Date.now().toString();
-    addBudgetItem(name, amount, true);
-    onAddExpense(newItemId, amount);
-    toast({
-      title: "Expense Added",
-      description: `Added and tracked new impulse expense: ${name}`,
-    });
+  const handleAddNewExpense = async (name: string, amount: number) => {
+    if (!currentBudgetId) {
+      toast({
+        title: "Error adding expense",
+        description: "No current budget found",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const newItem = await budgetService.createBudgetItem(
+        currentBudgetId,
+        name,
+        amount,
+        true
+      );
+
+      await onAddExpense(newItem.id, amount);
+      
+      toast({
+        title: "Expense Added",
+        description: `Added and tracked new impulse expense: ${name}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error adding expense",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleAddExpense = (e: React.FormEvent) => {
+  const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedItemId) {
@@ -75,35 +121,91 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
       return;
     }
     
-    let totalExpense = 0;
-
-    if (hasSubItems) {
-      Object.entries(subItemExpenses).forEach(([_, value]) => {
-        if (value.checked) {
-          totalExpense += parseFloat(value.amount) || 0;
+    try {
+      if (hasSubItems) {
+        const selectedSubItems = Object.entries(subItemExpenses)
+          .filter(([_, value]) => value.checked)
+          .map(([subItemId, value]) => ({
+            id: subItemId,
+            amount: parseFloat(value.amount)
+          }));
+        
+        if (selectedSubItems.length === 0) {
+          toast({
+            title: "No Sub-items Selected",
+            description: "Please select at least one sub-item.",
+            variant: "destructive"
+          });
+          return;
         }
-      });
-    } else {
-      totalExpense = parseFloat(expenseAmount);
-    }
-
-    if (isNaN(totalExpense) || totalExpense <= 0) {
+        
+        let totalAmount = 0;
+        const subItemIds: string[] = [];
+        
+        for (const { id, amount } of selectedSubItems) {
+          if (isNaN(amount) || amount <= 0) continue;
+          totalAmount += amount;
+          subItemIds.push(id);
+        }
+        
+        if (totalAmount <= 0) {
+          toast({
+            title: "Invalid Amount",
+            description: "Please enter valid expense amounts.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        await onAddExpense(selectedItemId, totalAmount, subItemIds);
+      } else {
+        const amount = parseFloat(expenseAmount);
+        
+        if (isNaN(amount) || amount <= 0) {
+          toast({
+            title: "Invalid Amount",
+            description: "Please enter a valid expense amount.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        await onAddExpense(selectedItemId, amount);
+      }
+      
+      setExpenseAmount('');
+      setSubItemExpenses({});
+      
       toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid expense amount.",
+        title: "Expense Added",
+        description: "Your expense has been recorded.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error adding expense",
+        description: error.message,
         variant: "destructive"
       });
-      return;
     }
-    
-    onAddExpense(selectedItemId, totalExpense);
-    setExpenseAmount('');
-    setSubItemExpenses({});
-    
-    toast({
-      title: "Expense Added",
-      description: `$${totalExpense.toFixed(2)} expense recorded.`,
-    });
+  };
+
+  const handleAddSubItem = async () => {
+    if (selectedItemId && newSubItemName && newSubItemAmount) {
+      const amount = parseFloat(newSubItemAmount);
+      if (!isNaN(amount) && amount > 0) {
+        try {
+          await addSubItem(selectedItemId, newSubItemName, amount);
+          setNewSubItemName('');
+          setNewSubItemAmount('');
+        } catch (error: any) {
+          toast({
+            title: "Error adding sub-item",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
+      }
+    }
   };
 
   return (
@@ -162,38 +264,59 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                 <div className="space-y-2">
                   <Label className="block mb-2">Track Sub-items</Label>
                   <div className="space-y-3 border border-b-0 border-x-0 border-t-0">
-                    {selectedItem.subItems.map((subItem) => (
-                      <div key={subItem.id} className="flex items-center gap-3 py-2">
-                        <input
-                          type="checkbox"
-                          checked={subItemExpenses[subItem.id]?.checked || false}
-                          onChange={(e) => handleSubItemCheck(subItem.id, e.target.checked)}
-                          className="accent-finance-primary h-4 w-4"
-                          id={`check-${subItem.id}`}
-                        />
-                        <Label htmlFor={`check-${subItem.id}`} className="flex-1 cursor-pointer">
-                          {subItem.name}
-                        </Label>
-                        <div className="relative w-32">
-                          <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                            <span className="text-gray-500">$</span>
-                          </div>
-                          <Input
-                            type="number"
-                            placeholder={subItem.amount.toString()}
-                            step="0.01"
-                            min="0"
-                            className="pl-6 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
-                            value={subItemExpenses[subItem.id]?.amount || ""}
-                            onChange={(e) => handleSubItemChange(subItem.id, e.target.value)}
-                            disabled={subItemExpenses[subItem.id]?.checked}
+                    {selectedItem.subItems.map((subItem) => {
+                      const isTracked = trackedSubItems[subItem.id] || subItem.hasExpenses;
+                      
+                      return (
+                        <div 
+                          key={subItem.id} 
+                          className={cn(
+                            "flex items-center gap-3 py-2",
+                            isTracked ? "bg-green-50 px-2 rounded" : ""
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={subItemExpenses[subItem.id]?.checked || false}
+                            onChange={(e) => handleSubItemCheck(subItem.id, e.target.checked)}
+                            className="accent-finance-primary h-4 w-4"
+                            id={`check-${subItem.id}`}
                           />
+                          <Label 
+                            htmlFor={`check-${subItem.id}`} 
+                            className={cn(
+                              "flex-1 cursor-pointer", 
+                              isTracked ? "font-medium text-green-700" : ""
+                            )}
+                          >
+                            {subItem.name}
+                            {isTracked && (
+                              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                                Tracked
+                              </span>
+                            )}
+                          </Label>
+                          <div className="relative w-32">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                              <span className="text-gray-500">$</span>
+                            </div>
+                            <Input
+                              type="number"
+                              placeholder={subItem.amount.toString()}
+                              step="0.01"
+                              min="0"
+                              className={cn(
+                                "pl-6 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary",
+                                isTracked ? "bg-green-50" : ""
+                              )}
+                              value={subItemExpenses[subItem.id]?.amount || ""}
+                              onChange={(e) => handleSubItemChange(subItem.id, e.target.value)}
+                              disabled={!subItemExpenses[subItem.id]?.checked}
+                            />
+                          </div>
                         </div>
-                        {subItemExpenses[subItem.id]?.checked && (
-                          <span className="ml-2 text-xs text-gray-400">Use default</span>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -239,18 +362,9 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                   <div className="flex gap-2">
                     <Button
                       type="button"
-                      onClick={() => {
-                        if (selectedItemId && newSubItemName && newSubItemAmount) {
-                          const amount = parseFloat(newSubItemAmount);
-                          if (!isNaN(amount) && amount > 0) {
-                            addSubItem(selectedItemId, newSubItemName, amount);
-                            setNewSubItemName('');
-                            setNewSubItemAmount('');
-                            setShowNewSubItemInput(false);
-                          }
-                        }
-                      }}
+                      onClick={handleAddSubItem}
                       className="flex-1"
+                      disabled={!newSubItemName || !newSubItemAmount || parseFloat(newSubItemAmount) <= 0}
                     >
                       Add
                     </Button>
@@ -281,7 +395,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
               (!expenseAmount && !hasSubItems) ||
               (hasSubItems &&
                 !Object.values(subItemExpenses).some((v) =>
-                  v.checked || (!!v.amount && parseFloat(v.amount) > 0)
+                  v.checked && (!!v.amount && parseFloat(v.amount) > 0)
                 )
               )
             }

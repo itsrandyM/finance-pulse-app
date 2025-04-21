@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { BudgetItem } from '@/contexts/BudgetContext';
 import { ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import * as budgetService from '@/services/budgetService';
 
 interface SpendingProgressCardProps {
   budgetItems: BudgetItem[];
@@ -16,6 +17,32 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
   budgetItems,
   formatCurrency,
 }) => {
+  const [trackedSubItems, setTrackedSubItems] = useState<Record<string, boolean>>({});
+  
+  // Fetch expenses for all sub-items to determine which ones have been tracked
+  useEffect(() => {
+    const fetchSubItemExpenses = async () => {
+      const subItemExpensesMap: Record<string, boolean> = {};
+      
+      for (const item of budgetItems) {
+        for (const subItem of item.subItems) {
+          try {
+            const expenses = await budgetService.getExpensesBySubItem(subItem.id);
+            subItemExpensesMap[subItem.id] = expenses.length > 0;
+          } catch (error) {
+            console.error(`Error fetching expenses for sub-item ${subItem.id}:`, error);
+          }
+        }
+      }
+      
+      setTrackedSubItems(subItemExpensesMap);
+    };
+    
+    if (budgetItems.length > 0) {
+      fetchSubItemExpenses();
+    }
+  }, [budgetItems]);
+
   const calculateProgress = (spent: number, budgeted: number) => {
     return (spent / budgeted) * 100;
   };
@@ -81,15 +108,31 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
                   {hasSubItems && (
                     <CollapsibleContent>
                       <div className="pl-6 mt-2 space-y-2">
-                        {item.subItems.map((subItem) => (
-                          <div 
-                            key={subItem.id} 
-                            className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded"
-                          >
-                            <span>{subItem.name}</span>
-                            <span className="text-gray-600">{formatCurrency(subItem.amount)}</span>
-                          </div>
-                        ))}
+                        {item.subItems.map((subItem) => {
+                          const isTracked = trackedSubItems[subItem.id] || subItem.hasExpenses;
+                          
+                          return (
+                            <div 
+                              key={subItem.id} 
+                              className={cn(
+                                "flex justify-between items-center text-sm p-2 rounded",
+                                isTracked ? "bg-green-50 border border-green-100" : "bg-gray-50"
+                              )}
+                            >
+                              <span className={isTracked ? "font-medium text-green-700" : ""}>
+                                {subItem.name}
+                                {isTracked && (
+                                  <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                                    Tracked
+                                  </span>
+                                )}
+                              </span>
+                              <span className={isTracked ? "text-green-700" : "text-gray-600"}>
+                                {formatCurrency(subItem.amount)}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </CollapsibleContent>
                   )}

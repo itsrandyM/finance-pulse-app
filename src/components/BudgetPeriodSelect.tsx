@@ -1,59 +1,72 @@
-
 import React from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { useBudget, BudgetPeriod } from '@/contexts/BudgetContext';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
-const periods: { value: BudgetPeriod; label: string }[] = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'bi-weekly', label: 'Bi-Weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'semi-annually', label: 'Semi-Annually' },
-  { value: 'annually', label: 'Annually' },
-  { value: 'custom', label: 'Custom' },
-];
+interface BudgetPeriodSelectProps {
+  onPeriodSelected: (period: string) => void;
+}
 
-const BudgetPeriodSelect: React.FC = () => {
-  const { setPeriod } = useBudget();
-  const navigate = useNavigate();
+const BudgetPeriodSelect: React.FC<BudgetPeriodSelectProps> = ({ onPeriodSelected }) => {
+  const [period, setPeriod] = React.useState<string>('monthly');
 
-  const handlePeriodSelect = (period: BudgetPeriod) => {
-    setPeriod(period);
-    navigate('/budget-amount');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onPeriodSelected(period);
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto animate-fade-in">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center text-finance-text">Choose Budget Period</CardTitle>
-        <CardDescription className="text-center">
-          Select how often you want to budget your finances
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4">
-          {periods.map((period) => (
-            <Button
-              key={period.value}
-              variant="outline"
-              className="h-16 text-lg hover:bg-finance-primary hover:text-white"
-              onClick={() => handlePeriodSelect(period.value)}
-            >
-              {period.label}
+    <div className="flex items-center justify-center h-screen bg-gray-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl text-finance-text">Select Budget Period</CardTitle>
+          <CardDescription>Choose the period for your budget.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <RadioGroup defaultValue="monthly" className="flex flex-col space-y-1" onValueChange={setPeriod}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="daily" id="r1" />
+                  <label htmlFor="r1" className="cursor-pointer">Daily</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="weekly" id="r2" />
+                  <label htmlFor="r2" className="cursor-pointer">Weekly</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="bi-weekly" id="r3" />
+                  <label htmlFor="r3" className="cursor-pointer">Bi-Weekly</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="monthly" id="r4" />
+                  <label htmlFor="r4" className="cursor-pointer">Monthly</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="quarterly" id="r5" />
+                  <label htmlFor="r5" className="cursor-pointer">Quarterly</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="semi-annually" id="r6" />
+                  <label htmlFor="r6" className="cursor-pointer">Semi-Annually</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="annually" id="r7" />
+                  <label htmlFor="r7" className="cursor-pointer">Annually</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="custom" id="r8" />
+                  <label htmlFor="r8" className="cursor-pointer">Custom</label>
+                </div>
+              </RadioGroup>
+            </div>
+            <Button type="submit" className="w-full bg-finance-primary hover:bg-finance-secondary">
+              Continue
             </Button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

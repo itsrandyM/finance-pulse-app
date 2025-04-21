@@ -9,6 +9,175 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      budget_items: {
+        Row: {
+          amount: number
+          budget_id: string
+          created_at: string | null
+          deadline: string | null
+          id: string
+          is_impulse: boolean | null
+          name: string
+          note: string | null
+          spent: number
+          tag: string | null
+        }
+        Insert: {
+          amount: number
+          budget_id: string
+          created_at?: string | null
+          deadline?: string | null
+          id?: string
+          is_impulse?: boolean | null
+          name: string
+          note?: string | null
+          spent?: number
+          tag?: string | null
+        }
+        Update: {
+          amount?: number
+          budget_id?: string
+          created_at?: string | null
+          deadline?: string | null
+          id?: string
+          is_impulse?: boolean | null
+          name?: string
+          note?: string | null
+          spent?: number
+          tag?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_items_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_sub_items: {
+        Row: {
+          amount: number
+          budget_item_id: string
+          created_at: string | null
+          id: string
+          name: string
+          note: string | null
+          tag: string | null
+        }
+        Insert: {
+          amount: number
+          budget_item_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          note?: string | null
+          tag?: string | null
+        }
+        Update: {
+          amount?: number
+          budget_item_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          note?: string | null
+          tag?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_sub_items_budget_item_id_fkey"
+            columns: ["budget_item_id"]
+            isOneToOne: false
+            referencedRelation: "budget_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budgets: {
+        Row: {
+          created_at: string | null
+          id: string
+          period: string
+          total_budget: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          period: string
+          total_budget: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          period?: string
+          total_budget?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          budget_item_id: string
+          created_at: string | null
+          id: string
+          sub_item_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          budget_item_id: string
+          created_at?: string | null
+          id?: string
+          sub_item_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          budget_item_id?: string
+          created_at?: string | null
+          id?: string
+          sub_item_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_budget_item_id_fkey"
+            columns: ["budget_item_id"]
+            isOneToOne: false
+            referencedRelation: "budget_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_sub_item_id_fkey"
+            columns: ["sub_item_id"]
+            isOneToOne: false
+            referencedRelation: "budget_sub_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           contact_info: string
