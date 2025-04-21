@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
-import { Calendar as CalendarIcon, Trash2, Note, Tag } from 'lucide-react';
+import { Calendar as CalendarIcon, Trash2, FileText, Tag } from 'lucide-react';
 import SubItemInput from './SubItemInput';
 import NoteTagEditor from './NoteTagEditor';
 import { BudgetItem, SubBudgetItem } from '@/contexts/BudgetContext';
@@ -129,7 +128,7 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
                     )}
                     aria-label="Add/Edit note and tag"
                   >
-                    <Note className="h-4 w-4" />
+                    <FileText className="h-4 w-4" />
                   </button>
                   {item.tag && (
                     <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-semibold ${getTagColor(item.tag)}`}>
@@ -140,7 +139,7 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
                 </div>
                 {item.note && (
                   <div className="text-xs text-gray-600 flex items-center gap-1 ml-6">
-                    <Note className="inline h-3 w-3 mb-0.5" /> {item.note}
+                    <FileText className="inline h-3 w-3 mb-0.5" /> {item.note}
                   </div>
                 )}
                 <span className="font-mono text-base">{formatCurrency(item.amount)}</span>
@@ -172,37 +171,6 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
                 onAddSubItem={onAddSubItem}
                 onDeleteSubItem={onDeleteSubItem}
                 budgetItemAmount={item.amount}
-                // Add note & tag logic for subItems:
-                renderActionsForSubItem={(sub: SubBudgetItem) => (
-                  <React.Fragment>
-                    <button
-                      className="ml-1 text-gray-400 hover:text-finance-accent"
-                      onClick={() => handleEditNoteTag(
-                        'subItem',
-                        sub.id,
-                        sub.note || "",
-                        sub.tag || "",
-                        item.id
-                      )}
-                      aria-label="Add/Edit note and tag"
-                    >
-                      <Note className="h-4 w-4" />
-                    </button>
-                    {sub.tag && (
-                      <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-semibold ${getTagColor(sub.tag)}`}>
-                        <Tag className="inline h-3 w-3 mb-0.5 mr-1" />
-                        {sub.tag}
-                      </span>
-                    )}
-                  </React.Fragment>
-                )}
-                renderNoteForSubItem={(sub: SubBudgetItem) =>
-                  sub.note && (
-                    <div className="text-xs text-gray-500 flex items-center gap-1 ml-6">
-                      <Note className="inline h-3 w-3 mb-0.5" /> {sub.note}
-                    </div>
-                  )
-                }
               />
             </CollapsibleContent>
           </Collapsible>

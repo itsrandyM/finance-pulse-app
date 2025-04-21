@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Tag, Note } from "lucide-react";
+import { FileText, Tag } from "lucide-react";
 
 const TAGS = [
   "Bills",
@@ -65,7 +65,7 @@ const NoteTagEditor: React.FC<NoteTagEditorProps> = ({
         <DialogHeader>
           <DialogTitle>
             <div className="flex items-center gap-2">
-              <Note className="h-5 w-5" />
+              <FileText className="h-5 w-5" />
               {isSubItem ? "Edit Sub-item Note & Tag" : "Edit Note & Tag"}
             </div>
           </DialogTitle>

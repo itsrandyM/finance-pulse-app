@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, FileText, Tag } from 'lucide-react';
 import { SubBudgetItem } from '@/contexts/BudgetContext';
 
 interface SubItemInputProps {
@@ -38,6 +38,20 @@ const SubItemInput: React.FC<SubItemInputProps> = ({
     onAddSubItem(budgetItemId, name, numericAmount);
     setName('');
     setAmount('');
+  };
+
+  // Helper function to get tag color class
+  const getTagColor = (tag: string | null | undefined) => {
+    const colorMap: Record<string, string> = {
+      Bills: 'bg-orange-200 text-orange-800',
+      Savings: 'bg-green-200 text-green-800',
+      Groceries: 'bg-blue-200 text-blue-800',
+      Transport: 'bg-sky-200 text-sky-800',
+      Shopping: 'bg-pink-200 text-pink-800',
+      Dining: 'bg-purple-200 text-purple-800',
+    }
+    if (!tag) return 'bg-gray-100 text-gray-500';
+    return colorMap[tag] || 'bg-gray-200 text-gray-700';
   };
 
   return (
@@ -82,7 +96,22 @@ const SubItemInput: React.FC<SubItemInputProps> = ({
         <div className="space-y-2">
           {subItems.map((subItem) => (
             <div key={subItem.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-              <span>{subItem.name}</span>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span>{subItem.name}</span>
+                  {subItem.tag && (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getTagColor(subItem.tag)}`}>
+                      <Tag className="inline h-3 w-3 mb-0.5 mr-1" />
+                      {subItem.tag}
+                    </span>
+                  )}
+                </div>
+                {subItem.note && (
+                  <div className="text-xs text-gray-500 flex items-center gap-1">
+                    <FileText className="inline h-3 w-3 mb-0.5" /> {subItem.note}
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600">${subItem.amount.toFixed(2)}</span>
                 <Button
