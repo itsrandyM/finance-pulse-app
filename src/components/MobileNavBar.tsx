@@ -1,13 +1,14 @@
 
 import React from "react";
-import { useLocation } from "react-router-dom";
-import { LayoutDashboard, Wallet, TrendingUp } from "lucide-react";
+import { useLocation, Link } from "react-router-dom";
+import { LayoutDashboard, Wallet, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/", label: "Setup", icon: <LayoutDashboard className="h-5 w-5" /> },
   { href: "/budget", label: "Budget", icon: <Wallet className="h-5 w-5" /> },
-  { href: "/tracking", label: "Tracking", icon: <TrendingUp className="h-5 w-5" /> }
+  { href: "/tracking", label: "Tracking", icon: <TrendingUp className="h-5 w-5" /> },
+  { href: "/profile", label: "Profile", icon: <User className="h-5 w-5" /> }
 ];
 
 const MobileNavBar: React.FC = () => {
@@ -18,9 +19,9 @@ const MobileNavBar: React.FC = () => {
       role="navigation"
     >
       {navLinks.map((link) => (
-        <a
+        <Link
           key={link.href}
-          href={link.href}
+          to={link.href}
           className={cn(
             "flex flex-col items-center justify-center space-y-1 text-xs text-gray-500 hover:text-finance-primary transition-colors",
             location.pathname === link.href && "text-finance-primary font-semibold"
@@ -28,7 +29,7 @@ const MobileNavBar: React.FC = () => {
         >
           {link.icon}
           <span>{link.label}</span>
-        </a>
+        </Link>
       ))}
     </nav>
   );

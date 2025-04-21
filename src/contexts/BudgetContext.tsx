@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -28,6 +29,11 @@ export interface BudgetItem {
   tag?: TagOption;
 }
 
+export interface BudgetDateRange {
+  startDate: Date;
+  endDate: Date;
+}
+
 interface BudgetContextType {
   period: BudgetPeriod | null;
   totalBudget: number;
@@ -50,6 +56,9 @@ interface BudgetContextType {
   currentBudgetId: string | null;
   initializeBudget: (period: BudgetPeriod, amount: number) => Promise<void>;
   loadBudget: () => Promise<boolean>;
+  budgetDateRange: BudgetDateRange | null;
+  isBudgetExpired: boolean;
+  createNewBudgetPeriod: () => Promise<void>;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -60,6 +69,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [currentBudgetId, setCurrentBudgetId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [budgetDateRange, setBudgetDateRange] = useState<BudgetDateRange | null>(null);
+  const [isBudgetExpired, setIsBudgetExpired] = useState<boolean>(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -71,6 +82,47 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [user]);
 
+  useEffect(() => {
+    // Check if the budget is expired
+    if (budgetDateRange && budgetDateRange.endDate) {
+      const now = new Date();
+      setIsBudgetExpired(now > budgetDateRange.endDate);
+    }
+  }, [budgetDateRange]);
+
+  const calculateDateRange = (startDate: Date, budgetPeriod: BudgetPeriod): BudgetDateRange => {
+    const endDate = new Date(startDate);
+    
+    switch (budgetPeriod) {
+      case 'daily':
+        endDate.setDate(startDate.getDate() + 1);
+        break;
+      case 'weekly':
+        endDate.setDate(startDate.getDate() + 7);
+        break;
+      case 'bi-weekly':
+        endDate.setDate(startDate.getDate() + 14);
+        break;
+      case 'monthly':
+        endDate.setMonth(startDate.getMonth() + 1);
+        break;
+      case 'quarterly':
+        endDate.setMonth(startDate.getMonth() + 3);
+        break;
+      case 'semi-annually':
+        endDate.setMonth(startDate.getMonth() + 6);
+        break;
+      case 'annually':
+        endDate.setFullYear(startDate.getFullYear() + 1);
+        break;
+      default:
+        // Default to 30 days for custom or unknown periods
+        endDate.setDate(startDate.getDate() + 30);
+    }
+    
+    return { startDate, endDate };
+  };
+
   const initializeBudget = async (budgetPeriod: BudgetPeriod, amount: number): Promise<void> => {
     try {
       setIsLoading(true);
@@ -79,6 +131,12 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setPeriodState(budgetPeriod as BudgetPeriod);
       setTotalBudgetState(amount);
       setBudgetItems([]);
+      
+      // Calculate and set the budget date range
+      const startDate = new Date(budget.created_at || new Date());
+      const dateRange = calculateDateRange(startDate, budgetPeriod);
+      setBudgetDateRange(dateRange);
+      setIsBudgetExpired(false);
     } catch (error: any) {
       toast({
         title: "Error creating budget",
@@ -89,6 +147,24 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const createNewBudgetPeriod = async (): Promise<void> => {
+    if (!period || !totalBudget) {
+      toast({
+        title: "Missing budget information",
+        description: "Cannot create a new budget period without period and amount information.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    await initializeBudget(period, totalBudget);
+    
+    toast({
+      title: "New Budget Created",
+      description: `A new ${period} budget has been created.`,
+    });
   };
 
   const loadBudget = async (): Promise<boolean> => {
@@ -131,6 +207,16 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       });
       
       setBudgetItems(processedItems);
+      
+      // Calculate and set the budget date range
+      const startDate = new Date(budget.created_at || new Date());
+      const dateRange = calculateDateRange(startDate, budget.period as BudgetPeriod);
+      setBudgetDateRange(dateRange);
+      
+      // Check if budget is expired
+      const now = new Date();
+      setIsBudgetExpired(now > dateRange.endDate);
+      
       return true;
     } catch (error: any) {
       console.error("Error loading budget:", error);
@@ -365,6 +451,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setTotalBudgetState(0);
     setBudgetItems([]);
     setCurrentBudgetId(null);
+    setBudgetDateRange(null);
+    setIsBudgetExpired(false);
   };
 
   const getTotalAllocated = () => {
@@ -402,7 +490,10 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         isLoading,
         currentBudgetId,
         initializeBudget,
-        loadBudget
+        loadBudget,
+        budgetDateRange,
+        isBudgetExpired,
+        createNewBudgetPeriod
       }}
     >
       {children}

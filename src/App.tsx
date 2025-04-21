@@ -14,6 +14,7 @@ import BudgetAmountInputPage from "./pages/BudgetAmountInputPage";
 import BudgetAllocation from "./components/BudgetAllocation";
 import ExpenseTracking from "./components/ExpenseTracking";
 import Auth from "./pages/Auth";
+import ProfilePage from "./pages/ProfilePage";
 import React from "react";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,13 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <ExpenseTracking />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <ProfilePage />
                   </Layout>
                 </ProtectedRoute>
               } />
