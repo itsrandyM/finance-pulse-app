@@ -1,10 +1,11 @@
 
-import React from 'react';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { useLocation } from 'react-router-dom';
-import { Wallet, LayoutDashboard, TrendingUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React from "react";
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { useLocation } from "react-router-dom";
+import { Wallet, LayoutDashboard, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileNavBar from "./MobileNavBar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,68 +18,87 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
-        <Sidebar>
-          <SidebarHeader className="p-4">
-            <div className="hidden md:flex items-center gap-2">
-              <Wallet className="h-6 w-6 text-finance-primary" />
-              <span className="font-semibold text-lg">Wallet</span>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === '/'}
-                  tooltip="Setup"
-                >
-                  <a href="/" className={cn(
-                    "w-full",
-                    location.pathname === '/' && "text-finance-primary"
-                  )}>
-                    <LayoutDashboard />
-                    <span className="hidden md:inline">Setup</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === '/budget'}
-                  tooltip="Budget"
-                >
-                  <a href="/budget" className={cn(
-                    "w-full",
-                    location.pathname === '/budget' && "text-finance-primary"
-                  )}>
-                    <Wallet />
-                    <span className="hidden md:inline">Budget</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === '/tracking'}
-                  tooltip="Tracking"
-                >
-                  <a href="/tracking" className={cn(
-                    "w-full",
-                    location.pathname === '/tracking' && "text-finance-primary"
-                  )}>
-                    <TrendingUp />
-                    <span className="hidden md:inline">Tracking</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-        </Sidebar>
-        <main className="flex-1 p-4 md:p-8">
-          <div className="max-w-6xl mx-auto">
+        <>
+          {!isMobile && (
+            <Sidebar className="min-w-[72px] w-64 md:w-64 bg-white border-r shadow-none transition-all duration-200">
+              <SidebarHeader className="p-4 h-16 flex items-center gap-2 border-b">
+                <img
+                  src="/favicon.ico"
+                  className="h-8 w-8"
+                  alt="Wallet Logo"
+                />
+                <span className="font-bold text-xl tracking-tight text-finance-primary">
+                  Wallet
+                </span>
+              </SidebarHeader>
+              <SidebarContent className="flex-1 pt-8">
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === "/"}
+                      tooltip="Setup"
+                    >
+                      <a
+                        href="/"
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-2 hover:text-finance-primary",
+                          location.pathname === "/" && "text-finance-primary font-semibold"
+                        )}
+                      >
+                        <LayoutDashboard />
+                        <span className="hidden md:inline">Setup</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === "/budget"}
+                      tooltip="Budget"
+                    >
+                      <a
+                        href="/budget"
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-2 hover:text-finance-primary",
+                          location.pathname === "/budget" && "text-finance-primary font-semibold"
+                        )}
+                      >
+                        <Wallet />
+                        <span className="hidden md:inline">Budget</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === "/tracking"}
+                      tooltip="Tracking"
+                    >
+                      <a
+                        href="/tracking"
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-2 hover:text-finance-primary",
+                          location.pathname === "/tracking" && "text-finance-primary font-semibold"
+                        )}
+                      >
+                        <TrendingUp />
+                        <span className="hidden md:inline">Tracking</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarContent>
+            </Sidebar>
+          )}
+          <main className={cn(
+              "flex-1 p-4 md:p-8 max-w-6xl mx-auto w-full",
+              isMobile && "pb-16"
+            )}>
             {children}
-          </div>
-        </main>
+          </main>
+          {isMobile && <MobileNavBar />}
+        </>
       </div>
     </SidebarProvider>
   );
