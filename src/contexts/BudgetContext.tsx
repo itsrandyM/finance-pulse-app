@@ -63,7 +63,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Load user's budget when they log in
   useEffect(() => {
     if (user) {
       loadBudget().catch(error => {
@@ -72,7 +71,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [user]);
 
-  // Initialize a new budget
   const initializeBudget = async (budgetPeriod: BudgetPeriod, amount: number): Promise<void> => {
     try {
       setIsLoading(true);
@@ -93,7 +91,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
-  // Load the user's current budget
   const loadBudget = async (): Promise<boolean> => {
     if (!user) return false;
     
@@ -102,7 +99,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const budget = await budgetService.getCurrentBudget();
       
       if (!budget) {
-        // No budget found
         return false;
       }
       
@@ -110,10 +106,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setPeriodState(budget.period as BudgetPeriod);
       setTotalBudgetState(budget.total_budget);
       
-      // Load budget items
       const items = await budgetService.getBudgetItems(budget.id);
       
-      // Process items to match our interface
       const processedItems: BudgetItem[] = items.map((item: any) => {
         const subItems = item.sub_items.map((subItem: any) => ({
           id: subItem.id,
@@ -267,7 +261,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const updateBudgetItem = async (id: string, updates: Partial<BudgetItem>) => {
     try {
-      // Format updates to match DB schema
       const dbUpdates: any = { ...updates };
       if (updates.deadline) {
         dbUpdates.deadline = updates.deadline;
@@ -333,12 +326,10 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const addExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     try {
       if (subItemIds && subItemIds.length > 0) {
-        // If specific sub-items are being expensed
         for (const subItemId of subItemIds) {
-          await budgetService.addExpense(itemId, amount, subItemId);
+          await budgetService.addExpense(itemId, amount, subItemId.toString());
         }
       } else {
-        // Adding expense to the main item
         await budgetService.addExpense(itemId, amount);
       }
       
@@ -347,11 +338,10 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           if (item.id === itemId) {
             const newItem = { ...item, spent: item.spent + amount };
 
-            // Mark sub-items as having expenses
             if (subItemIds && subItemIds.length > 0) {
-              newItem.subItems = item.subItems.map(subItem => 
-                subItemIds.includes(subItem.id) 
-                  ? { ...subItem, hasExpenses: true } 
+              newItem.subItems = item.subItems.map(subItem =>
+                subItemIds.includes(subItem.id)
+                  ? { ...subItem, hasExpenses: true }
                   : subItem
               );
             }
