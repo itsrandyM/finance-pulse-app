@@ -213,7 +213,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
     <div className="bg-white shadow-none md:shadow-none px-0 py-0 md:px-0 md:py-0 transition-none w-full max-w-2xl mx-auto">
       <form onSubmit={handleAddExpense} className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="budget-category">Budget Category</Label>
+          <Label htmlFor="budget-category">Track Expenses</Label>
           <Select
             value={selectedItemId}
             onValueChange={(value) => {
