@@ -1,6 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { BudgetPeriod, SubBudgetItem } from '@/contexts/BudgetContext';
+import { Database } from '@/integrations/supabase/types';
+
+// Types for better type safety
+type ExpenseInsert = Database['public']['Tables']['expenses']['Insert'];
 
 // Budget operations
 export const createBudget = async (period: BudgetPeriod, totalBudget: number) => {
@@ -188,34 +192,42 @@ export const addExpense = async (
   amount: number,
   subItemIds?: string[]
 ) => {
-  const expenseData: any = {
+  const user = await supabase.auth.getUser();
+  const userId = user.data.user?.id;
+
+  if (!userId) {
+    throw new Error('User not authenticated');
+  }
+
+  // Create a properly typed expense data object
+  const baseExpenseData: Omit<ExpenseInsert, 'sub_item_id'> = {
     budget_item_id: budgetItemId,
     amount,
-    user_id: (await supabase.auth.getUser()).data.user?.id
+    user_id: userId
   };
 
-  // If a sub-item is specified, add that to the expense record
+  // If sub-item IDs are specified, add multiple expense records
   if (subItemIds && subItemIds.length > 0) {
-    // We'll create multiple expense records, one for each subItemId
+    // Create multiple expense records, one for each subItemId
     for (const subItemId of subItemIds) {
-      const singleExpenseData = {
-        ...expenseData,
+      const expenseData: ExpenseInsert = {
+        ...baseExpenseData,
         sub_item_id: subItemId
       };
 
       const { error } = await supabase
         .from('expenses')
-        .insert(singleExpenseData);
+        .insert(expenseData);
 
       if (error) {
         throw new Error(`Failed to add expense: ${error.message}`);
       }
     }
   } else {
-    // No sub-items, just add a single expense
+    // No sub-items, just add a single expense without sub_item_id
     const { error } = await supabase
       .from('expenses')
-      .insert(expenseData);
+      .insert(baseExpenseData);
 
     if (error) {
       throw new Error(`Failed to add expense: ${error.message}`);
