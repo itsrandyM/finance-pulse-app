@@ -7,7 +7,6 @@ import { useBudget } from '@/contexts/BudgetContext';
 import BudgetAllocationSummary from './budget/BudgetAllocationSummary';
 import BudgetItemForm from './budget/BudgetItemForm';
 import BudgetItemsList from './budget/BudgetItemsList';
-import { format } from 'date-fns';
 
 const BudgetAllocation: React.FC = () => {
   const { 
@@ -37,8 +36,6 @@ const BudgetAllocation: React.FC = () => {
   const handleAddSubItem = (budgetItemId: string, name: string, amount: number) => {
     if (amount > 0) {
       addSubItem(budgetItemId, name, amount);
-      // Don't close the sub-item form anymore
-      // setShowSubItems(prev => ({ ...prev, [budgetItemId]: false }));
     }
   };
 
