@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -5,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { BudgetItem } from '@/contexts/BudgetContext';
+import { BudgetItem } from '@/types/budget';
 import { useBudget } from '@/contexts/BudgetContext';
 import NewExpenseForm from './NewExpenseForm';
 import * as budgetService from '@/services/budgetService';
@@ -14,11 +15,13 @@ import { cn } from '@/lib/utils';
 interface ExpenseInputCardProps {
   budgetItems: BudgetItem[];
   onAddExpense: (itemId: string, amount: number, subItemIds?: string[]) => Promise<void>;
+  isRefreshing?: boolean;
 }
 
 const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
   budgetItems,
   onAddExpense,
+  isRefreshing = false,
 }) => {
   const { toast } = useToast();
   const { addBudgetItem, addSubItem, currentBudgetId } = useBudget();
@@ -99,6 +102,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
     }
 
     try {
+      console.log("Creating new impulse budget item:", { name, amount });
       const newItem = await budgetService.createBudgetItem(
         currentBudgetId,
         name,
@@ -106,6 +110,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
         true
       );
 
+      console.log("Adding expense for new item:", { id: newItem.id, amount });
       await onAddExpense(newItem.id, amount);
       
       toast({
@@ -115,6 +120,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
       
       resetForm();
     } catch (error: any) {
+      console.error("Error adding new expense:", error);
       toast({
         title: "Error adding expense",
         description: error.message,
@@ -171,6 +177,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
           return;
         }
         
+        console.log("Adding sub-item expenses:", { itemId: selectedItemId, totalAmount, subItemIds });
         await onAddExpense(selectedItemId, totalAmount, subItemIds);
       } else {
         const amount = parseFloat(expenseAmount);
@@ -184,6 +191,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
           return;
         }
         
+        console.log("Adding expense for item:", { itemId: selectedItemId, amount });
         await onAddExpense(selectedItemId, amount);
       }
       
@@ -194,6 +202,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
         description: "Your expense has been recorded.",
       });
     } catch (error: any) {
+      console.error("Error adding expense:", error);
       toast({
         title: "Error adding expense",
         description: error.message,
@@ -231,7 +240,10 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
   };
 
   return (
-    <div className="bg-white shadow-none md:shadow-none px-0 py-0 md:px-0 md:py-0 transition-none w-full max-w-2xl mx-auto">
+    <div className={cn(
+      "bg-white shadow-none md:shadow-none px-0 py-0 md:px-0 md:py-0 transition-none w-full max-w-2xl mx-auto",
+      isRefreshing ? "opacity-75 pointer-events-none" : ""
+    )}>
       <form onSubmit={handleAddExpense} className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="budget-category">Budget Category</Label>
@@ -242,6 +254,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
               setSubItemExpenses({});
               setShowNewSubItemInput(false);
             }}
+            disabled={isRefreshing}
           >
             <SelectTrigger id="budget-category">
               <SelectValue placeholder="Select category" />
@@ -267,7 +280,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                   <Label htmlFor="expense-amount">Expense Amount</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <span className="text-gray-500">$</span>
+                      <span className="text-gray-500">KSh</span>
                     </div>
                     <Input
                       id="expense-amount"
@@ -275,9 +288,10 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                       placeholder="0.00"
                       step="0.01"
                       min="0"
-                      className="pl-8 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
+                      className="pl-12 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
                       value={expenseAmount}
                       onChange={(e) => setExpenseAmount(e.target.value)}
+                      disabled={isRefreshing}
                     />
                   </div>
                 </div>
@@ -303,6 +317,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                             onChange={(e) => handleSubItemCheck(subItem.id, e.target.checked)}
                             className="accent-finance-primary h-4 w-4"
                             id={`check-${subItem.id}`}
+                            disabled={isRefreshing}
                           />
                           <Label 
                             htmlFor={`check-${subItem.id}`} 
@@ -320,7 +335,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                           </Label>
                           <div className="relative w-32">
                             <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                              <span className="text-gray-500">$</span>
+                              <span className="text-gray-500">KSh</span>
                             </div>
                             <Input
                               type="number"
@@ -328,12 +343,12 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                               step="0.01"
                               min="0"
                               className={cn(
-                                "pl-6 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary",
+                                "pl-10 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary",
                                 isTracked ? "bg-green-50" : ""
                               )}
                               value={subItemExpenses[subItem.id]?.amount || ""}
                               onChange={(e) => handleSubItemChange(subItem.id, e.target.value)}
-                              disabled={!subItemExpenses[subItem.id]?.checked}
+                              disabled={!subItemExpenses[subItem.id]?.checked || isRefreshing}
                             />
                           </div>
                         </div>
@@ -349,6 +364,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                   size="sm"
                   onClick={() => setShowNewSubItemInput(true)}
                   className="w-full"
+                  disabled={isRefreshing}
                 >
                   + Add New Sub-item Expense
                 </Button>
@@ -362,22 +378,24 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                       value={newSubItemName}
                       onChange={(e) => setNewSubItemName(e.target.value)}
                       className="border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
+                      disabled={isRefreshing}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Amount</Label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500">KSh</span>
                       </div>
                       <Input
                         type="number"
                         placeholder="0.00"
                         step="0.01"
                         min="0"
-                        className="pl-8 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
+                        className="pl-12 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
                         value={newSubItemAmount}
                         onChange={(e) => setNewSubItemAmount(e.target.value)}
+                        disabled={isRefreshing}
                       />
                     </div>
                   </div>
@@ -386,7 +404,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                       type="button"
                       onClick={handleAddSubItem}
                       className="flex-1"
-                      disabled={!newSubItemName || !newSubItemAmount || parseFloat(newSubItemAmount) <= 0}
+                      disabled={!newSubItemName || !newSubItemAmount || parseFloat(newSubItemAmount) <= 0 || isRefreshing}
                     >
                       Add
                     </Button>
@@ -398,6 +416,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                         setNewSubItemName('');
                         setNewSubItemAmount('');
                       }}
+                      disabled={isRefreshing}
                     >
                       Cancel
                     </Button>
@@ -413,6 +432,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
             type="submit"
             className="w-full md:w-auto bg-finance-primary hover:bg-finance-secondary"
             disabled={
+              isRefreshing ||
               !selectedItemId ||
               (!expenseAmount && !hasSubItems) ||
               (hasSubItems &&
@@ -422,7 +442,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
               )
             }
           >
-            Add Expense
+            {isRefreshing ? "Adding..." : "Add Expense"}
           </Button>
         )}
       </form>

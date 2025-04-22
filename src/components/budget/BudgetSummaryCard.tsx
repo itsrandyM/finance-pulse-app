@@ -10,6 +10,7 @@ interface BudgetSummaryCardProps {
   remainingBudget: number;
   budgetItems: Array<{ name: string; amount: number }>;
   formatCurrency: (value: number) => string;
+  isRefreshing?: boolean;
 }
 
 const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
@@ -18,9 +19,11 @@ const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
   remainingBudget,
   budgetItems,
   formatCurrency,
+  isRefreshing = false,
 }) => {
   // Use useMemo to calculate these values only when the dependencies change
   const spentPercentage = useMemo(() => {
+    console.log("Calculating spent percentage:", { totalSpent, totalBudget });
     return totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   }, [totalSpent, totalBudget]);
   
@@ -29,7 +32,7 @@ const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
   }, [remainingBudget]);
 
   return (
-    <Card>
+    <Card className={isRefreshing ? "opacity-75" : ""}>
       <CardHeader>
         <CardTitle className="text-2xl text-finance-text">Budget Summary</CardTitle>
         <CardDescription>

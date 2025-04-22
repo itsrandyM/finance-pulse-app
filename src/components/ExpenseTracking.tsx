@@ -25,6 +25,7 @@ const ExpenseTracking: React.FC = () => {
   
   // Ensure we have the latest budget data when the component mounts
   useEffect(() => {
+    console.log("Loading budget data in ExpenseTracking...");
     loadBudget().catch(error => {
       console.error("Failed to load budget data:", error);
     });
@@ -33,19 +34,24 @@ const ExpenseTracking: React.FC = () => {
   // Function to handle expense addition
   const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     try {
+      console.log("Adding expense in ExpenseTracking:", { itemId, amount, subItemIds });
       setIsRefreshing(true);
       
       // Add the expense
       await addExpense(itemId, amount, subItemIds);
       
       // Reload the budget data to get updated spent amounts
+      console.log("Reloading budget after adding expense");
       await loadBudget();
       
       toast({
         title: "Expense Added",
         description: `Expense of ${formatCurrency(amount)} has been added successfully.`,
       });
+      
+      console.log("Expense added successfully");
     } catch (error: any) {
+      console.error("Error adding expense:", error);
       toast({
         title: "Error adding expense",
         description: error.message,
@@ -64,17 +70,20 @@ const ExpenseTracking: React.FC = () => {
         remainingBudget={getRemainingBudget()}
         budgetItems={budgetItems}
         formatCurrency={formatCurrency}
+        isRefreshing={isRefreshing}
       />
 
       <ExpenseInputCard
         budgetItems={budgetItems}
         onAddExpense={handleAddExpense}
+        isRefreshing={isRefreshing}
       />
 
       {budgetItems.length > 0 ? (
         <SpendingProgressCard
           budgetItems={budgetItems}
           formatCurrency={formatCurrency}
+          isRefreshing={isRefreshing}
         />
       ) : (
         <Card className="border-dashed">

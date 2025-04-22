@@ -1,10 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { BudgetPeriod, SubBudgetItem } from '@/contexts/BudgetContext';
+import { BudgetPeriod } from '@/types/budget';
 import { Database } from '@/integrations/supabase/types';
 
 // Types for better type safety
 type ExpenseInsert = Database['public']['Tables']['expenses']['Insert'];
+type BudgetItemUpdate = Partial<Database['public']['Tables']['budget_items']['Update']>;
+type SubItemUpdate = Partial<Database['public']['Tables']['budget_sub_items']['Update']>;
 
 // Budget operations
 export const createBudget = async (period: BudgetPeriod, totalBudget: number) => {
@@ -46,6 +48,8 @@ export const getCurrentBudget = async () => {
 
 // Budget items operations
 export const getBudgetItems = async (budgetId: string) => {
+  console.log(`Getting budget items for budget ${budgetId}`);
+  
   // First get the budget items
   const { data: itemsData, error: itemsError } = await supabase
     .from('budget_items')
@@ -56,6 +60,8 @@ export const getBudgetItems = async (budgetId: string) => {
   if (itemsError) {
     throw new Error(`Failed to get budget items: ${itemsError.message}`);
   }
+
+  console.log(`Found ${itemsData.length} budget items`);
 
   // Now get the sub-items for each budget item
   const subItemsPromises = itemsData.map(async (item) => {
@@ -77,7 +83,8 @@ export const getBudgetItems = async (budgetId: string) => {
 
   // Wait for all sub-item queries to complete
   const itemsWithSubItems = await Promise.all(subItemsPromises);
-
+  
+  console.log("All budget items with sub-items:", itemsWithSubItems);
   return itemsWithSubItems;
 };
 
@@ -107,7 +114,7 @@ export const createBudgetItem = async (
 
 export const updateBudgetItem = async (
   id: string, 
-  updates: any
+  updates: BudgetItemUpdate
 ) => {
   const { error } = await supabase
     .from('budget_items')
@@ -172,7 +179,7 @@ export const deleteSubItem = async (id: string) => {
 
 export const updateSubItem = async (
   id: string, 
-  updates: Partial<SubBudgetItem>
+  updates: SubItemUpdate
 ) => {
   const { error } = await supabase
     .from('budget_sub_items')
@@ -199,6 +206,9 @@ export const addExpense = async (
     throw new Error('User not authenticated');
   }
 
+  console.log(`Adding expense of ${amount} to budget item ${budgetItemId}`);
+  console.log(`Sub-item IDs: ${subItemIds?.join(', ') || 'none'}`);
+
   // Create a properly typed expense data object
   const baseExpenseData: Omit<ExpenseInsert, 'sub_item_id'> = {
     budget_item_id: budgetItemId,
@@ -215,6 +225,7 @@ export const addExpense = async (
         sub_item_id: subItemId
       };
 
+      console.log(`Adding expense for sub-item ${subItemId}`);
       const { error } = await supabase
         .from('expenses')
         .insert(expenseData);
@@ -225,6 +236,7 @@ export const addExpense = async (
     }
   } else {
     // No sub-items, just add a single expense without sub_item_id
+    console.log("Adding expense without sub-item");
     const { error } = await supabase
       .from('expenses')
       .insert(baseExpenseData);
@@ -235,6 +247,7 @@ export const addExpense = async (
   }
 
   // Call the RPC to update the spent amount in the budget item
+  console.log(`Updating spent amount for budget item ${budgetItemId}`);
   const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
     p_budget_item_id: budgetItemId
   });
@@ -243,6 +256,7 @@ export const addExpense = async (
     throw new Error(`Failed to update budget item spent amount: ${updateError.message}`);
   }
 
+  console.log("Expense added successfully");
   return true;
 };
 

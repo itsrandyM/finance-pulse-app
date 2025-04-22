@@ -1,9 +1,9 @@
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { BudgetItem } from '@/contexts/BudgetContext';
+import { BudgetItem } from '@/types/budget';
 import { ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import * as budgetService from '@/services/budgetService';
@@ -11,11 +11,13 @@ import * as budgetService from '@/services/budgetService';
 interface SpendingProgressCardProps {
   budgetItems: BudgetItem[];
   formatCurrency: (value: number) => string;
+  isRefreshing?: boolean;
 }
 
 const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
   budgetItems,
   formatCurrency,
+  isRefreshing = false,
 }) => {
   const [trackedSubItems, setTrackedSubItems] = useState<Record<string, boolean>>({});
   
@@ -44,6 +46,7 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
   }, [budgetItems]);
 
   const calculateProgress = (spent: number, budgeted: number) => {
+    console.log("Calculating progress:", { spent, budgeted });
     return budgeted > 0 ? (spent / budgeted) * 100 : 0;
   };
 
@@ -55,7 +58,7 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
   };
 
   return (
-    <Card>
+    <Card className={isRefreshing ? "opacity-75" : ""}>
       <CardHeader>
         <CardTitle className="text-xl text-finance-text">Spending Progress</CardTitle>
       </CardHeader>
