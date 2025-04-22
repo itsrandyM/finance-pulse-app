@@ -104,19 +104,26 @@ const ProfilePage = () => {
         }
         
         // Get the total spent for this budget
-        const { data: expensesData, error: expensesError } = await supabase
-          .from('expenses')
-          .select('amount')
-          .in('budget_item_id', 
-            supabase
-              .from('budget_items')
-              .select('id')
-              .eq('budget_id', budget.id)
-          );
+        const { data: itemsData, error: itemsError } = await supabase
+          .from('budget_items')
+          .select('id')
+          .eq('budget_id', budget.id);
+        
+        if (itemsError) throw itemsError;
+        
+        // Extract just the IDs into an array
+        const itemIds = itemsData.map(item => item.id);
         
         let totalSpent = 0;
-        if (!expensesError && expensesData) {
-          totalSpent = expensesData.reduce((sum, expense) => sum + Number(expense.amount), 0);
+        if (itemIds.length > 0) {
+          const { data: expensesData, error: expensesError } = await supabase
+            .from('expenses')
+            .select('amount')
+            .in('budget_item_id', itemIds);
+          
+          if (!expensesError && expensesData) {
+            totalSpent = expensesData.reduce((sum, expense) => sum + Number(expense.amount), 0);
+          }
         }
         
         return {

@@ -182,7 +182,7 @@ export const updateSubItem = async (
 export const addExpense = async (
   budgetItemId: string, 
   amount: number,
-  subItemId?: string
+  subItemIds?: string[]
 ) => {
   const expenseData: any = {
     budget_item_id: budgetItemId,
@@ -191,16 +191,31 @@ export const addExpense = async (
   };
 
   // If a sub-item is specified, add that to the expense record
-  if (subItemId) {
-    expenseData.sub_item_id = subItemId;
-  }
+  if (subItemIds && subItemIds.length > 0) {
+    // We'll create multiple expense records, one for each subItemId
+    for (const subItemId of subItemIds) {
+      const singleExpenseData = {
+        ...expenseData,
+        sub_item_id: subItemId
+      };
 
-  const { error } = await supabase
-    .from('expenses')
-    .insert(expenseData);
+      const { error } = await supabase
+        .from('expenses')
+        .insert(singleExpenseData);
 
-  if (error) {
-    throw new Error(`Failed to add expense: ${error.message}`);
+      if (error) {
+        throw new Error(`Failed to add expense: ${error.message}`);
+      }
+    }
+  } else {
+    // No sub-items, just add a single expense
+    const { error } = await supabase
+      .from('expenses')
+      .insert(expenseData);
+
+    if (error) {
+      throw new Error(`Failed to add expense: ${error.message}`);
+    }
   }
 
   // Also update the 'spent' field on the budget_items table
@@ -213,4 +228,18 @@ export const addExpense = async (
   }
 
   return true;
+};
+
+// Add the missing function to get expenses by sub-item
+export const getExpensesBySubItem = async (subItemId: string) => {
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .eq('sub_item_id', subItemId);
+
+  if (error) {
+    throw new Error(`Failed to get expenses: ${error.message}`);
+  }
+
+  return data || [];
 };
