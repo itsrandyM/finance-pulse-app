@@ -56,6 +56,17 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
     }
   }, [selectedItem]);
 
+  useEffect(() => {
+    if (budgetItems.length > 0 && selectedItemId) {
+      const itemStillExists = budgetItems.some(item => item.id === selectedItemId);
+      if (!itemStillExists) {
+        setSelectedItemId('');
+        setExpenseAmount('');
+        setSubItemExpenses({});
+      }
+    }
+  }, [budgetItems, selectedItemId]);
+
   const handleSubItemChange = (subItemId: string, value: string) => {
     setSubItemExpenses(prev => ({
       ...prev,
@@ -101,6 +112,8 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
         title: "Expense Added",
         description: `Added and tracked new impulse expense: ${name}`,
       });
+      
+      setSelectedItemId('');
     } catch (error: any) {
       toast({
         title: "Error adding expense",
@@ -176,6 +189,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
       
       setExpenseAmount('');
       setSubItemExpenses({});
+      setSelectedItemId('');
       
       toast({
         title: "Expense Added",

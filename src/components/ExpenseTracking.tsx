@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useBudget } from '@/contexts/BudgetContext';
 import { DollarSign } from 'lucide-react';
@@ -7,6 +7,7 @@ import BudgetSummaryCard from './budget/BudgetSummaryCard';
 import ExpenseInputCard from './budget/ExpenseInputCard';
 import SpendingProgressCard from './budget/SpendingProgressCard';
 import VisualSummaryCard from './budget/VisualSummaryCard';
+import { useToast } from '@/hooks/use-toast';
 
 const ExpenseTracking: React.FC = () => {
   const { 
@@ -14,14 +15,36 @@ const ExpenseTracking: React.FC = () => {
     totalBudget, 
     addExpense, 
     getTotalSpent,
-    getRemainingBudget
+    getRemainingBudget,
+    loadBudget
   } = useBudget();
+  
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(value);
+  };
+
+  // Function to handle expense addition
+  const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
+    try {
+      await addExpense(itemId, amount, subItemIds);
+      setIsRefreshing(true);
+      
+      // Reload the budget data to get updated spent amounts
+      await loadBudget();
+      setIsRefreshing(false);
+    } catch (error: any) {
+      toast({
+        title: "Error adding expense",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -36,7 +59,7 @@ const ExpenseTracking: React.FC = () => {
 
       <ExpenseInputCard
         budgetItems={budgetItems}
-        onAddExpense={addExpense}
+        onAddExpense={handleAddExpense}
       />
 
       {budgetItems.length > 0 ? (
