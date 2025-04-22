@@ -1,6 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { BudgetPeriod, SubBudgetItem } from '@/contexts/BudgetContext';
 
+// Budget operations
 export const createBudget = async (period: BudgetPeriod, totalBudget: number) => {
   const { data, error } = await supabase
     .from('budgets')
@@ -38,6 +40,7 @@ export const getCurrentBudget = async () => {
   return data;
 };
 
+// Budget items operations
 export const getBudgetItems = async (budgetId: string) => {
   // First get the budget items
   const { data: itemsData, error: itemsError } = await supabase
@@ -127,6 +130,7 @@ export const deleteBudgetItem = async (id: string) => {
   return true;
 };
 
+// Sub-item operations
 export const createSubItem = async (
   budgetItemId: string,
   name: string,
@@ -178,6 +182,7 @@ export const updateSubItem = async (
   return true;
 };
 
+// Expense operations
 export const addExpense = async (
   budgetItemId: string, 
   amount: number,
@@ -217,7 +222,7 @@ export const addExpense = async (
     }
   }
 
-  // Also update the 'spent' field on the budget_items table
+  // Fix the TypeScript error: passing the budget_item_id as a string parameter
   const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
     p_budget_item_id: budgetItemId
   });

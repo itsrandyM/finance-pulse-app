@@ -411,30 +411,14 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         await budgetService.addExpense(itemId, amount);
       }
       
-      setBudgetItems(
-        budgetItems.map(item => {
-          if (item.id === itemId) {
-            const newItem = { ...item, spent: item.spent + amount };
-
-            if (subItemIds && subItemIds.length > 0) {
-              newItem.subItems = item.subItems.map(subItem =>
-                subItemIds.includes(subItem.id)
-                  ? { ...subItem, hasExpenses: true }
-                  : subItem
-              );
-            }
-            
-            return newItem;
-          }
-          return item;
-        })
-      );
+      await loadBudget();
     } catch (error: any) {
       toast({
         title: "Error adding expense",
         description: error.message,
         variant: "destructive"
       });
+      throw error;
     }
   };
 

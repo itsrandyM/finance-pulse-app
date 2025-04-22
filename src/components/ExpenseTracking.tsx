@@ -21,6 +21,13 @@ const ExpenseTracking: React.FC = () => {
   
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
+  
+  // Ensure we have the latest budget data when the component mounts
+  useEffect(() => {
+    loadBudget().catch(error => {
+      console.error("Failed to load budget data:", error);
+    });
+  }, [loadBudget]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -32,18 +39,26 @@ const ExpenseTracking: React.FC = () => {
   // Function to handle expense addition
   const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     try {
-      await addExpense(itemId, amount, subItemIds);
       setIsRefreshing(true);
+      
+      // Add the expense
+      await addExpense(itemId, amount, subItemIds);
       
       // Reload the budget data to get updated spent amounts
       await loadBudget();
-      setIsRefreshing(false);
+      
+      toast({
+        title: "Expense Added",
+        description: `Expense of ${formatCurrency(amount)} has been added successfully.`,
+      });
     } catch (error: any) {
       toast({
         title: "Error adding expense",
         description: error.message,
         variant: "destructive"
       });
+    } finally {
+      setIsRefreshing(false);
     }
   };
 

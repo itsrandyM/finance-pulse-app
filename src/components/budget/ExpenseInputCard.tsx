@@ -113,7 +113,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
         description: `Added and tracked new impulse expense: ${name}`,
       });
       
-      setSelectedItemId('');
+      resetForm();
     } catch (error: any) {
       toast({
         title: "Error adding expense",
@@ -187,9 +187,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
         await onAddExpense(selectedItemId, amount);
       }
       
-      setExpenseAmount('');
-      setSubItemExpenses({});
-      setSelectedItemId('');
+      resetForm();
       
       toast({
         title: "Expense Added",
@@ -221,6 +219,15 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
         }
       }
     }
+  };
+
+  const resetForm = () => {
+    setSelectedItemId('');
+    setExpenseAmount('');
+    setSubItemExpenses({});
+    setShowNewSubItemInput(false);
+    setNewSubItemName('');
+    setNewSubItemAmount('');
   };
 
   return (
