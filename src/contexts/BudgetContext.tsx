@@ -28,6 +28,11 @@ export interface BudgetItem {
   tag?: TagOption;
 }
 
+// export interface BudgetDateRange {
+//   startDate: Date;
+//   endDate: Date;
+// }
+
 interface BudgetContextType {
   period: BudgetPeriod | null;
   totalBudget: number;
