@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -83,7 +82,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [user]);
 
   useEffect(() => {
-    // Check if the budget is expired
     if (budgetDateRange && budgetDateRange.endDate) {
       const now = new Date();
       setIsBudgetExpired(now > budgetDateRange.endDate);
@@ -116,7 +114,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         endDate.setFullYear(startDate.getFullYear() + 1);
         break;
       default:
-        // Default to 30 days for custom or unknown periods
         endDate.setDate(startDate.getDate() + 30);
     }
     
@@ -132,7 +129,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setTotalBudgetState(amount);
       setBudgetItems([]);
       
-      // Calculate and set the budget date range
       const startDate = new Date(budget.created_at || new Date());
       const dateRange = calculateDateRange(startDate, budgetPeriod);
       setBudgetDateRange(dateRange);
@@ -208,12 +204,10 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       
       setBudgetItems(processedItems);
       
-      // Calculate and set the budget date range
       const startDate = new Date(budget.created_at || new Date());
       const dateRange = calculateDateRange(startDate, budget.period as BudgetPeriod);
       setBudgetDateRange(dateRange);
       
-      // Check if budget is expired
       const now = new Date();
       setIsBudgetExpired(now > dateRange.endDate);
       
@@ -412,9 +406,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const addExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     try {
       if (subItemIds && subItemIds.length > 0) {
-        for (const subItemId of subItemIds) {
-          await budgetService.addExpense(itemId, amount, subItemId.toString());
-        }
+        await budgetService.addExpense(itemId, amount, subItemIds);
       } else {
         await budgetService.addExpense(itemId, amount);
       }

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { BudgetPeriod, SubBudgetItem } from '@/contexts/BudgetContext';
 
@@ -230,7 +229,6 @@ export const addExpense = async (
   return true;
 };
 
-// Add the missing function to get expenses by sub-item
 export const getExpensesBySubItem = async (subItemId: string) => {
   const { data, error } = await supabase
     .from('expenses')
