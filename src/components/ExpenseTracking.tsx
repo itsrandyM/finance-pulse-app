@@ -8,6 +8,7 @@ import ExpenseInputCard from './budget/ExpenseInputCard';
 import SpendingProgressCard from './budget/SpendingProgressCard';
 import VisualSummaryCard from './budget/VisualSummaryCard';
 import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/formatters';
 
 const ExpenseTracking: React.FC = () => {
   const { 
@@ -28,13 +29,6 @@ const ExpenseTracking: React.FC = () => {
       console.error("Failed to load budget data:", error);
     });
   }, [loadBudget]);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(value);
-  };
 
   // Function to handle expense addition
   const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {

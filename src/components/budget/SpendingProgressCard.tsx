@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -44,11 +44,11 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
   }, [budgetItems]);
 
   const calculateProgress = (spent: number, budgeted: number) => {
-    return (spent / budgeted) * 100;
+    return budgeted > 0 ? (spent / budgeted) * 100 : 0;
   };
 
   const getProgressColor = (spent: number, budgeted: number) => {
-    const percentage = (spent / budgeted) * 100;
+    const percentage = budgeted > 0 ? (spent / budgeted) * 100 : 0;
     if (percentage < 70) return 'bg-finance-accent';
     if (percentage < 90) return 'bg-finance-warning';
     return 'bg-finance-danger';

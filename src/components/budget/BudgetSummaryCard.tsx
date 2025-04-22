@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -19,8 +19,14 @@ const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
   budgetItems,
   formatCurrency,
 }) => {
-  const spentPercentage = (totalSpent / totalBudget) * 100;
-  const isOverBudget = remainingBudget < 0;
+  // Use useMemo to calculate these values only when the dependencies change
+  const spentPercentage = useMemo(() => {
+    return totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  }, [totalSpent, totalBudget]);
+  
+  const isOverBudget = useMemo(() => {
+    return remainingBudget < 0;
+  }, [remainingBudget]);
 
   return (
     <Card>

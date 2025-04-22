@@ -222,7 +222,7 @@ export const addExpense = async (
     }
   }
 
-  // Fix the TypeScript error: passing the budget_item_id as a string parameter
+  // Call the RPC to update the spent amount in the budget item
   const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
     p_budget_item_id: budgetItemId
   });
