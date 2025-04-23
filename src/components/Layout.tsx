@@ -1,8 +1,8 @@
 
 import React from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { useLocation } from "react-router-dom";
-import { Wallet, LayoutDashboard, TrendingUp } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Wallet, LayoutDashboard, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileNavBar from "./MobileNavBar";
@@ -21,15 +21,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <>
           {!isMobile && (
             <Sidebar className="min-w-[72px] w-64 md:w-64 bg-white border-r shadow-none transition-all duration-200">
-              <SidebarHeader className="p-4 h-16 flex items-center gap-2 border-b">
+              <SidebarHeader className="p-4 h-16 flex items-center gap-2 mb-24">
                 <img
-                  src="/favicon.ico"
-                  className="h-8 w-8"
+                  src="/Preview2.png"
+                  className=""
                   alt="Wallet Logo"
                 />
-                <span className="font-bold text-xl tracking-tight text-finance-primary">
-                  Wallet
-                </span>
+                
               </SidebarHeader>
               <SidebarContent className="flex-1 pt-8">
                 <SidebarMenu>
@@ -39,8 +37,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       isActive={location.pathname === "/"}
                       tooltip="Setup"
                     >
-                      <a
-                        href="/"
+                      <Link
+                        to="/"
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-2 hover:text-finance-primary",
                           location.pathname === "/" && "text-finance-primary font-semibold"
@@ -48,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       >
                         <LayoutDashboard />
                         <span className="hidden md:inline">Setup</span>
-                      </a>
+                        </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
@@ -57,8 +55,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       isActive={location.pathname === "/budget"}
                       tooltip="Budget"
                     >
-                      <a
-                        href="/budget"
+                      <Link
+                        to="/budget"
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-2 hover:text-finance-primary",
                           location.pathname === "/budget" && "text-finance-primary font-semibold"
@@ -66,7 +64,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       >
                         <Wallet />
                         <span className="hidden md:inline">Budget</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
@@ -75,8 +73,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       isActive={location.pathname === "/tracking"}
                       tooltip="Tracking"
                     >
-                      <a
-                        href="/tracking"
+                      <Link
+                        to="/tracking"
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-2 hover:text-finance-primary",
                           location.pathname === "/tracking" && "text-finance-primary font-semibold"
@@ -84,7 +82,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       >
                         <TrendingUp />
                         <span className="hidden md:inline">Tracking</span>
-                      </a>
+                      </Link>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === "/profile"}
+                      tooltip="Profile"
+                    >
+                      <Link
+                        to="/profile"
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-2 hover:text-finance-primary",
+                          location.pathname === "/profile" && "text-finance-primary font-semibold"
+                        )}
+                      >
+                        <User />
+                        <span className="hidden md:inline">Profile</span>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>

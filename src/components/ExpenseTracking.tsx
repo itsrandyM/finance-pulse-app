@@ -7,6 +7,7 @@ import BudgetSummaryCard from './budget/BudgetSummaryCard';
 import ExpenseInputCard from './budget/ExpenseInputCard';
 import SpendingProgressCard from './budget/SpendingProgressCard';
 import VisualSummaryCard from './budget/VisualSummaryCard';
+import { formatCurrency } from '@/lib/formatters';
 
 const ExpenseTracking: React.FC = () => {
   const { 
@@ -17,12 +18,6 @@ const ExpenseTracking: React.FC = () => {
     getRemainingBudget
   } = useBudget();
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(value);
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">

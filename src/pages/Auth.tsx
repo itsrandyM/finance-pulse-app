@@ -54,8 +54,16 @@ const Auth = () => {
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Personal Budget</CardTitle>
+        <CardHeader className="space-y-1 items-center">
+          {/* <CardTitle className="text-2xl font-bold text-center">My Personal Budget</CardTitle> */}
+          <div className="p-4 h-16 flex items-center gap-2 mb-12">
+                <img
+                  src="/NoBackgound.png"
+                  className="h-21 w-21"
+                  alt="Wallet Logo"
+                />
+                
+              </div>
           <CardDescription className="text-center">
             Sign in or create an account to manage your budget
           </CardDescription>

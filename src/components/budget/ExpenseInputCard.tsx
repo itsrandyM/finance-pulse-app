@@ -246,7 +246,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                   <Label htmlFor="expense-amount">Expense Amount</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <span className="text-gray-500">$</span>
+                      <span className="text-gray-500">Ksh</span>
                     </div>
                     <Input
                       id="expense-amount"
@@ -254,7 +254,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                       placeholder="0.00"
                       step="0.01"
                       min="0"
-                      className="pl-8 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
+                      className="pl-10 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
                       value={expenseAmount}
                       onChange={(e) => setExpenseAmount(e.target.value)}
                     />
@@ -299,7 +299,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                           </Label>
                           <div className="relative w-32">
                             <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                              <span className="text-gray-500">$</span>
+                              <span className="text-gray-500">Ksh</span>
                             </div>
                             <Input
                               type="number"
@@ -307,7 +307,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                               step="0.01"
                               min="0"
                               className={cn(
-                                "pl-6 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary",
+                                "pl-9 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary",
                                 isTracked ? "bg-green-50" : ""
                               )}
                               value={subItemExpenses[subItem.id]?.amount || ""}
@@ -347,14 +347,14 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                     <Label>Amount</Label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500">Ksh</span>
                       </div>
                       <Input
                         type="number"
                         placeholder="0.00"
                         step="0.01"
                         min="0"
-                        className="pl-8 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
+                        className="pl-10 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
                         value={newSubItemAmount}
                         onChange={(e) => setNewSubItemAmount(e.target.value)}
                       />
