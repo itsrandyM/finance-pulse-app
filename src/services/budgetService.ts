@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { BudgetPeriod } from '@/types/budget';
 import { Database } from '@/integrations/supabase/types';
@@ -116,9 +117,9 @@ export const updateBudgetItem = async (
   updates: BudgetItemUpdate
 ) => {
   const dbUpdates = { ...updates };
-
-  // Convert Date objects to ISO strings for the database, but check for null
-  if (updates.deadline && typeof updates.deadline === 'object' && 'toISOString' in updates.deadline && updates.deadline !== null) {
+  
+  // Convert Date objects to ISO strings for the database
+  if (updates.deadline && typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
     dbUpdates.deadline = updates.deadline.toISOString();
   }
 
@@ -223,6 +224,7 @@ export const addExpense = async (
 
   // Insert expenses
   if (subItemIds && subItemIds.length > 0) {
+    // Add for each sub-item
     for (const subItemId of subItemIds) {
       const expenseData: ExpenseInsert = {
         ...baseExpenseData,
@@ -248,16 +250,32 @@ export const addExpense = async (
     }
   }
 
-  // Call the new RPC to update spent on the budget item
-  const { error: rpcError } = await supabase.rpc('update_budget_item_spent', {
-    budget_item_id: budgetItemId,
-  });
+  // Directly update spent amount on budget_items table
+  // 1. Get total spent for this budgetItemId from expenses
+  const { data: sumData, error: sumError } = await supabase
+    .from('expenses')
+    .select('amount')
+    .eq('budget_item_id', budgetItemId);
 
-  if (rpcError) {
-    throw new Error(`Failed to update spent via RPC: ${rpcError.message}`);
+  if (sumError) {
+    throw new Error(`Failed to sum expenses: ${sumError.message}`);
   }
 
-  console.log("Expense added and budget item spent updated via RPC");
+  const totalSpent = Array.isArray(sumData)
+    ? sumData.reduce((sum, curr) => sum + (typeof curr.amount === 'number' ? curr.amount : parseFloat(curr.amount)), 0)
+    : 0;
+
+  // 2. Update budget_items.spent
+  const { error: updateError } = await supabase
+    .from('budget_items')
+    .update({ spent: totalSpent })
+    .eq('id', budgetItemId);
+
+  if (updateError) {
+    throw new Error(`Failed to update budget item spent amount: ${updateError.message}`);
+  }
+
+  console.log("Expense added and budget item spent updated successfully");
   return true;
 };
 
