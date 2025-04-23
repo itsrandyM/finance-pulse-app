@@ -172,8 +172,7 @@ export const useBudgetOperations = ({
 
   const updateItemDeadline = async (itemId: string, deadline: Date) => {
     try {
-      await budgetService.updateBudgetItem(itemId, { deadline });
-      
+      await budgetService.updateBudgetItem(itemId, { deadline: deadline.toISOString() });      
       setBudgetItems(
         budgetItems.map(item =>
           item.id === itemId ? { ...item, deadline } : item

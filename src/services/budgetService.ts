@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { BudgetPeriod } from '@/types/budget';
 import { Database } from '@/integrations/supabase/types';
@@ -216,23 +215,21 @@ export const addExpense = async (
   console.log(`Adding expense of ${amount} to budget item ${budgetItemId}`);
   console.log(`Sub-item IDs: ${subItemIds?.join(', ') || 'none'}`);
 
-  // Create a properly typed expense data object
   const baseExpenseData: Omit<ExpenseInsert, 'sub_item_id'> = {
     budget_item_id: budgetItemId,
     amount,
     user_id: userId
   };
 
-  // If sub-item IDs are specified, add multiple expense records
+  // Insert expenses
   if (subItemIds && subItemIds.length > 0) {
-    // Create multiple expense records, one for each subItemId
+    // Add for each sub-item
     for (const subItemId of subItemIds) {
       const expenseData: ExpenseInsert = {
         ...baseExpenseData,
         sub_item_id: subItemId
       };
 
-      console.log(`Adding expense for sub-item ${subItemId}`);
       const { error } = await supabase
         .from('expenses')
         .insert(expenseData);
@@ -242,8 +239,7 @@ export const addExpense = async (
       }
     }
   } else {
-    // No sub-items, just add a single expense without sub_item_id
-    console.log("Adding expense without sub-item");
+    // No sub-items, just add a single expense
     const { error } = await supabase
       .from('expenses')
       .insert(baseExpenseData);
@@ -253,19 +249,32 @@ export const addExpense = async (
     }
   }
 
-  // Call the RPC to update the spent amount in the budget item
-  console.log(`Updating spent amount for budget item ${budgetItemId}`);
-  
-  // Fix the RPC call with proper type definitions
-  const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
-    p_budget_item_id: budgetItemId
-  } as any); // Use type assertion to bypass TypeScript error
+  // Directly update spent amount on budget_items table
+  // 1. Get total spent for this budgetItemId from expenses
+  const { data: sumData, error: sumError } = await supabase
+    .from('expenses')
+    .select('amount')
+    .eq('budget_item_id', budgetItemId);
+
+  if (sumError) {
+    throw new Error(`Failed to sum expenses: ${sumError.message}`);
+  }
+
+  const totalSpent = Array.isArray(sumData)
+    ? sumData.reduce((sum, curr) => sum + (typeof curr.amount === 'number' ? curr.amount : parseFloat(curr.amount)), 0)
+    : 0;
+
+  // 2. Update budget_items.spent
+  const { error: updateError } = await supabase
+    .from('budget_items')
+    .update({ spent: totalSpent })
+    .eq('id', budgetItemId);
 
   if (updateError) {
     throw new Error(`Failed to update budget item spent amount: ${updateError.message}`);
   }
 
-  console.log("Expense added successfully");
+  console.log("Expense added and budget item spent updated successfully");
   return true;
 };
 
