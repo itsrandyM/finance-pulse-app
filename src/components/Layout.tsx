@@ -21,15 +21,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <>
           {!isMobile && (
             <Sidebar className="min-w-[72px] w-64 md:w-64 bg-white border-r shadow-none transition-all duration-200">
-              <SidebarHeader className="p-4 h-16 flex items-center gap-2 border-b">
+              <SidebarHeader className="p-4 h-16 flex items-center gap-2 mb-24">
                 <img
-                  src="/favicon.ico"
-                  className="h-8 w-8"
+                  src="/Preview2.png"
+                  className=""
                   alt="Wallet Logo"
                 />
-                <span className="font-bold text-xl tracking-tight text-finance-primary">
-                  Wallet
-                </span>
+                
               </SidebarHeader>
               <SidebarContent className="flex-1 pt-8">
                 <SidebarMenu>
