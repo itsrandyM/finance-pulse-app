@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { BudgetPeriod } from '@/types/budget';
 import { Database } from '@/integrations/supabase/types';
@@ -118,7 +119,7 @@ export const updateBudgetItem = async (
   const dbUpdates = { ...updates };
   
   // Convert Date objects to ISO strings for the database
-  if (updates.deadline && updates.deadline instanceof Date) {
+  if (updates.deadline && typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
     dbUpdates.deadline = updates.deadline.toISOString();
   }
 
