@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { BudgetPeriod } from '@/types/budget';
 import { Database } from '@/integrations/supabase/types';
@@ -116,9 +115,14 @@ export const updateBudgetItem = async (
   id: string, 
   updates: BudgetItemUpdate
 ) => {
+  const dbUpdates = { ...updates };
+  if (updates.deadline && updates.deadline instanceof Date) {
+    dbUpdates.deadline = updates.deadline.toISOString();
+  }
+
   const { error } = await supabase
     .from('budget_items')
-    .update(updates)
+    .update(dbUpdates)
     .eq('id', id);
 
   if (error) {
@@ -248,6 +252,8 @@ export const addExpense = async (
 
   // Call the RPC to update the spent amount in the budget item
   console.log(`Updating spent amount for budget item ${budgetItemId}`);
+  
+  // Type-safe way to call the RPC function
   const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
     p_budget_item_id: budgetItemId
   });

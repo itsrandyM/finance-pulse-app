@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { BudgetItem, SubBudgetItem } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
@@ -60,11 +59,10 @@ export const useBudgetOperations = ({
   const updateBudgetItem = async (id: string, updates: Partial<BudgetItem>) => {
     try {
       const dbUpdates: any = { ...updates };
-      if (updates.deadline) {
-        dbUpdates.deadline = updates.deadline;
-      }
+      
       if (updates.isImpulse !== undefined) {
         dbUpdates.is_impulse = updates.isImpulse;
+        delete dbUpdates.isImpulse;
       }
       
       await budgetService.updateBudgetItem(id, dbUpdates);
@@ -175,6 +173,7 @@ export const useBudgetOperations = ({
   const updateItemDeadline = async (itemId: string, deadline: Date) => {
     try {
       await budgetService.updateBudgetItem(itemId, { deadline });
+      
       setBudgetItems(
         budgetItems.map(item =>
           item.id === itemId ? { ...item, deadline } : item
@@ -191,15 +190,20 @@ export const useBudgetOperations = ({
 
   const addExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     try {
+      console.log(`Adding expense: itemId=${itemId}, amount=${amount}, subItemIds=${subItemIds?.join(',')}`);
+      
       if (subItemIds && subItemIds.length > 0) {
         await budgetService.addExpense(itemId, amount, subItemIds);
       } else {
         await budgetService.addExpense(itemId, amount);
       }
       
-      // Important: Force a complete budget refresh to ensure all spent amounts are updated
+      console.log("Expense added successfully, reloading budget data...");
+      
       await loadBudget();
+      console.log("Budget data reloaded after expense addition");
     } catch (error: any) {
+      console.error("Error adding expense:", error);
       toast({
         title: "Error adding expense",
         description: error.message,
