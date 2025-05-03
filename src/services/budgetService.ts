@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { BudgetPeriod } from '@/types/budget';
 import { Database } from '@/integrations/supabase/types';
@@ -118,24 +117,24 @@ export const updateBudgetItem = async (
   id: string, 
   updates: BudgetItemUpdate
 ) => {
-  const dbUpdates = { ...updates };
+  const dbUpdates: Record<string, any> = { ...updates };
   
   // Handle deadline value - ensure it's converted to ISO string only if it exists
   if (updates.deadline !== undefined) {
-    // Only convert if it's a Date object
+    // Only convert if it's a Date object and not null
     if (updates.deadline !== null && typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
       dbUpdates.deadline = updates.deadline.toISOString();
     }
   }
   
   // Handle isContinuous -> is_continuous mapping
-  if (updates.isContinuous !== undefined) {
+  if ('isContinuous' in updates) {
     dbUpdates.is_continuous = updates.isContinuous;
     delete dbUpdates.isContinuous;
   }
   
   // Handle isImpulse -> is_impulse mapping
-  if (updates.isImpulse !== undefined) {
+  if ('isImpulse' in updates) {
     dbUpdates.is_impulse = updates.isImpulse;
     delete dbUpdates.isImpulse;
   }

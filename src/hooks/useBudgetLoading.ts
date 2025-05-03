@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { BudgetPeriod, BudgetDateRange, BudgetItem } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
@@ -118,7 +117,7 @@ export const useBudgetLoading = ({
               spent: item.spent, // Preserve the spent amount from the previous budget item
               subItems: [], // Sub-items will need to be added separately if needed
               isImpulse: newItem.is_impulse,
-              isContinuous: newItem.is_continuous
+              isContinuous: newItem.is_continuous || false
             });
             
             // Copy sub-items if any
