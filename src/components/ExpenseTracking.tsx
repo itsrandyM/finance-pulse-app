@@ -10,6 +10,7 @@ import VisualSummaryCard from './budget/VisualSummaryCard';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { LoadingSection, LoadingSpinner } from './ui/loading-spinner';
+import ExpiredBudgetOverlay from './budget/ExpiredBudgetOverlay';
 
 const ExpenseTracking: React.FC = () => {
   // Wrap the component content in a try-catch to handle context errors gracefully
@@ -20,7 +21,8 @@ const ExpenseTracking: React.FC = () => {
       addExpense, 
       getTotalSpent,
       getRemainingBudget,
-      loadBudget
+      loadBudget,
+      isBudgetExpired
     } = useBudget();
     
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -78,46 +80,51 @@ const ExpenseTracking: React.FC = () => {
     }
 
     return (
-      <div className="space-y-6 animate-fade-in">
-        <BudgetSummaryCard
-          totalBudget={totalBudget}
-          totalSpent={getTotalSpent()}
-          remainingBudget={getRemainingBudget()}
-          budgetItems={budgetItems}
-          formatCurrency={formatCurrency}
-          isRefreshing={isRefreshing}
-        />
-
-        <ExpenseInputCard
-          budgetItems={budgetItems}
-          onAddExpense={handleAddExpense}
-          isRefreshing={isRefreshing}
-        />
-
-        {budgetItems.length > 0 ? (
-          <SpendingProgressCard
+      <>
+        {/* Show expired budget overlay if budget is expired */}
+        {isBudgetExpired && <ExpiredBudgetOverlay />}
+        
+        <div className={`space-y-6 animate-fade-in ${isBudgetExpired ? 'opacity-50 pointer-events-none' : ''}`}>
+          <BudgetSummaryCard
+            totalBudget={totalBudget}
+            totalSpent={getTotalSpent()}
+            remainingBudget={getRemainingBudget()}
             budgetItems={budgetItems}
             formatCurrency={formatCurrency}
             isRefreshing={isRefreshing}
           />
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="py-8">
-              <div className="text-center space-y-4">
-                <DollarSign className="h-12 w-12 text-gray-300 mx-auto" />
-                <h3 className="text-lg font-medium text-gray-500">No Budget Items</h3>
-                <p className="text-sm text-gray-400">
-                  You need to create budget items before you can track expenses.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {budgetItems.length > 0 && (
-          <VisualSummaryCard budgetItems={budgetItems} formatCurrency={formatCurrency} />
-        )}
-      </div>
+          <ExpenseInputCard
+            budgetItems={budgetItems}
+            onAddExpense={handleAddExpense}
+            isRefreshing={isRefreshing}
+          />
+
+          {budgetItems.length > 0 ? (
+            <SpendingProgressCard
+              budgetItems={budgetItems}
+              formatCurrency={formatCurrency}
+              isRefreshing={isRefreshing}
+            />
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="py-8">
+                <div className="text-center space-y-4">
+                  <DollarSign className="h-12 w-12 text-gray-300 mx-auto" />
+                  <h3 className="text-lg font-medium text-gray-500">No Budget Items</h3>
+                  <p className="text-sm text-gray-400">
+                    You need to create budget items before you can track expenses.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {budgetItems.length > 0 && (
+            <VisualSummaryCard budgetItems={budgetItems} formatCurrency={formatCurrency} />
+          )}
+        </div>
+      </>
     );
   } catch (error) {
     // Fallback UI when BudgetProvider is not available

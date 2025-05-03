@@ -29,14 +29,14 @@ const BudgetPeriodSelectPage = () => {
 
   const handlePeriodSelected = (selectedPeriod: string) => {
     setPeriod(selectedPeriod as BudgetPeriod);
-    navigate('/budget-amount');
+    navigate('/income-setup'); // Navigate to the income setup page first
   };
 
   const handleCreateNewBudget = async () => {
     setIsCreatingNewBudget(true);
     try {
       await createNewBudgetPeriod();
-      navigate('/budget');
+      navigate('/income-setup'); // Navigate to income setup for a new budget period
     } finally {
       setIsCreatingNewBudget(false);
     }

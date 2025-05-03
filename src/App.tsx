@@ -11,6 +11,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./contexts/AuthContext";
 import BudgetPeriodSelectPage from "./pages/BudgetPeriodSelectPage";
 import BudgetAmountInputPage from "./pages/BudgetAmountInputPage";
+import IncomeSetupPage from "./pages/IncomeSetupPage";
 import BudgetAllocation from "./components/BudgetAllocation";
 import ExpenseTracking from "./components/ExpenseTracking";
 import IncomeTracking from "./components/IncomeTracking";
@@ -49,6 +50,13 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <BudgetPeriodSelectPage />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/income-setup" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <IncomeSetupPage />
                   </Layout>
                 </ProtectedRoute>
               } />

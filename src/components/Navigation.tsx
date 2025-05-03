@@ -3,9 +3,11 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { DollarSign, BarChart, PieChart, BadgeDollarSign } from 'lucide-react';
+import { useBudget } from '@/contexts/BudgetContext';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
+  const { isBudgetExpired } = useBudget();
   
   const navItems = [
     { path: '/', label: 'Setup', icon: <DollarSign className="h-5 w-5" /> },

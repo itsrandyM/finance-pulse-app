@@ -92,7 +92,8 @@ export const createBudgetItem = async (
   budgetId: string,
   name: string,
   amount: number,
-  isImpulse: boolean = false
+  isImpulse: boolean = false,
+  isContinuous: boolean = false
 ) => {
   const { data, error } = await supabase
     .from('budget_items')
@@ -100,7 +101,8 @@ export const createBudgetItem = async (
       budget_id: budgetId,
       name,
       amount,
-      is_impulse: isImpulse
+      is_impulse: isImpulse,
+      is_continuous: isContinuous
     })
     .select()
     .single();
@@ -119,10 +121,23 @@ export const updateBudgetItem = async (
   const dbUpdates = { ...updates };
   
   // Handle deadline value - ensure it's converted to ISO string only if it exists
-  if (updates.deadline !== undefined && updates.deadline !== null) {
-    if (typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
+  if (updates.deadline !== undefined) {
+    // Only convert if it's a Date object
+    if (updates.deadline !== null && typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
       dbUpdates.deadline = updates.deadline.toISOString();
     }
+  }
+  
+  // Handle isContinuous -> is_continuous mapping
+  if (updates.isContinuous !== undefined) {
+    dbUpdates.is_continuous = updates.isContinuous;
+    delete dbUpdates.isContinuous;
+  }
+  
+  // Handle isImpulse -> is_impulse mapping
+  if (updates.isImpulse !== undefined) {
+    dbUpdates.is_impulse = updates.isImpulse;
+    delete dbUpdates.isImpulse;
   }
 
   const { error } = await supabase

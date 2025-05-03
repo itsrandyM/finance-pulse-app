@@ -24,6 +24,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [budgetDateRange, setBudgetDateRange] = useState<BudgetDateRange | null>(null);
   const [isBudgetExpired, setIsBudgetExpired] = useState<boolean>(false);
+  const [previousRemainingBudget, setPreviousRemainingBudget] = useState<number>(0);
+  const [continuousBudgetItems, setContinuousBudgetItems] = useState<BudgetItem[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -38,7 +40,11 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCurrentBudgetId,
     setBudgetDateRange,
     setIsBudgetExpired,
-    toast
+    toast,
+    previousRemainingBudget,
+    setPreviousRemainingBudget,
+    continuousBudgetItems,
+    setContinuousBudgetItems
   });
 
   const budgetOperations = useBudgetOperations({
@@ -58,9 +64,21 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => {
     if (budgetDateRange && budgetDateRange.endDate) {
       const now = new Date();
-      setIsBudgetExpired(now > budgetDateRange.endDate);
+      const isExpired = now > budgetDateRange.endDate;
+      
+      if (isExpired && !isBudgetExpired) {
+        // Budget just expired, store the remaining amount for next budget
+        const remainingBudget = budgetCalculations.getRemainingBudget();
+        setPreviousRemainingBudget(remainingBudget > 0 ? remainingBudget : 0);
+        
+        // Store budget items that should be continued
+        const itemsToContinue = budgetItems.filter(item => item.isContinuous);
+        setContinuousBudgetItems(itemsToContinue);
+      }
+      
+      setIsBudgetExpired(isExpired);
     }
-  }, [budgetDateRange]);
+  }, [budgetDateRange, budgetItems, isBudgetExpired, budgetCalculations]);
 
   // Load budget when user changes
   useEffect(() => {
@@ -76,7 +94,12 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const setTotalBudget = (amount: number) => {
-    setTotalBudgetState(amount);
+    // Add the previous remaining budget if coming from an expired budget
+    const finalAmount = previousRemainingBudget > 0 
+      ? amount + previousRemainingBudget 
+      : amount;
+    
+    setTotalBudgetState(finalAmount);
   };
 
   const resetBudget = () => {
@@ -86,6 +109,25 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCurrentBudgetId(null);
     setBudgetDateRange(null);
     setIsBudgetExpired(false);
+    setPreviousRemainingBudget(0);
+    setContinuousBudgetItems([]);
+  };
+
+  const markItemAsContinuous = async (itemId: string, isContinuous: boolean) => {
+    try {
+      await budgetOperations.updateBudgetItem(itemId, { isContinuous });
+      toast({
+        title: isContinuous 
+          ? "Item marked as continuous" 
+          : "Item removed from continuous tracking",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error updating item",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -114,7 +156,10 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         loadBudget: budgetLoading.loadBudget,
         budgetDateRange,
         isBudgetExpired,
-        createNewBudgetPeriod: budgetLoading.createNewBudgetPeriod
+        createNewBudgetPeriod: budgetLoading.createNewBudgetPeriod,
+        previousRemainingBudget,
+        continuousBudgetItems,
+        markItemAsContinuous
       }}
     >
       {children}

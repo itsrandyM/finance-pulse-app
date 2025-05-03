@@ -14,6 +14,10 @@ interface UseBudgetLoadingProps {
   setBudgetDateRange: React.Dispatch<React.SetStateAction<BudgetDateRange | null>>;
   setIsBudgetExpired: React.Dispatch<React.SetStateAction<boolean>>;
   toast: any;
+  previousRemainingBudget: number;
+  setPreviousRemainingBudget: React.Dispatch<React.SetStateAction<number>>;
+  continuousBudgetItems: BudgetItem[];
+  setContinuousBudgetItems: React.Dispatch<React.SetStateAction<BudgetItem[]>>;
 }
 
 export const useBudgetLoading = ({
@@ -26,7 +30,11 @@ export const useBudgetLoading = ({
   setCurrentBudgetId,
   setBudgetDateRange,
   setIsBudgetExpired,
-  toast
+  toast,
+  previousRemainingBudget,
+  setPreviousRemainingBudget,
+  continuousBudgetItems,
+  setContinuousBudgetItems
 }: UseBudgetLoadingProps) => {
   
   const calculateDateRange = (startDate: Date, budgetPeriod: BudgetPeriod): BudgetDateRange => {
@@ -64,16 +72,81 @@ export const useBudgetLoading = ({
   const initializeBudget = async (budgetPeriod: BudgetPeriod, amount: number): Promise<void> => {
     try {
       setIsLoading(true);
-      const budget = await budgetService.createBudget(budgetPeriod, amount);
+      
+      // If there's a previous remaining budget, add it to the new budget amount
+      const finalAmount = previousRemainingBudget > 0 
+        ? amount + previousRemainingBudget 
+        : amount;
+      
+      // Create the new budget
+      const budget = await budgetService.createBudget(budgetPeriod, finalAmount);
       setCurrentBudgetId(budget.id);
       setPeriodState(budgetPeriod);
-      setTotalBudgetState(amount);
-      setBudgetItems([]);
+      setTotalBudgetState(finalAmount);
       
+      // Reset the previous remaining budget after using it
+      if (previousRemainingBudget > 0) {
+        setPreviousRemainingBudget(0);
+      }
+      
+      // Create date range for the new budget
       const startDate = new Date(budget.created_at || new Date());
       const dateRange = calculateDateRange(startDate, budgetPeriod);
       setBudgetDateRange(dateRange);
       setIsBudgetExpired(false);
+      
+      // If there are any continuous budget items from the previous budget, add them to the new budget
+      const newBudgetItems: BudgetItem[] = [];
+      
+      if (continuousBudgetItems.length > 0) {
+        for (const item of continuousBudgetItems) {
+          // Create a new budget item with the same details
+          try {
+            const newItem = await budgetService.createBudgetItem(
+              budget.id,
+              item.name,
+              item.amount,
+              item.isImpulse || false,
+              item.isContinuous || false
+            );
+            
+            // Add to the local state with the spent amount from the previous budget
+            newBudgetItems.push({
+              id: newItem.id,
+              name: newItem.name,
+              amount: newItem.amount,
+              spent: item.spent, // Preserve the spent amount from the previous budget item
+              subItems: [], // Sub-items will need to be added separately if needed
+              isImpulse: newItem.is_impulse,
+              isContinuous: newItem.is_continuous
+            });
+            
+            // Copy sub-items if any
+            if (item.subItems.length > 0) {
+              for (const subItem of item.subItems) {
+                await budgetService.createSubItem(
+                  newItem.id,
+                  subItem.name,
+                  subItem.amount
+                );
+              }
+            }
+          } catch (error: any) {
+            console.error("Failed to recreate budget item:", error);
+            toast({
+              title: `Failed to recreate ${item.name}`,
+              description: error.message,
+              variant: "destructive"
+            });
+          }
+        }
+        
+        // Reset continuous budget items after adding them
+        setContinuousBudgetItems([]);
+      }
+      
+      // Set the initial budget items
+      setBudgetItems(newBudgetItems);
     } catch (error: any) {
       toast({
         title: "Error creating budget",
@@ -100,6 +173,7 @@ export const useBudgetLoading = ({
       return;
     }
     
+    // Load the current budget to get period and check for continuous items
     await loadBudget();
   };
 
@@ -142,6 +216,7 @@ export const useBudgetLoading = ({
           subItems: subItems,
           deadline: item.deadline ? new Date(item.deadline) : undefined,
           isImpulse: item.is_impulse || false,
+          isContinuous: item.is_continuous || false,
           note: item.note || undefined,
           tag: item.tag || null,
         };
@@ -155,7 +230,8 @@ export const useBudgetLoading = ({
       setBudgetDateRange(dateRange);
       
       const now = new Date();
-      setIsBudgetExpired(now > dateRange.endDate);
+      const isExpired = now > dateRange.endDate;
+      setIsBudgetExpired(isExpired);
       
       console.log("Budget fully loaded");
       return true;

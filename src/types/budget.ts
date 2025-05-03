@@ -20,6 +20,7 @@ export interface BudgetItem {
   subItems: SubBudgetItem[];
   deadline?: Date;
   isImpulse?: boolean;
+  isContinuous?: boolean;
   note?: string;
   tag?: TagOption;
 }
@@ -54,4 +55,7 @@ export interface BudgetContextType {
   budgetDateRange: BudgetDateRange | null;
   isBudgetExpired: boolean;
   createNewBudgetPeriod: () => Promise<void>;
+  previousRemainingBudget: number;
+  continuousBudgetItems: BudgetItem[];
+  markItemAsContinuous: (itemId: string, isContinuous: boolean) => Promise<void>;
 }
