@@ -8,6 +8,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import * as incomeService from '@/services/incomeService';
 import { useBudget } from '@/contexts/BudgetContext';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const IncomeTracking: React.FC = () => {
   const [name, setName] = useState('');
@@ -135,8 +136,14 @@ const IncomeTracking: React.FC = () => {
               />
             </div>
             <Button type="submit" disabled={isLoading} className="w-full">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Income
+              {isLoading ? (
+                <LoadingSpinner variant="spinner" size="sm" theme="light" />
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Income
+                </>
+              )}
             </Button>
           </form>
         </CardContent>
@@ -150,33 +157,44 @@ const IncomeTracking: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {incomeEntries.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">No income entries yet</p>
-            ) : (
-              incomeEntries.map((entry) => (
-                <div key={entry.id} className="flex justify-between items-center border-b pb-2">
-                  <div>
-                    <p className="font-medium">{entry.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(entry.created_at).toLocaleDateString()}
-                    </p>
+          {isLoading && incomeEntries.length === 0 ? (
+            <div className="py-8 text-center">
+              <LoadingSpinner 
+                variant="wave" 
+                size="md" 
+                theme="finance" 
+                text="Loading income data..." 
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {incomeEntries.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">No income entries yet</p>
+              ) : (
+                incomeEntries.map((entry) => (
+                  <div key={entry.id} className="flex justify-between items-center border-b pb-2">
+                    <div>
+                      <p className="font-medium">{entry.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(entry.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <p className="font-medium">{formatCurrency(entry.amount)}</p>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleDeleteIncome(entry.id)}
+                        disabled={isLoading}
+                      >
+                        <Trash2 className="h-4 w-4 text-finance-danger" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <p className="font-medium">{formatCurrency(entry.amount)}</p>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleDeleteIncome(entry.id)}
-                      disabled={isLoading}
-                    >
-                      <Trash2 className="h-4 w-4 text-finance-danger" />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
       

@@ -9,6 +9,7 @@ import SpendingProgressCard from './budget/SpendingProgressCard';
 import VisualSummaryCard from './budget/VisualSummaryCard';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { LoadingSection, LoadingSpinner } from './ui/loading-spinner';
 
 const ExpenseTracking: React.FC = () => {
   // Wrap the component content in a try-catch to handle context errors gracefully
@@ -64,6 +65,18 @@ const ExpenseTracking: React.FC = () => {
       }
     };
 
+    if (isRefreshing) {
+      return (
+        <LoadingSection 
+          variant="spinner" 
+          size="lg" 
+          theme="finance" 
+          text="Processing your expense..."
+          className="min-h-[300px]" 
+        />
+      );
+    }
+
     return (
       <div className="space-y-6 animate-fade-in">
         <BudgetSummaryCard
@@ -113,6 +126,7 @@ const ExpenseTracking: React.FC = () => {
       <div className="p-4 border rounded-lg bg-red-50 text-red-800">
         <h2 className="text-lg font-semibold mb-2">Budget Context Error</h2>
         <p>Unable to load expense tracking. Please ensure you're logged in and have a budget created.</p>
+        <LoadingSpinner variant="dots" size="md" theme="primary" text="Trying to reconnect..." />
       </div>
     );
   }
