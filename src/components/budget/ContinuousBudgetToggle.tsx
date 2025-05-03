@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HelpCircle } from 'lucide-react';
 import { useBudget } from '@/contexts/BudgetContext';
-import { useLoading } from '@/contexts/LoadingContext';
 
 interface ContinuousBudgetToggleProps {
   itemId: string;
@@ -19,7 +18,6 @@ const ContinuousBudgetToggle: React.FC<ContinuousBudgetToggleProps> = ({
   className = ''
 }) => {
   const { markItemAsContinuous } = useBudget();
-  const { isLoading } = useLoading();
   
   const handleToggle = (checked: boolean) => {
     markItemAsContinuous(itemId, checked);
@@ -31,7 +29,6 @@ const ContinuousBudgetToggle: React.FC<ContinuousBudgetToggleProps> = ({
         id={`continuous-${itemId}`} 
         checked={isContinuous}
         onCheckedChange={handleToggle}
-        disabled={isLoading}
       />
       <Label htmlFor={`continuous-${itemId}`} className="text-sm text-muted-foreground">
         Continue to next period

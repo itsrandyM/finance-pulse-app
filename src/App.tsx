@@ -8,7 +8,6 @@ import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 import { BudgetProvider } from "./contexts/BudgetContext";
 import { AuthProvider } from "./contexts/AuthContext";
-import { LoadingProvider } from "./contexts/LoadingContext";
 import { useAuth } from "./contexts/AuthContext";
 import BudgetPeriodSelectPage from "./pages/BudgetPeriodSelectPage";
 import BudgetAmountInputPage from "./pages/BudgetAmountInputPage";
@@ -40,69 +39,67 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <LoadingProvider>
-        <BudgetProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <BudgetPeriodSelectPage />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/income-setup" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <IncomeSetupPage />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/budget-amount" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <BudgetAmountInputPage />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/budget" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <BudgetAllocation />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/income" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <IncomeTracking />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/tracking" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <ExpenseTracking />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <ProfilePage />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </BudgetProvider>
-      </LoadingProvider>
+      <BudgetProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <BudgetPeriodSelectPage />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/income-setup" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <IncomeSetupPage />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/budget-amount" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <BudgetAmountInputPage />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/budget" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <BudgetAllocation />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/income" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <IncomeTracking />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/tracking" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <ExpenseTracking />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <ProfilePage />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </BudgetProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
