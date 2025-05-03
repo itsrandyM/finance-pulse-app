@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
+import { useLoading } from './LoadingContext';
 import { 
   BudgetPeriod,
   BudgetItem,
@@ -13,6 +14,9 @@ import {
 import { useBudgetOperations } from '@/hooks/useBudgetOperations';
 import { useBudgetCalculations } from '@/hooks/useBudgetCalculations';
 import { useBudgetLoading } from '@/hooks/useBudgetLoading';
+import { useBudgetActions } from '@/hooks/useBudgetActions';
+import { useSubItemActions } from '@/hooks/useSubItemActions';
+import { useExpenseActions } from '@/hooks/useExpenseActions';
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
@@ -28,6 +32,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [continuousBudgetItems, setContinuousBudgetItems] = useState<BudgetItem[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { startLoading, stopLoading } = useLoading();
 
   // Custom hooks for budget functionality
   const budgetLoading = useBudgetLoading({
@@ -46,19 +51,22 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     continuousBudgetItems,
     setContinuousBudgetItems
   });
-
-  const budgetOperations = useBudgetOperations({
-    currentBudgetId,
-    budgetItems,
-    setBudgetItems,
-    toast,
-    loadBudget: budgetLoading.loadBudget
-  });
-
+  
   const budgetCalculations = useBudgetCalculations({
     budgetItems,
     totalBudget
   });
+  
+  // New refactored hooks
+  const budgetActions = useBudgetActions(
+    budgetItems,
+    setBudgetItems,
+    budgetLoading.loadBudget,
+    currentBudgetId
+  );
+  
+  const subItemActions = useSubItemActions(budgetItems, setBudgetItems);
+  const expenseActions = useExpenseActions(budgetLoading.loadBudget);
 
   // Check if budget is expired when date range changes
   useEffect(() => {
@@ -113,23 +121,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setContinuousBudgetItems([]);
   };
 
-  const markItemAsContinuous = async (itemId: string, isContinuous: boolean) => {
-    try {
-      await budgetOperations.updateBudgetItem(itemId, { isContinuous });
-      toast({
-        title: isContinuous 
-          ? "Item marked as continuous" 
-          : "Item removed from continuous tracking",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error updating item",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
   return (
     <BudgetContext.Provider
       value={{
@@ -138,18 +129,18 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         budgetItems,
         setPeriod,
         setTotalBudget,
-        addBudgetItem: budgetOperations.addBudgetItem,
-        updateBudgetItem: budgetOperations.updateBudgetItem,
-        deleteBudgetItem: budgetOperations.deleteBudgetItem,
-        addSubItem: budgetOperations.addSubItem,
-        deleteSubItem: budgetOperations.deleteSubItem,
-        updateSubItem: budgetOperations.updateSubItem,
-        addExpense: budgetOperations.addExpense,
+        addBudgetItem: budgetActions.addBudgetItem,
+        updateBudgetItem: budgetActions.updateBudgetItem,
+        deleteBudgetItem: budgetActions.deleteBudgetItem,
+        addSubItem: subItemActions.addSubItem,
+        deleteSubItem: subItemActions.deleteSubItem,
+        updateSubItem: subItemActions.updateSubItem,
+        addExpense: expenseActions.addExpense,
         resetBudget,
         getRemainingBudget: budgetCalculations.getRemainingBudget,
         getTotalSpent: budgetCalculations.getTotalSpent,
         getTotalAllocated: budgetCalculations.getTotalAllocated,
-        updateItemDeadline: budgetOperations.updateItemDeadline,
+        updateItemDeadline: expenseActions.updateItemDeadline,
         isLoading,
         currentBudgetId,
         initializeBudget: budgetLoading.initializeBudget,
@@ -159,7 +150,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         createNewBudgetPeriod: budgetLoading.createNewBudgetPeriod,
         previousRemainingBudget,
         continuousBudgetItems,
-        markItemAsContinuous
+        markItemAsContinuous: budgetActions.markItemAsContinuous
       }}
     >
       {children}

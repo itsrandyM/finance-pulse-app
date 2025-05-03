@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useBudget } from '@/contexts/BudgetContext';
+import { useLoading } from '@/contexts/LoadingContext';
 import { DollarSign } from 'lucide-react';
 import BudgetSummaryCard from './budget/BudgetSummaryCard';
 import ExpenseInputCard from './budget/ExpenseInputCard';
@@ -9,7 +10,7 @@ import SpendingProgressCard from './budget/SpendingProgressCard';
 import VisualSummaryCard from './budget/VisualSummaryCard';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
-import { LoadingSection, LoadingSpinner } from './ui/loading-spinner';
+import { LoadingSection } from './ui/loading-spinner';
 import ExpiredBudgetOverlay from './budget/ExpiredBudgetOverlay';
 
 const ExpenseTracking: React.FC = () => {
@@ -25,29 +26,28 @@ const ExpenseTracking: React.FC = () => {
       isBudgetExpired
     } = useBudget();
     
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const { isLoading, startLoading, stopLoading } = useLoading();
     const { toast } = useToast();
     
     // Ensure we have the latest budget data when the component mounts
     useEffect(() => {
       console.log("Loading budget data in ExpenseTracking...");
+      startLoading("Loading budget data...");
       loadBudget().catch(error => {
         console.error("Failed to load budget data:", error);
+      }).finally(() => {
+        stopLoading();
       });
-    }, [loadBudget]);
+    }, [loadBudget, startLoading, stopLoading]);
 
     // Function to handle expense addition
     const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
       try {
         console.log("Adding expense in ExpenseTracking:", { itemId, amount, subItemIds });
-        setIsRefreshing(true);
+        startLoading("Adding expense...");
         
         // Add the expense
         await addExpense(itemId, amount, subItemIds);
-        
-        // Reload the budget data to get updated spent amounts
-        console.log("Reloading budget after adding expense");
-        await loadBudget();
         
         toast({
           title: "Expense Added",
@@ -63,11 +63,11 @@ const ExpenseTracking: React.FC = () => {
           variant: "destructive"
         });
       } finally {
-        setIsRefreshing(false);
+        stopLoading();
       }
     };
 
-    if (isRefreshing) {
+    if (isLoading) {
       return (
         <LoadingSection 
           variant="spinner" 
@@ -91,20 +91,20 @@ const ExpenseTracking: React.FC = () => {
             remainingBudget={getRemainingBudget()}
             budgetItems={budgetItems}
             formatCurrency={formatCurrency}
-            isRefreshing={isRefreshing}
+            isRefreshing={isLoading}
           />
 
           <ExpenseInputCard
             budgetItems={budgetItems}
             onAddExpense={handleAddExpense}
-            isRefreshing={isRefreshing}
+            isRefreshing={isLoading}
           />
 
           {budgetItems.length > 0 ? (
             <SpendingProgressCard
               budgetItems={budgetItems}
               formatCurrency={formatCurrency}
-              isRefreshing={isRefreshing}
+              isRefreshing={isLoading}
             />
           ) : (
             <Card className="border-dashed">
