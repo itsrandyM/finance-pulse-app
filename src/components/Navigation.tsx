@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { DollarSign, PieChart, BarChart } from 'lucide-react';
+import { DollarSign, BarChart, PieChart, BadgeDollarSign } from 'lucide-react';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -10,6 +10,7 @@ const Navigation: React.FC = () => {
   const navItems = [
     { path: '/', label: 'Setup', icon: <DollarSign className="h-5 w-5" /> },
     { path: '/budget', label: 'Budget', icon: <BarChart className="h-5 w-5" /> },
+    { path: '/income', label: 'Income', icon: <BadgeDollarSign className="h-5 w-5" /> },
     { path: '/tracking', label: 'Tracking', icon: <PieChart className="h-5 w-5" /> },
   ];
 

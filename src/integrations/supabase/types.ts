@@ -204,7 +204,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_budget_item_spent: {
+        Args: { budget_item_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

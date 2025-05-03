@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { BudgetPeriod } from '@/types/budget';
 import { Database } from '@/integrations/supabase/types';

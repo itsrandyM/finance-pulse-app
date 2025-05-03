@@ -1,12 +1,13 @@
 
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
-import { LayoutDashboard, Wallet, TrendingUp, User } from "lucide-react";
+import { LayoutDashboard, Wallet, TrendingUp, User, BadgeDollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/", label: "Setup", icon: <LayoutDashboard className="h-5 w-5" /> },
   { href: "/budget", label: "Budget", icon: <Wallet className="h-5 w-5" /> },
+  { href: "/income", label: "Income", icon: <BadgeDollarSign className="h-5 w-5" /> },
   { href: "/tracking", label: "Tracking", icon: <TrendingUp className="h-5 w-5" /> },
   { href: "/profile", label: "Profile", icon: <User className="h-5 w-5" /> }
 ];

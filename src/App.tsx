@@ -13,6 +13,7 @@ import BudgetPeriodSelectPage from "./pages/BudgetPeriodSelectPage";
 import BudgetAmountInputPage from "./pages/BudgetAmountInputPage";
 import BudgetAllocation from "./components/BudgetAllocation";
 import ExpenseTracking from "./components/ExpenseTracking";
+import IncomeTracking from "./components/IncomeTracking";
 import Auth from "./pages/Auth";
 import ProfilePage from "./pages/ProfilePage";
 import React from "react";
@@ -62,6 +63,13 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <BudgetAllocation />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/income" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <IncomeTracking />
                   </Layout>
                 </ProtectedRoute>
               } />
