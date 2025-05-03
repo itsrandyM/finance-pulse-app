@@ -19,7 +19,7 @@ export const getIncomeEntries = async () => {
     throw new Error(`Failed to get income entries: ${error.message}`);
   }
 
-  return data || [];
+  return data as IncomeEntry[];
 };
 
 // Create a new income entry
@@ -45,7 +45,7 @@ export const createIncomeEntry = async (name: string, amount: number) => {
     throw new Error(`Failed to create income entry: ${error.message}`);
   }
 
-  return data;
+  return data as IncomeEntry;
 };
 
 // Delete an income entry
