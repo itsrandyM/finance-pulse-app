@@ -47,7 +47,7 @@ export interface BudgetContextType {
   getRemainingBudget: () => number;
   getTotalSpent: () => number;
   getTotalAllocated: () => number;
-  updateItemDeadline: (itemId: string, deadline: Date) => Promise<void>;
+  updateItemDeadline: (itemId: string, deadline: Date | null) => Promise<void>;
   isLoading: boolean;
   currentBudgetId: string | null;
   initializeBudget: (period: BudgetPeriod, amount: number) => Promise<void>;

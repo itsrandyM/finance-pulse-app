@@ -68,7 +68,16 @@ export const useBudgetActions = ({
     try {
       setIsLoading(true);
       // Convert BudgetItem updates to BudgetItemUpdate format
-      const itemUpdate: BudgetItemUpdate = { ...updates };
+      // Create a new object with only the properties that BudgetItemUpdate supports
+      const itemUpdate: BudgetItemUpdate = {
+        name: updates.name,
+        amount: updates.amount,
+        isImpulse: updates.isImpulse,
+        isContinuous: updates.isContinuous,
+        deadline: updates.deadline,
+        note: updates.note,
+        tag: updates.tag as string | null
+      };
       
       await budgetService.updateBudgetItem(id, itemUpdate);
       
@@ -192,11 +201,13 @@ export const useBudgetActions = ({
   const updateItemDeadline = async (itemId: string, deadline: Date | null) => {
     try {
       setIsLoading(true);
-      await budgetService.updateBudgetItem(itemId, { deadline });
+      // Create a proper BudgetItemUpdate object with just the deadline field
+      const update: BudgetItemUpdate = { deadline };
+      await budgetService.updateBudgetItem(itemId, update);
       
       setBudgetItems(
         budgetItems.map(item =>
-          item.id === itemId ? { ...item, deadline: deadline || undefined } : item
+          item.id === itemId ? { ...item, deadline } : item
         )
       );
     } catch (error: any) {
@@ -214,7 +225,9 @@ export const useBudgetActions = ({
   const markItemAsContinuous = async (itemId: string, isContinuous: boolean) => {
     try {
       setIsLoading(true);
-      await budgetService.updateBudgetItem(itemId, { isContinuous });
+      // Create a proper BudgetItemUpdate object with just the isContinuous field
+      const update: BudgetItemUpdate = { isContinuous };
+      await budgetService.updateBudgetItem(itemId, update);
       
       setBudgetItems(
         budgetItems.map(item =>

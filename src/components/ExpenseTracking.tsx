@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useBudget } from '@/contexts/BudgetContext';
 import { DollarSign } from 'lucide-react';
@@ -29,8 +29,10 @@ const ExpenseTracking: React.FC = () => {
     const [localLoading, setLocalLoading] = useState(true);
     const [loadingExpense, setLoadingExpense] = useState(false);
     const { toast } = useToast();
+    const initialLoadCompleted = useRef(false);
     
     // Ensure we have the latest budget data when the component mounts
+    // Use a ref to prevent multiple loads
     useEffect(() => {
       console.log("Loading budget data in ExpenseTracking...");
       
@@ -38,10 +40,11 @@ const ExpenseTracking: React.FC = () => {
       let loadingTimeout: NodeJS.Timeout;
       
       const loadData = async () => {
-        if (!mounted) return;
+        if (!mounted || initialLoadCompleted.current) return;
         
         try {
           await loadBudget();
+          initialLoadCompleted.current = true;
         } catch (error) {
           console.error("Failed to load budget data:", error);
         } finally {
@@ -73,7 +76,9 @@ const ExpenseTracking: React.FC = () => {
         
         // Reload the budget data to get updated spent amounts
         console.log("Reloading budget after adding expense");
+        initialLoadCompleted.current = false; // Reset to allow one more load
         await loadBudget();
+        initialLoadCompleted.current = true; // Set back to true after reload
         
         toast({
           title: "Expense Added",

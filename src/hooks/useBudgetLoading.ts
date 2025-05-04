@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { BudgetPeriod, BudgetDateRange, BudgetItem } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
 import { useBudgetDateRange } from './useBudgetDateRange';
@@ -39,6 +39,7 @@ export const useBudgetLoading = ({
 }: UseBudgetLoadingProps) => {
   const { calculateDateRange } = useBudgetDateRange();
   const { setIsLoading } = useLoading();
+  const isLoadingRef = useRef(false);
   const { initializeBudget: initBudget } = useBudgetInitialization({
     setCurrentBudgetId,
     setPeriodState,
@@ -73,14 +74,22 @@ export const useBudgetLoading = ({
       return false;
     }
     
+    // Prevent concurrent loading
+    if (isLoadingRef.current) {
+      console.log("Already loading budget, skipping duplicate call");
+      return false;
+    }
+    
     try {
       console.log("Loading budget...");
+      isLoadingRef.current = true;
       setIsLoading(true);
       const budget = await budgetService.getCurrentBudget();
       
       if (!budget) {
         console.log("No budget found");
         setIsLoading(false);
+        isLoadingRef.current = false;
         return false;
       }
       
@@ -139,6 +148,7 @@ export const useBudgetLoading = ({
       return false;
     } finally {
       setIsLoading(false);
+      isLoadingRef.current = false;
     }
   };
 
