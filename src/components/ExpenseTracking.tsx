@@ -23,7 +23,7 @@ const ExpenseTracking: React.FC = () => {
       getRemainingBudget,
       loadBudget,
       isBudgetExpired,
-      isLoading
+      isLoading: contextLoading
     } = useBudget();
     
     const [localLoading, setLocalLoading] = useState(true);
@@ -35,18 +35,21 @@ const ExpenseTracking: React.FC = () => {
       console.log("Loading budget data in ExpenseTracking...");
       
       let mounted = true;
+      let loadingTimeout: NodeJS.Timeout;
       
       const loadData = async () => {
+        if (!mounted) return;
+        
         try {
           await loadBudget();
         } catch (error) {
           console.error("Failed to load budget data:", error);
         } finally {
           if (mounted) {
-            // Add a small delay to prevent flashing
-            setTimeout(() => {
+            // Add a small delay to prevent flickering
+            loadingTimeout = setTimeout(() => {
               setLocalLoading(false);
-            }, 300);
+            }, 500);
           }
         }
       };
@@ -55,6 +58,7 @@ const ExpenseTracking: React.FC = () => {
       
       return () => {
         mounted = false;
+        if (loadingTimeout) clearTimeout(loadingTimeout);
       };
     }, [loadBudget]);
 
@@ -89,8 +93,11 @@ const ExpenseTracking: React.FC = () => {
       }
     };
 
+    // Combined loading state
+    const isPageLoading = localLoading || contextLoading;
+
     // Display loading state only on initial load, not during every operation
-    if (localLoading) {
+    if (isPageLoading) {
       return (
         <LoadingSection 
           variant="spinner" 
@@ -150,7 +157,7 @@ const ExpenseTracking: React.FC = () => {
         
         {/* Transparent overlay during expense operations */}
         {loadingExpense && (
-          <div className="fixed inset-0 bg-background/30 backdrop-blur-sm z-40 flex items-center justify-center pointer-events-none">
+          <div className="fixed inset-0 bg-background/30 backdrop-blur-sm z-40 flex items-center justify-center">
             <LoadingSection 
               variant="spinner" 
               size="md" 

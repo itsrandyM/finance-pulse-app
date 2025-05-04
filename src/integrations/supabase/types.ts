@@ -16,6 +16,7 @@ export type Database = {
           created_at: string | null
           deadline: string | null
           id: string
+          is_continuous: boolean | null
           is_impulse: boolean | null
           name: string
           note: string | null
@@ -28,6 +29,7 @@ export type Database = {
           created_at?: string | null
           deadline?: string | null
           id?: string
+          is_continuous?: boolean | null
           is_impulse?: boolean | null
           name: string
           note?: string | null
@@ -40,6 +42,7 @@ export type Database = {
           created_at?: string | null
           deadline?: string | null
           id?: string
+          is_continuous?: boolean | null
           is_impulse?: boolean | null
           name?: string
           note?: string | null

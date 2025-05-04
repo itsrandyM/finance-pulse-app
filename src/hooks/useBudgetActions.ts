@@ -63,7 +63,7 @@ export const useBudgetActions = ({
     }
   };
 
-  const updateBudgetItem = async (id: string, updates: Partial<Omit<BudgetItem, 'deadline'>> & { deadline?: Date | null }) => {
+  const updateBudgetItem = async (id: string, updates: Partial<BudgetItem>) => {
     try {
       setIsLoading(true);
       await budgetService.updateBudgetItem(id, updates);
@@ -205,6 +205,32 @@ export const useBudgetActions = ({
       setIsLoading(false);
     }
   };
+  
+  // Add a new function to mark items as continuous
+  const markItemAsContinuous = async (itemId: string, isContinuous: boolean) => {
+    try {
+      setIsLoading(true);
+      await budgetService.updateBudgetItem(itemId, { isContinuous });
+      
+      setBudgetItems(
+        budgetItems.map(item =>
+          item.id === itemId ? { ...item, isContinuous } : item
+        )
+      );
+      
+      toast({
+        title: isContinuous ? "Item will continue to next period" : "Item will not continue to next period",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error updating item continuity",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return {
     addBudgetItem,
@@ -214,5 +240,6 @@ export const useBudgetActions = ({
     deleteSubItem,
     updateSubItem,
     updateItemDeadline,
+    markItemAsContinuous,
   };
 };

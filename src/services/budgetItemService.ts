@@ -6,6 +6,7 @@ import { Database } from '@/integrations/supabase/types';
 type BudgetItemUpdate = Partial<Database['public']['Tables']['budget_items']['Update']> & { 
   isContinuous?: boolean;
   isImpulse?: boolean;
+  deadline?: Date | null | string;
 };
 
 export const getBudgetItems = async (budgetId: string) => {
@@ -78,7 +79,7 @@ export const createBudgetItem = async (
 export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) => {
   const dbUpdates: Record<string, any> = { ...updates };
   
-  // Handle deadline value - ensure it's converted to ISO string only if it exists
+  // Handle deadline value - ensure it's converted to ISO string only if it exists and is a Date
   if (updates.deadline !== undefined) {
     if (updates.deadline !== null && typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
       dbUpdates.deadline = updates.deadline.toISOString();

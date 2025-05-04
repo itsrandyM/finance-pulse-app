@@ -8,6 +8,7 @@ import { ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import * as budgetService from '@/services/budgetService';
 import { useLoading } from '@/contexts/LoadingContext';
+import ContinuousBudgetToggle from './budget/ContinuousBudgetToggle';
 
 interface SpendingProgressCardProps {
   budgetItems: BudgetItem[];
@@ -118,6 +119,12 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
                       Over budget by {formatCurrency(item.spent - item.amount)}
                     </div>
                   )}
+                  
+                  <ContinuousBudgetToggle
+                    itemId={item.id}
+                    isContinuous={item.isContinuous}
+                    className="mt-2"
+                  />
 
                   {hasSubItems && (
                     <CollapsibleContent>

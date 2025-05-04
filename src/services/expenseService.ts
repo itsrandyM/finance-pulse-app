@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export const addExpense = async (
@@ -9,55 +8,64 @@ export const addExpense = async (
   const userId = (await supabase.auth.getUser()).data.user?.id;
   
   if (!userId) {
-    throw new Error('User not authenticated');
+    throw new Error("User not authenticated");
   }
   
-  // If sub-item IDs are provided, add an expense for each sub-item
-  if (subItemIds && subItemIds.length > 0) {
-    const subItemExpensePromises = subItemIds.map(subItemId =>
-      supabase
+  try {
+    // If subItemIds are provided, add expenses for each sub-item
+    if (subItemIds && subItemIds.length > 0) {
+      for (const subItemId of subItemIds) {
+        const { error } = await supabase
+          .from('expenses')
+          .insert({
+            budget_item_id: budgetItemId,
+            sub_item_id: subItemId,
+            amount: amount / subItemIds.length, // Divide the amount equally
+            user_id: userId
+          });
+        
+        if (error) {
+          throw new Error(`Error adding sub-item expense: ${error.message}`);
+        }
+      }
+    }
+    // Otherwise, add expense for the budget item directly
+    else {
+      const { error } = await supabase
         .from('expenses')
         .insert({
-          user_id: userId,
           budget_item_id: budgetItemId,
-          sub_item_id: subItemId,
-          amount: amount / subItemIds.length // Divide the amount equally
-        })
-    );
-    
-    await Promise.all(subItemExpensePromises);
-  } else {
-    // Add a single expense for the budget item
-    const { error } = await supabase
-      .from('expenses')
-      .insert({
-        user_id: userId,
-        budget_item_id: budgetItemId,
-        amount
-      });
+          amount,
+          user_id: userId
+        });
       
-    if (error) {
-      throw new Error(`Failed to add expense: ${error.message}`);
+      if (error) {
+        throw new Error(`Error adding expense: ${error.message}`);
+      }
     }
+    
+    // Update the spent amount for the budget item
+    await supabase.rpc('update_budget_item_spent', {
+      budget_item_id: budgetItemId
+    });
+    
+    return true;
+  } catch (error: any) {
+    throw new Error(`Failed to add expense: ${error.message}`);
   }
-  
-  // Update the spent amount on the budget item
-  await updateBudgetItemSpent(budgetItemId);
-  
-  return true;
 };
 
-export const updateBudgetItemSpent = async (budgetItemId: string) => {
-  // Call the Supabase function to update the spent amount
-  const { error } = await supabase.rpc('update_budget_item_spent', {
-    budget_item_id: budgetItemId
-  });
+export const getExpensesByItem = async (budgetItemId: string) => {
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .eq('budget_item_id', budgetItemId);
   
   if (error) {
-    throw new Error(`Failed to update spent amount: ${error.message}`);
+    throw new Error(`Failed to get expenses: ${error.message}`);
   }
   
-  return true;
+  return data;
 };
 
 export const getExpensesBySubItem = async (subItemId: string) => {
@@ -65,10 +73,10 @@ export const getExpensesBySubItem = async (subItemId: string) => {
     .from('expenses')
     .select('*')
     .eq('sub_item_id', subItemId);
-    
+  
   if (error) {
-    throw new Error(`Failed to get expenses: ${error.message}`);
+    throw new Error(`Failed to get sub-item expenses: ${error.message}`);
   }
   
-  return data || [];
+  return data;
 };
