@@ -54,11 +54,7 @@ export const useBudgetLoading = ({
   });
 
   const createNewBudgetPeriod = async (): Promise<void> => {
-    const currentPeriod = budgetDateRange?.startDate ? 
-      new Date(budgetDateRange.startDate) : 
-      new Date();
-    
-    if (!currentPeriod) {
+    if (!budgetDateRange?.startDate) {
       toast({
         title: "Missing budget information",
         description: "Cannot create a new budget period without period information.",
@@ -72,7 +68,10 @@ export const useBudgetLoading = ({
   };
 
   const loadBudget = async (): Promise<boolean> => {
-    if (!user) return false;
+    if (!user) {
+      console.log("No user found, cannot load budget");
+      return false;
+    }
     
     try {
       console.log("Loading budget...");

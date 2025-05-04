@@ -48,8 +48,8 @@ export const useBudgetActions = ({
           amount: newItem.amount,
           spent: 0,
           subItems: [],
-          isImpulse: newItem.is_impulse,
-          isContinuous: newItem.is_continuous
+          isImpulse: newItem.is_impulse || false,
+          isContinuous: newItem.is_continuous || false
         }
       ]);
     } catch (error: any) {
@@ -63,7 +63,7 @@ export const useBudgetActions = ({
     }
   };
 
-  const updateBudgetItem = async (id: string, updates: Partial<BudgetItem>) => {
+  const updateBudgetItem = async (id: string, updates: Partial<Omit<BudgetItem, 'deadline'>> & { deadline?: Date | null }) => {
     try {
       setIsLoading(true);
       await budgetService.updateBudgetItem(id, updates);
@@ -185,14 +185,14 @@ export const useBudgetActions = ({
     }
   };
 
-  const updateItemDeadline = async (itemId: string, deadline: Date) => {
+  const updateItemDeadline = async (itemId: string, deadline: Date | null) => {
     try {
       setIsLoading(true);
       await budgetService.updateBudgetItem(itemId, { deadline });
       
       setBudgetItems(
         budgetItems.map(item =>
-          item.id === itemId ? { ...item, deadline } : item
+          item.id === itemId ? { ...item, deadline: deadline || undefined } : item
         )
       );
     } catch (error: any) {

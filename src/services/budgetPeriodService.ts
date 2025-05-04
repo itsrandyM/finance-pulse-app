@@ -27,13 +27,9 @@ export const getCurrentBudget = async () => {
     .select('*')
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    if (error.code === 'PGRST116') {
-      // No budget found - not an error
-      return null;
-    }
     throw new Error(`Failed to get current budget: ${error.message}`);
   }
 

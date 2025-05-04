@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { BudgetPeriod, BudgetItem } from '@/types/budget';
+import { BudgetPeriod, BudgetItem, BudgetDateRange } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
 import { useLoading } from '@/contexts/LoadingContext';
 import { useBudgetDateRange } from './useBudgetDateRange';
@@ -83,9 +83,9 @@ export const useBudgetInitialization = ({
               id: newItem.id,
               name: newItem.name,
               amount: newItem.amount,
-              spent: item.spent, // Preserve the spent amount from the previous budget item
+              spent: 0, // Reset spent amount for the new budget period
               subItems: [], // Sub-items will need to be added separately if needed
-              isImpulse: newItem.is_impulse,
+              isImpulse: newItem.is_impulse !== undefined ? newItem.is_impulse : false,
               isContinuous: newItem.is_continuous !== undefined ? newItem.is_continuous : false
             });
             

@@ -7,6 +7,7 @@ import { BudgetItem } from '@/types/budget';
 import { ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import * as budgetService from '@/services/budgetService';
+import { useLoading } from '@/contexts/LoadingContext';
 
 interface SpendingProgressCardProps {
   budgetItems: BudgetItem[];
@@ -20,6 +21,7 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
   isRefreshing = false,
 }) => {
   const [trackedSubItems, setTrackedSubItems] = useState<Record<string, boolean>>({});
+  const { setIsLoading } = useLoading();
   
   // Fetch expenses for all sub-items to determine which ones have been tracked
   useEffect(() => {
@@ -67,7 +69,7 @@ const SpendingProgressCard: React.FC<SpendingProgressCardProps> = ({
   };
 
   return (
-    <Card className={isRefreshing ? "opacity-75" : ""}>
+    <Card className={cn(isRefreshing ? "opacity-75" : "")}>
       <CardHeader>
         <CardTitle className="text-xl text-finance-text">Spending Progress</CardTitle>
       </CardHeader>

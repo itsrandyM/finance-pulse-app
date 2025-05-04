@@ -79,9 +79,8 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
   const dbUpdates: Record<string, any> = { ...updates };
   
   // Handle deadline value - ensure it's converted to ISO string only if it exists
-  if (updates.deadline !== undefined && updates.deadline !== null) {
-    // Only convert if it's a Date object and not null
-    if (typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
+  if (updates.deadline !== undefined) {
+    if (updates.deadline !== null && typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
       dbUpdates.deadline = updates.deadline.toISOString();
     }
   }

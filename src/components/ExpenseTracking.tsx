@@ -26,22 +26,43 @@ const ExpenseTracking: React.FC = () => {
       isLoading
     } = useBudget();
     
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [localLoading, setLocalLoading] = useState(true);
+    const [loadingExpense, setLoadingExpense] = useState(false);
     const { toast } = useToast();
     
     // Ensure we have the latest budget data when the component mounts
     useEffect(() => {
       console.log("Loading budget data in ExpenseTracking...");
-      loadBudget().catch(error => {
-        console.error("Failed to load budget data:", error);
-      });
+      
+      let mounted = true;
+      
+      const loadData = async () => {
+        try {
+          await loadBudget();
+        } catch (error) {
+          console.error("Failed to load budget data:", error);
+        } finally {
+          if (mounted) {
+            // Add a small delay to prevent flashing
+            setTimeout(() => {
+              setLocalLoading(false);
+            }, 300);
+          }
+        }
+      };
+      
+      loadData();
+      
+      return () => {
+        mounted = false;
+      };
     }, [loadBudget]);
 
     // Function to handle expense addition
     const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
       try {
         console.log("Adding expense in ExpenseTracking:", { itemId, amount, subItemIds });
-        setIsRefreshing(true);
+        setLoadingExpense(true);
         
         // Add the expense
         await addExpense(itemId, amount, subItemIds);
@@ -64,17 +85,18 @@ const ExpenseTracking: React.FC = () => {
           variant: "destructive"
         });
       } finally {
-        setIsRefreshing(false);
+        setLoadingExpense(false);
       }
     };
 
-    if (isLoading || isRefreshing) {
+    // Display loading state only on initial load, not during every operation
+    if (localLoading) {
       return (
         <LoadingSection 
           variant="spinner" 
           size="lg" 
           theme="finance" 
-          text="Processing your expense..."
+          text="Loading your budget..."
           className="min-h-[300px]" 
         />
       );
@@ -92,20 +114,20 @@ const ExpenseTracking: React.FC = () => {
             remainingBudget={getRemainingBudget()}
             budgetItems={budgetItems}
             formatCurrency={formatCurrency}
-            isRefreshing={isRefreshing}
+            isRefreshing={loadingExpense}
           />
 
           <ExpenseInputCard
             budgetItems={budgetItems}
             onAddExpense={handleAddExpense}
-            isRefreshing={isRefreshing}
+            isRefreshing={loadingExpense}
           />
 
           {budgetItems.length > 0 ? (
             <SpendingProgressCard
               budgetItems={budgetItems}
               formatCurrency={formatCurrency}
-              isRefreshing={isRefreshing}
+              isRefreshing={loadingExpense}
             />
           ) : (
             <Card className="border-dashed">
@@ -125,6 +147,18 @@ const ExpenseTracking: React.FC = () => {
             <VisualSummaryCard budgetItems={budgetItems} formatCurrency={formatCurrency} />
           )}
         </div>
+        
+        {/* Transparent overlay during expense operations */}
+        {loadingExpense && (
+          <div className="fixed inset-0 bg-background/30 backdrop-blur-sm z-40 flex items-center justify-center pointer-events-none">
+            <LoadingSection 
+              variant="spinner" 
+              size="md" 
+              theme="finance" 
+              text="Processing expense..."
+            />
+          </div>
+        )}
       </>
     );
   } catch (error) {
@@ -134,7 +168,6 @@ const ExpenseTracking: React.FC = () => {
       <div className="p-4 border rounded-lg bg-red-50 text-red-800">
         <h2 className="text-lg font-semibold mb-2">Budget Context Error</h2>
         <p>Unable to load expense tracking. Please ensure you're logged in and have a budget created.</p>
-        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-800"></div>
       </div>
     );
   }
