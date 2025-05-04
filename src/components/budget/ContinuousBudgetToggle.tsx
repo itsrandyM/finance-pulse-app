@@ -27,7 +27,7 @@ const ContinuousBudgetToggle: React.FC<ContinuousBudgetToggleProps> = ({
     <div className={`flex items-center space-x-2 ${className}`}>
       <Switch 
         id={`continuous-${itemId}`} 
-        checked={isContinuous}
+        checked={isContinuous || false}
         onCheckedChange={handleToggle}
       />
       <Label htmlFor={`continuous-${itemId}`} className="text-sm text-muted-foreground">

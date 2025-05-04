@@ -6,6 +6,7 @@ import { Wallet, LayoutDashboard, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileNavBar from "./MobileNavBar";
+import GlobalLoadingIndicator from './GlobalLoadingIndicator';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <>
+          <GlobalLoadingIndicator />
           {!isMobile && (
             <Sidebar className="min-w-[72px] w-64 md:w-64 bg-white border-r shadow-none transition-all duration-200">
               <SidebarHeader className="p-4 h-16 flex items-center gap-2 border-b">

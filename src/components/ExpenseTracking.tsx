@@ -9,7 +9,7 @@ import SpendingProgressCard from './budget/SpendingProgressCard';
 import VisualSummaryCard from './budget/VisualSummaryCard';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
-import { LoadingSection, LoadingSpinner } from './ui/loading-spinner';
+import { LoadingSection } from './ui/loading-spinner';
 import ExpiredBudgetOverlay from './budget/ExpiredBudgetOverlay';
 
 const ExpenseTracking: React.FC = () => {
@@ -22,7 +22,8 @@ const ExpenseTracking: React.FC = () => {
       getTotalSpent,
       getRemainingBudget,
       loadBudget,
-      isBudgetExpired
+      isBudgetExpired,
+      isLoading
     } = useBudget();
     
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -67,7 +68,7 @@ const ExpenseTracking: React.FC = () => {
       }
     };
 
-    if (isRefreshing) {
+    if (isLoading || isRefreshing) {
       return (
         <LoadingSection 
           variant="spinner" 
@@ -133,7 +134,7 @@ const ExpenseTracking: React.FC = () => {
       <div className="p-4 border rounded-lg bg-red-50 text-red-800">
         <h2 className="text-lg font-semibold mb-2">Budget Context Error</h2>
         <p>Unable to load expense tracking. Please ensure you're logged in and have a budget created.</p>
-        <LoadingSpinner variant="dots" size="md" theme="primary" text="Trying to reconnect..." />
+        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-800"></div>
       </div>
     );
   }
