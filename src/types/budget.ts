@@ -18,7 +18,7 @@ export interface BudgetItem {
   amount: number;
   spent: number;
   subItems: SubBudgetItem[];
-  deadline?: Date;
+  deadline?: Date | null;
   isImpulse?: boolean;
   isContinuous?: boolean;
   note?: string;

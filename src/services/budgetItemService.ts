@@ -1,9 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
 // Types for better type safety
-type BudgetItemUpdate = Partial<Database['public']['Tables']['budget_items']['Update']> & { 
+export type BudgetItemUpdate = Partial<Database['public']['Tables']['budget_items']['Update']> & { 
   isContinuous?: boolean;
   isImpulse?: boolean;
   deadline?: Date | null | string;
@@ -81,9 +80,12 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
   
   // Handle deadline value - ensure it's converted to ISO string only if it exists and is a Date
   if (updates.deadline !== undefined) {
-    if (updates.deadline !== null && typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
+    if (updates.deadline === null) {
+      dbUpdates.deadline = null;
+    } else if (typeof updates.deadline === 'object' && updates.deadline instanceof Date) {
       dbUpdates.deadline = updates.deadline.toISOString();
     }
+    // If it's already a string, keep it as is
   }
   
   // Handle isContinuous -> is_continuous mapping

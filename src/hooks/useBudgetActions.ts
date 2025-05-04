@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { BudgetItem, SubBudgetItem } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
 import { useLoading } from '@/contexts/LoadingContext';
+import { BudgetItemUpdate } from '@/services/budgetItemService';
 
 interface UseBudgetActionsProps {
   currentBudgetId: string | null;
@@ -66,7 +67,10 @@ export const useBudgetActions = ({
   const updateBudgetItem = async (id: string, updates: Partial<BudgetItem>) => {
     try {
       setIsLoading(true);
-      await budgetService.updateBudgetItem(id, updates);
+      // Convert BudgetItem updates to BudgetItemUpdate format
+      const itemUpdate: BudgetItemUpdate = { ...updates };
+      
+      await budgetService.updateBudgetItem(id, itemUpdate);
       
       setBudgetItems(
         budgetItems.map(item => 
