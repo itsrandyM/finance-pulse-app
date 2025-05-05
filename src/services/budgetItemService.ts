@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
@@ -80,7 +79,7 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
   const dbUpdates: Record<string, any> = { ...updates };
   
   // Handle deadline value - ensure it's converted to ISO string only if it exists and is a Date
-  if (updates.deadline !== undefined) {
+  if ('deadline' in updates) {
     if (updates.deadline === null) {
       dbUpdates.deadline = null;
     } else if (updates.deadline instanceof Date) {

@@ -36,6 +36,7 @@ export interface BudgetContextType {
   budgetItems: BudgetItem[];
   setPeriod: (period: BudgetPeriod) => void;
   setTotalBudget: (amount: number) => void;
+  setBudgetItems: React.Dispatch<React.SetStateAction<BudgetItem[]>>;
   addBudgetItem: (name: string, amount: number, isImpulse: boolean) => Promise<void>;
   updateBudgetItem: (id: string, updates: Partial<BudgetItem>) => Promise<void>;
   deleteBudgetItem: (id: string) => Promise<void>;

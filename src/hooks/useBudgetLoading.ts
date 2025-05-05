@@ -40,6 +40,9 @@ export const useBudgetLoading = ({
   const { calculateDateRange } = useBudgetDateRange();
   const { setIsLoading } = useLoading();
   const isLoadingRef = useRef(false);
+  const lastLoadTimeRef = useRef<number>(0);
+  const MIN_LOAD_INTERVAL = 2000; // Prevent reloads within 2 seconds
+  
   const { initializeBudget: initBudget } = useBudgetInitialization({
     setCurrentBudgetId,
     setPeriodState,
@@ -74,9 +77,15 @@ export const useBudgetLoading = ({
       return false;
     }
     
-    // Prevent concurrent loading
+    // Prevent concurrent loading and throttle repeated calls
     if (isLoadingRef.current) {
       console.log("Already loading budget, skipping duplicate call");
+      return false;
+    }
+    
+    const now = Date.now();
+    if (now - lastLoadTimeRef.current < MIN_LOAD_INTERVAL) {
+      console.log("Budget was loaded recently, skipping duplicate call");
       return false;
     }
     
@@ -84,6 +93,8 @@ export const useBudgetLoading = ({
       console.log("Loading budget...");
       isLoadingRef.current = true;
       setIsLoading(true);
+      lastLoadTimeRef.current = Date.now();
+      
       const budget = await budgetService.getCurrentBudget();
       
       if (!budget) {

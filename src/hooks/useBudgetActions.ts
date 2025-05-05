@@ -68,7 +68,6 @@ export const useBudgetActions = ({
     try {
       setIsLoading(true);
       // Convert BudgetItem updates to BudgetItemUpdate format
-      // Create a new object with only the properties that BudgetItemUpdate supports
       const itemUpdate: BudgetItemUpdate = {
         name: updates.name,
         amount: updates.amount,

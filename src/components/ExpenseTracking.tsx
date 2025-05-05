@@ -31,11 +31,8 @@ const ExpenseTracking: React.FC = () => {
     const { toast } = useToast();
     const initialLoadCompleted = useRef(false);
     
-    // Ensure we have the latest budget data when the component mounts
-    // Use a ref to prevent multiple loads
+    // Ensure we have the latest budget data when the component mounts only once
     useEffect(() => {
-      console.log("Loading budget data in ExpenseTracking...");
-      
       let mounted = true;
       let loadingTimeout: NodeJS.Timeout;
       
@@ -43,8 +40,11 @@ const ExpenseTracking: React.FC = () => {
         if (!mounted || initialLoadCompleted.current) return;
         
         try {
+          console.log("Loading budget data in ExpenseTracking... (initial load)");
           await loadBudget();
-          initialLoadCompleted.current = true;
+          if (mounted) {
+            initialLoadCompleted.current = true;
+          }
         } catch (error) {
           console.error("Failed to load budget data:", error);
         } finally {
@@ -65,7 +65,7 @@ const ExpenseTracking: React.FC = () => {
       };
     }, [loadBudget]);
 
-    // Function to handle expense addition
+    // Function to handle expense addition with localized loading state
     const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
       try {
         console.log("Adding expense in ExpenseTracking:", { itemId, amount, subItemIds });
@@ -73,12 +73,6 @@ const ExpenseTracking: React.FC = () => {
         
         // Add the expense
         await addExpense(itemId, amount, subItemIds);
-        
-        // Reload the budget data to get updated spent amounts
-        console.log("Reloading budget after adding expense");
-        initialLoadCompleted.current = false; // Reset to allow one more load
-        await loadBudget();
-        initialLoadCompleted.current = true; // Set back to true after reload
         
         toast({
           title: "Expense Added",
@@ -98,11 +92,8 @@ const ExpenseTracking: React.FC = () => {
       }
     };
 
-    // Combined loading state
-    const isPageLoading = localLoading || contextLoading;
-
-    // Display loading state only on initial load, not during every operation
-    if (isPageLoading) {
+    // Initial loading state - only on first render
+    if (localLoading && contextLoading) {
       return (
         <LoadingSection 
           variant="spinner" 
@@ -160,15 +151,11 @@ const ExpenseTracking: React.FC = () => {
           )}
         </div>
         
-        {/* Transparent overlay during expense operations */}
+        {/* Show loading indicator only for expense operations - no full overlay */}
         {loadingExpense && (
-          <div className="fixed inset-0 bg-background/30 backdrop-blur-sm z-40 flex items-center justify-center">
-            <LoadingSection 
-              variant="spinner" 
-              size="md" 
-              theme="finance" 
-              text="Processing expense..."
-            />
+          <div className="fixed bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg z-40 flex items-center gap-3">
+            <div className="h-5 w-5 rounded-full border-t-2 border-b-2 border-finance-primary animate-spin"></div>
+            <span className="text-sm font-medium text-finance-primary">Processing expense...</span>
           </div>
         )}
       </>
