@@ -12,7 +12,7 @@ import {
 } from '@/types/budget';
 import { useBudgetCalculations } from '@/hooks/useBudgetCalculations';
 import { useBudgetLoading } from '@/hooks/useBudgetLoading';
-import { useBudgetActions } from '@/hooks/useBudgetActions';
+import { useBudgetItemActions } from '@/hooks/useBudgetItemActions';
 import { useExpenseActions } from '@/hooks/useExpenseActions';
 import { useLoading } from './LoadingContext';
 
