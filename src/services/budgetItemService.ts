@@ -83,7 +83,7 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
   if ('deadline' in updates) {
     if (updates.deadline === null) {
       dbUpdates.deadline = null;
-    } else if (updates.deadline && typeof updates.deadline === 'object' && updates.deadline instanceof Date) {
+    } else if (updates.deadline !== null && updates.deadline !== undefined && updates.deadline instanceof Date) {
       dbUpdates.deadline = updates.deadline.toISOString();
     }
     // If it's already a string, keep it as is
