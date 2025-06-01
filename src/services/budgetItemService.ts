@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
@@ -82,7 +83,7 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
   if ('deadline' in updates) {
     if (updates.deadline === null) {
       dbUpdates.deadline = null;
-    } else if (updates.deadline instanceof Date) {
+    } else if (updates.deadline && typeof updates.deadline === 'object' && 'toISOString' in updates.deadline) {
       dbUpdates.deadline = updates.deadline.toISOString();
     }
     // If it's already a string, keep it as is

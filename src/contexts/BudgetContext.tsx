@@ -48,7 +48,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setContinuousBudgetItems
   });
 
-  const budgetActions = useBudgetActions({
+  const budgetItemActions = useBudgetItemActions({
     currentBudgetId,
     budgetItems,
     setBudgetItems,
@@ -58,7 +58,9 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const expenseActions = useExpenseActions({
     toast,
-    loadBudget: budgetLoading.loadBudget
+    loadBudget: budgetLoading.loadBudget,
+    setBudgetItems,
+    currentBudgetId
   });
 
   const budgetCalculations = useBudgetCalculations({
@@ -125,7 +127,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const markItemAsContinuous = async (itemId: string, isContinuous: boolean) => {
     try {
       setIsLoading(true);
-      await budgetActions.updateBudgetItem(itemId, { isContinuous });
+      await budgetItemActions.updateBudgetItem(itemId, { isContinuous });
       toast({
         title: isContinuous 
           ? "Item marked as continuous" 
@@ -150,18 +152,19 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         budgetItems,
         setPeriod,
         setTotalBudget,
-        addBudgetItem: budgetActions.addBudgetItem,
-        updateBudgetItem: budgetActions.updateBudgetItem,
-        deleteBudgetItem: budgetActions.deleteBudgetItem,
-        addSubItem: budgetActions.addSubItem,
-        deleteSubItem: budgetActions.deleteSubItem,
-        updateSubItem: budgetActions.updateSubItem,
+        setBudgetItems,
+        addBudgetItem: budgetItemActions.addBudgetItem,
+        updateBudgetItem: budgetItemActions.updateBudgetItem,
+        deleteBudgetItem: budgetItemActions.deleteBudgetItem,
+        addSubItem: budgetItemActions.addSubItem,
+        deleteSubItem: budgetItemActions.deleteSubItem,
+        updateSubItem: budgetItemActions.updateSubItem,
         addExpense: expenseActions.addExpense,
         resetBudget,
         getRemainingBudget: budgetCalculations.getRemainingBudget,
         getTotalSpent: budgetCalculations.getTotalSpent,
         getTotalAllocated: budgetCalculations.getTotalAllocated,
-        updateItemDeadline: budgetActions.updateItemDeadline,
+        updateItemDeadline: budgetItemActions.updateItemDeadline,
         isLoading,
         currentBudgetId,
         initializeBudget: budgetLoading.initializeBudget,

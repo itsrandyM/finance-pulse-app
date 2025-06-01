@@ -18,11 +18,11 @@ export const useExpenseActions = ({
   setBudgetItems,
   currentBudgetId
 }: UseExpenseActionsProps) => {
-  const { setIsLoading } = useLoading();
+  const [isAddingExpense, setIsAddingExpense] = useState(false);
 
   const addExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     try {
-      setIsLoading(true);
+      setIsAddingExpense(true);
       console.log(`Adding expense: itemId=${itemId}, amount=${amount}, subItemIds=${subItemIds?.join(',')}`);
       
       if (subItemIds && subItemIds.length > 0) {
@@ -74,9 +74,9 @@ export const useExpenseActions = ({
       });
       throw error;
     } finally {
-      setIsLoading(false);
+      setIsAddingExpense(false);
     }
   };
 
-  return { addExpense };
+  return { addExpense, isAddingExpense };
 };

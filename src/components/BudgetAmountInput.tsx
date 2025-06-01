@@ -23,7 +23,7 @@ interface BudgetAmountInputProps {
 }
 
 const BudgetAmountInput: React.FC<BudgetAmountInputProps> = ({ onSubmit }) => {
-  const { period } = useBudget();
+  const { period, previousRemainingBudget } = useBudget();
   const [amount, setAmount] = useState<string>('');
   const [totalIncome, setTotalIncome] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -38,9 +38,10 @@ const BudgetAmountInput: React.FC<BudgetAmountInputProps> = ({ onSubmit }) => {
         const total = incomeEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
         setTotalIncome(total);
         
-        // Pre-fill the amount with income
-        if (total > 0 && !amount) {
-          setAmount(total.toString());
+        // Pre-fill the amount with income + previous remaining budget
+        const totalAvailable = total + previousRemainingBudget;
+        if (totalAvailable > 0 && !amount) {
+          setAmount(totalAvailable.toString());
         }
       } catch (error) {
         console.error("Failed to load income:", error);
@@ -50,7 +51,7 @@ const BudgetAmountInput: React.FC<BudgetAmountInputProps> = ({ onSubmit }) => {
     };
     
     loadIncome();
-  }, []);
+  }, [previousRemainingBudget]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +71,8 @@ const BudgetAmountInput: React.FC<BudgetAmountInputProps> = ({ onSubmit }) => {
   const periodText = period ? 
     period.charAt(0).toUpperCase() + period.slice(1) : 
     'Selected';
+
+  const totalAvailable = totalIncome + previousRemainingBudget;
 
   return (
     <Card className="w-full max-w-lg mx-auto animate-fade-in">
@@ -104,8 +107,26 @@ const BudgetAmountInput: React.FC<BudgetAmountInputProps> = ({ onSubmit }) => {
                   <p className="text-lg font-semibold text-finance-primary">
                     {formatCurrency(totalIncome)}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    You can budget this amount or add additional funds
+                </div>
+              )}
+              
+              {previousRemainingBudget > 0 && (
+                <div className="bg-green-50 p-4 rounded-md">
+                  <p className="font-medium">Previous Budget Remaining</p>
+                  <p className="text-lg font-semibold text-green-600">
+                    {formatCurrency(previousRemainingBudget)}
+                  </p>
+                  <p className="text-sm text-green-700 mt-1">
+                    This amount will be added to your new budget
+                  </p>
+                </div>
+              )}
+
+              {totalAvailable > 0 && (
+                <div className="bg-gray-50 p-3 rounded-md border">
+                  <p className="font-medium text-gray-700">Total Available</p>
+                  <p className="text-xl font-bold text-gray-900">
+                    {formatCurrency(totalAvailable)}
                   </p>
                 </div>
               )}
@@ -129,9 +150,9 @@ const BudgetAmountInput: React.FC<BudgetAmountInputProps> = ({ onSubmit }) => {
                   />
                 </div>
                 
-                {parseFloat(amount) > totalIncome && totalIncome > 0 && (
+                {parseFloat(amount) > totalAvailable && totalAvailable > 0 && (
                   <div className="text-xs text-finance-accent mt-1">
-                    Adding {formatCurrency(parseFloat(amount) - totalIncome)} to your income
+                    Adding {formatCurrency(parseFloat(amount) - totalAvailable)} to your available funds
                   </div>
                 )}
               </div>
