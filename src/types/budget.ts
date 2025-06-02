@@ -59,4 +59,5 @@ export interface BudgetContextType {
   previousRemainingBudget: number;
   continuousBudgetItems: BudgetItem[];
   markItemAsContinuous: (itemId: string, isContinuous: boolean) => Promise<void>;
+  setPreviousRemainingBudget: (amount: number) => void;
 }

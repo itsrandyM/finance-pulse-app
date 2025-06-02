@@ -78,7 +78,11 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         // Budget just expired, store the remaining amount for next budget
         const remainingBudget = budgetCalculations.getRemainingBudget();
         console.log(`Budget expired with remaining amount: ${remainingBudget}`);
-        setPreviousRemainingBudget(remainingBudget > 0 ? remainingBudget : 0);
+        
+        // Only store positive remaining amounts
+        if (remainingBudget > 0) {
+          setPreviousRemainingBudget(remainingBudget);
+        }
         
         // Store budget items that should be continued
         const itemsToContinue = budgetItems.filter(item => item.isContinuous);
@@ -174,7 +178,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         createNewBudgetPeriod: budgetLoading.createNewBudgetPeriod,
         previousRemainingBudget,
         continuousBudgetItems,
-        markItemAsContinuous
+        markItemAsContinuous,
+        setPreviousRemainingBudget
       }}
     >
       {children}

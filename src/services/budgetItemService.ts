@@ -82,8 +82,10 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
   // Handle deadline value with proper type checking
   if ('deadline' in updates) {
     const deadlineValue = updates.deadline;
+    // Check for null/undefined first to avoid instanceof error
     if (deadlineValue !== null && deadlineValue !== undefined) {
-      if (deadlineValue instanceof Date) {
+      // Now we can safely check instanceof since deadlineValue is not null/undefined
+      if (typeof deadlineValue === 'object' && deadlineValue instanceof Date) {
         dbUpdates.deadline = deadlineValue.toISOString();
       } else if (typeof deadlineValue === 'string') {
         dbUpdates.deadline = deadlineValue;
@@ -91,6 +93,12 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
     } else {
       dbUpdates.deadline = null;
     }
+    // Remove the original deadline property to avoid conflicts
+    delete dbUpdates.deadline;
+    // Set the correct database field name
+    dbUpdates.deadline = dbUpdates.deadline || (deadlineValue !== null && deadlineValue !== undefined ? 
+      (typeof deadlineValue === 'object' && deadlineValue instanceof Date ? deadlineValue.toISOString() : deadlineValue) : 
+      null);
   }
   
   // Handle isContinuous -> is_continuous mapping
