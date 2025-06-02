@@ -79,8 +79,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const remainingBudget = budgetCalculations.getRemainingBudget();
         console.log(`Budget expired with remaining amount: ${remainingBudget}`);
         
-        // Only store positive remaining amounts and only if not already stored
-        if (remainingBudget > 0 && previousRemainingBudget === 0) {
+        // Only store positive remaining amounts
+        if (remainingBudget > 0) {
           setPreviousRemainingBudget(remainingBudget);
         }
         
@@ -92,7 +92,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       
       setIsBudgetExpired(isExpired);
     }
-  }, [budgetDateRange, budgetItems, isBudgetExpired, budgetCalculations, previousRemainingBudget]);
+  }, [budgetDateRange, budgetItems, isBudgetExpired, budgetCalculations]);
 
   // Load budget when user changes
   useEffect(() => {
@@ -108,18 +108,13 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const setTotalBudget = (amount: number) => {
-    // Only add the previous remaining budget if it hasn't been added yet
-    const finalAmount = previousRemainingBudget > 0 && totalBudget === 0
+    // Add the previous remaining budget if coming from an expired budget
+    const finalAmount = previousRemainingBudget > 0 
       ? amount + previousRemainingBudget 
       : amount;
     
-    console.log(`Setting total budget: ${amount}, previous remaining: ${previousRemainingBudget}, final: ${finalAmount}`);
+    console.log(`Setting total budget: ${amount} + previous remaining ${previousRemainingBudget} = ${finalAmount}`);
     setTotalBudgetState(finalAmount);
-    
-    // Clear the previous remaining budget after it's been used
-    if (previousRemainingBudget > 0 && totalBudget === 0) {
-      setPreviousRemainingBudget(0);
-    }
   };
 
   const resetBudget = () => {
