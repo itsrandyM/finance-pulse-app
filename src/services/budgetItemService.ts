@@ -82,11 +82,13 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
   // Handle deadline value with proper type checking
   if ('deadline' in updates) {
     const deadlineValue = updates.deadline;
-    if (deadlineValue instanceof Date) {
-      dbUpdates.deadline = deadlineValue.toISOString();
-    } else if (typeof deadlineValue === 'string') {
-      dbUpdates.deadline = deadlineValue;
-    } else if (deadlineValue === null || deadlineValue === undefined) {
+    if (deadlineValue !== null && deadlineValue !== undefined) {
+      if (deadlineValue instanceof Date) {
+        dbUpdates.deadline = deadlineValue.toISOString();
+      } else if (typeof deadlineValue === 'string') {
+        dbUpdates.deadline = deadlineValue;
+      }
+    } else {
       dbUpdates.deadline = null;
     }
   }
