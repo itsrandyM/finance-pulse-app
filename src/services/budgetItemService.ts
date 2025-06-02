@@ -79,14 +79,16 @@ export const createBudgetItem = async (
 export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) => {
   const dbUpdates: Record<string, any> = { ...updates };
   
-  // Handle deadline value - ensure it's converted to ISO string only if it exists and is a Date
+  // Handle deadline value with proper type checking
   if ('deadline' in updates) {
-    if (updates.deadline === null) {
+    const deadlineValue = updates.deadline;
+    if (deadlineValue === null || deadlineValue === undefined) {
       dbUpdates.deadline = null;
-    } else if (updates.deadline !== null && updates.deadline !== undefined && updates.deadline instanceof Date) {
-      dbUpdates.deadline = updates.deadline.toISOString();
+    } else if (typeof deadlineValue === 'object' && deadlineValue instanceof Date) {
+      dbUpdates.deadline = deadlineValue.toISOString();
+    } else if (typeof deadlineValue === 'string') {
+      dbUpdates.deadline = deadlineValue;
     }
-    // If it's already a string, keep it as is
   }
   
   // Handle isContinuous -> is_continuous mapping
