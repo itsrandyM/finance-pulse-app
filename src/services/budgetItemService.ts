@@ -87,20 +87,11 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
       dbUpdates.deadline = null;
     } else if (typeof deadlineValue === 'string') {
       dbUpdates.deadline = deadlineValue;
-    } else if (deadlineValue && typeof deadlineValue === 'object' && deadlineValue.constructor === Date) {
-      // Use constructor check instead of instanceof to avoid TypeScript errors
+    } else if (deadlineValue instanceof Date) {
       dbUpdates.deadline = deadlineValue.toISOString();
     } else {
       dbUpdates.deadline = null;
     }
-    
-    // Remove the original deadline property to avoid conflicts
-    delete dbUpdates.deadline;
-    // Set the correct database field name with the processed value
-    dbUpdates.deadline = deadlineValue === null || deadlineValue === undefined ? null : 
-      (typeof deadlineValue === 'string' ? deadlineValue : 
-        (deadlineValue && typeof deadlineValue === 'object' && deadlineValue.constructor === Date ? 
-          deadlineValue.toISOString() : null));
   }
   
   // Handle isContinuous -> is_continuous mapping
