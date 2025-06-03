@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency } from '@/lib/formatters';
 
@@ -15,28 +14,38 @@ const BudgetAllocationSummary: React.FC<BudgetAllocationSummaryProps> = ({
   totalAllocated,
   remainingToAllocate,
 }) => {
-  const allocationPercentage = (totalAllocated / totalBudget) * 100;
+  const allocationPercentage = totalBudget > 0 ? (totalAllocated / totalBudget) * 100 : 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl text-finance-text">Budget Allocation</CardTitle>
-        <CardDescription>
-          Total Budget: {formatCurrency(totalBudget)}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Allocated: {formatCurrency(totalAllocated)}</span>
-            <span className={remainingToAllocate < 0 ? "text-finance-danger" : "text-finance-accent"}>
-              Remaining: {formatCurrency(remainingToAllocate)}
-            </span>
-          </div>
-          <Progress value={allocationPercentage} className="h-2" />
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Budget Overview</h2>
+          <p className="text-lg text-gray-600">Total Budget: {formatCurrency(totalBudget)}</p>
         </div>
-      </CardContent>
-    </Card>
+        <div className="mt-4 md:mt-0 text-right">
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-gray-700">
+              Allocated: {formatCurrency(totalAllocated)}
+            </div>
+            <div className={`text-lg font-bold ${remainingToAllocate < 0 ? "text-red-600" : "text-green-600"}`}>
+              Remaining: {formatCurrency(remainingToAllocate)}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-3">
+        <div className="flex justify-between text-sm font-medium text-gray-700">
+          <span>Progress</span>
+          <span>{allocationPercentage.toFixed(1)}%</span>
+        </div>
+        <Progress 
+          value={allocationPercentage} 
+          className="h-3 bg-white/50 border border-blue-200" 
+        />
+      </div>
+    </div>
   );
 };
 
