@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -75,14 +74,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const isExpired = now > budgetDateRange.endDate;
       
       if (isExpired && !isBudgetExpired) {
-        // Budget just expired, store the remaining amount for next budget
-        const remainingBudget = budgetCalculations.getRemainingBudget();
-        console.log(`Budget expired with remaining amount: ${remainingBudget}`);
-        
-        // Only store positive remaining amounts
-        if (remainingBudget > 0) {
-          setPreviousRemainingBudget(remainingBudget);
-        }
+        console.log("Budget has expired - the ExpiredBudgetOverlay will handle storing the remaining budget");
         
         // Store budget items that should be continued
         const itemsToContinue = budgetItems.filter(item => item.isContinuous);
@@ -92,7 +84,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       
       setIsBudgetExpired(isExpired);
     }
-  }, [budgetDateRange, budgetItems, isBudgetExpired, budgetCalculations]);
+  }, [budgetDateRange, budgetItems, isBudgetExpired]);
 
   // Load budget when user changes
   useEffect(() => {
@@ -108,13 +100,19 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const setTotalBudget = (amount: number) => {
-    // Add the previous remaining budget if coming from an expired budget
+    // Add the previous remaining budget if it exists and clear it after use
     const finalAmount = previousRemainingBudget > 0 
       ? amount + previousRemainingBudget 
       : amount;
     
     console.log(`Setting total budget: ${amount} + previous remaining ${previousRemainingBudget} = ${finalAmount}`);
     setTotalBudgetState(finalAmount);
+    
+    // Clear the previous remaining budget after using it to prevent double counting
+    if (previousRemainingBudget > 0) {
+      console.log("Clearing previousRemainingBudget after use");
+      setPreviousRemainingBudget(0);
+    }
   };
 
   const resetBudget = () => {

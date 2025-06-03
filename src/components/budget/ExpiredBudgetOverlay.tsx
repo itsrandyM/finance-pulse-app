@@ -20,7 +20,6 @@ const ExpiredBudgetOverlay: React.FC<ExpiredBudgetOverlayProps> = ({ className =
     budgetDateRange,
     createNewBudgetPeriod,
     getRemainingBudget,
-    previousRemainingBudget,
     setPreviousRemainingBudget
   } = useBudget();
   const [isCreatingNewBudget, setIsCreatingNewBudget] = React.useState(false);
@@ -33,9 +32,9 @@ const ExpiredBudgetOverlay: React.FC<ExpiredBudgetOverlayProps> = ({ className =
   const handleCreateNewBudget = async () => {
     setIsCreatingNewBudget(true);
     try {
-      // Ensure the remaining budget is properly stored before creating new budget
+      // Store the remaining budget before creating new budget period
       const currentRemainingBudget = getRemainingBudget();
-      console.log(`Storing remaining budget: ${currentRemainingBudget}`);
+      console.log(`ExpiredBudgetOverlay: Storing remaining budget: ${currentRemainingBudget}`);
       
       // Only store positive remaining amounts
       if (currentRemainingBudget > 0) {
