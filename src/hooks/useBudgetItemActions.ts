@@ -37,7 +37,9 @@ export const useBudgetItemActions = ({
         currentBudgetId, 
         name, 
         amount, 
-        isImpulse
+        isImpulse,
+        false, // isContinuous
+        false  // isRecurring
       );
       
       setBudgetItems([
@@ -49,7 +51,8 @@ export const useBudgetItemActions = ({
           spent: 0,
           subItems: [],
           isImpulse: newItem.is_impulse || false,
-          isContinuous: newItem.is_continuous || false
+          isContinuous: newItem.is_continuous || false,
+          isRecurring: newItem.is_recurring || false
         }
       ]);
     } catch (error: any) {
@@ -72,6 +75,7 @@ export const useBudgetItemActions = ({
         amount: updates.amount,
         isImpulse: updates.isImpulse,
         isContinuous: updates.isContinuous,
+        isRecurring: updates.isRecurring,
         deadline: updates.deadline ? updates.deadline.toISOString() : null,
         note: updates.note,
         tag: updates.tag as string | null
@@ -249,6 +253,33 @@ export const useBudgetItemActions = ({
     }
   };
 
+  // Add a new function to mark items as recurring
+  const markItemAsRecurring = async (itemId: string, isRecurring: boolean) => {
+    try {
+      setIsLoading(true);
+      const update: BudgetItemUpdate = { isRecurring };
+      await budgetService.updateBudgetItem(itemId, update);
+      
+      setBudgetItems(
+        budgetItems.map(item =>
+          item.id === itemId ? { ...item, isRecurring } : item
+        )
+      );
+      
+      toast({
+        title: isRecurring ? "Item will recur in next periods" : "Item will not recur in next periods",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error updating item recurrence",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     addBudgetItem,
     updateBudgetItem,
@@ -258,6 +289,7 @@ export const useBudgetItemActions = ({
     updateSubItem,
     updateItemDeadline,
     markItemAsContinuous,
+    markItemAsRecurring,
     isLoading
   };
 };

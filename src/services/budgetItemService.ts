@@ -6,6 +6,7 @@ import { Database } from '@/integrations/supabase/types';
 export type BudgetItemUpdate = Partial<Database['public']['Tables']['budget_items']['Update']> & { 
   isContinuous?: boolean;
   isImpulse?: boolean;
+  isRecurring?: boolean;
   deadline?: Date | null | string;
 };
 
@@ -55,7 +56,8 @@ export const createBudgetItem = async (
   name: string,
   amount: number,
   isImpulse: boolean = false,
-  isContinuous: boolean = false
+  isContinuous: boolean = false,
+  isRecurring: boolean = false
 ) => {
   const { data, error } = await supabase
     .from('budget_items')
@@ -64,7 +66,8 @@ export const createBudgetItem = async (
       name,
       amount,
       is_impulse: isImpulse,
-      is_continuous: isContinuous
+      is_continuous: isContinuous,
+      is_recurring: isRecurring
     })
     .select()
     .single();
@@ -104,6 +107,12 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
   if ('isImpulse' in updates) {
     dbUpdates.is_impulse = updates.isImpulse;
     delete dbUpdates.isImpulse;
+  }
+
+  // Handle isRecurring -> is_recurring mapping
+  if ('isRecurring' in updates) {
+    dbUpdates.is_recurring = updates.isRecurring;
+    delete dbUpdates.isRecurring;
   }
 
   const { error } = await supabase

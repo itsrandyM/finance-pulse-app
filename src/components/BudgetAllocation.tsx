@@ -39,9 +39,22 @@ const BudgetAllocation: React.FC = () => {
     }
   };
 
-  const handleSaveNoteTag = (type: 'item'|'subItem', id: string, note: string, tag: string|null, parentId?: string) => {
+  const handleSaveNoteTag = (
+    type: 'item'|'subItem', 
+    id: string, 
+    note: string, 
+    tag: string|null, 
+    isContinuous?: boolean, 
+    isRecurring?: boolean, 
+    parentId?: string
+  ) => {
     if (type === 'item') {
-      updateBudgetItem(id, { note, tag });
+      updateBudgetItem(id, { 
+        note, 
+        tag, 
+        isContinuous: isContinuous || false, 
+        isRecurring: isRecurring || false 
+      });
     } else if (type === 'subItem' && parentId) {
       updateSubItem(parentId, id, { note, tag });
     }

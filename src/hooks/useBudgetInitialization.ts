@@ -39,7 +39,7 @@ export const useBudgetInitialization = ({
     try {
       setIsLoading(true);
       
-      // If there's a previous remaining budget, add it to the new budget amount
+      // Calculate the final amount (only add remaining budget once)
       const finalAmount = previousRemainingBudget > 0 
         ? amount + previousRemainingBudget 
         : amount;
@@ -54,6 +54,7 @@ export const useBudgetInitialization = ({
       
       // Reset the previous remaining budget after using it
       if (previousRemainingBudget > 0) {
+        console.log("Resetting previous remaining budget from", previousRemainingBudget, "to 0");
         setPreviousRemainingBudget(0);
       }
       
@@ -63,39 +64,72 @@ export const useBudgetInitialization = ({
       setBudgetDateRange(dateRange);
       setIsBudgetExpired(false);
       
-      // If there are any continuous budget items from the previous budget, add them to the new budget
+      // Process continuous and recurring items from the previous budget
       const newBudgetItems: BudgetItem[] = [];
       
       if (continuousBudgetItems.length > 0) {
         for (const item of continuousBudgetItems) {
-          // Create a new budget item with the same details
           try {
-            const newItem = await budgetService.createBudgetItem(
-              budget.id,
-              item.name,
-              item.amount,
-              item.isImpulse || false,
-              item.isContinuous || false
-            );
+            // Handle continuous items - carry over with reduced amount
+            if (item.isContinuous) {
+              const remainingAmount = Math.max(0, item.amount - item.spent);
+              const newItem = await budgetService.createBudgetItem(
+                budget.id,
+                item.name,
+                remainingAmount,
+                item.isImpulse || false,
+                true, // Keep as continuous
+                item.isRecurring || false
+              );
+              
+              newBudgetItems.push({
+                id: newItem.id,
+                name: newItem.name,
+                amount: remainingAmount,
+                spent: item.spent, // Continue tracking from where we left off
+                subItems: [],
+                isImpulse: newItem.is_impulse || false,
+                isContinuous: true,
+                isRecurring: newItem.is_recurring || false,
+                note: item.note,
+                tag: item.tag
+              });
+            }
             
-            // Add to the local state with the spent amount from the previous budget
-            newBudgetItems.push({
-              id: newItem.id,
-              name: newItem.name,
-              amount: newItem.amount,
-              spent: 0, // Reset spent amount for the new budget period
-              subItems: [], // Sub-items will need to be added separately if needed
-              isImpulse: newItem.is_impulse !== undefined ? newItem.is_impulse : false,
-              isContinuous: newItem.is_continuous !== undefined ? newItem.is_continuous : false
-            });
+            // Handle recurring items - create fresh with original amount
+            if (item.isRecurring && !item.isContinuous) {
+              const newItem = await budgetService.createBudgetItem(
+                budget.id,
+                item.name,
+                item.amount,
+                item.isImpulse || false,
+                false,
+                true // Keep as recurring
+              );
+              
+              newBudgetItems.push({
+                id: newItem.id,
+                name: newItem.name,
+                amount: item.amount,
+                spent: 0, // Fresh start for recurring items
+                subItems: [],
+                isImpulse: newItem.is_impulse || false,
+                isContinuous: false,
+                isRecurring: true,
+                note: item.note,
+                tag: item.tag
+              });
+            }
             
-            // Copy sub-items if any
+            // Recreate sub-items for all carried over items
             if (item.subItems.length > 0) {
               for (const subItem of item.subItems) {
                 await budgetService.createSubItem(
-                  newItem.id,
+                  newBudgetItems[newBudgetItems.length - 1].id,
                   subItem.name,
-                  subItem.amount
+                  subItem.amount,
+                  subItem.note,
+                  subItem.tag
                 );
               }
             }
@@ -109,12 +143,14 @@ export const useBudgetInitialization = ({
           }
         }
         
-        // Reset continuous budget items after adding them
+        // Reset continuous budget items after processing them
         setContinuousBudgetItems([]);
       }
       
       // Set the initial budget items
       setBudgetItems(newBudgetItems);
+      
+      console.log("Budget initialization complete with", newBudgetItems.length, "items");
     } catch (error: any) {
       toast({
         title: "Error creating budget",

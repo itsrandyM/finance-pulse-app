@@ -21,6 +21,7 @@ export interface BudgetItem {
   deadline?: Date | null;
   isImpulse?: boolean;
   isContinuous?: boolean;
+  isRecurring?: boolean;
   note?: string;
   tag?: TagOption;
 }

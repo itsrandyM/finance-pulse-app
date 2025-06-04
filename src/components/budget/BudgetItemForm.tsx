@@ -81,7 +81,7 @@ const BudgetItemForm: React.FC<BudgetItemFormProps> = ({
               </div>
             </div>
           </div>
-          <Button type="submit" className="w-full md:w-auto bg-finance-primary hover:bg-finance-secondary">
+          <Button type="submit" className="w-full md:w-auto bg-finance-primary hover:bg-finance-secondary rounded-none">
             Add Budget Item
           </Button>
         </form>

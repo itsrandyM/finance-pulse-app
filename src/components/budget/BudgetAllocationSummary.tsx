@@ -18,7 +18,7 @@ const BudgetAllocationSummary: React.FC<BudgetAllocationSummaryProps> = ({
   const allocationPercentage = (totalAllocated / totalBudget) * 100;
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
       <CardHeader>
         <CardTitle className="text-2xl text-finance-text">Budget Allocation</CardTitle>
         <CardDescription>

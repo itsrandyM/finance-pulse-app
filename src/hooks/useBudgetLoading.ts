@@ -131,6 +131,7 @@ export const useBudgetLoading = ({
           deadline: item.deadline ? new Date(item.deadline) : undefined,
           isImpulse: item.is_impulse || false,
           isContinuous: item.is_continuous || false,
+          isRecurring: item.is_recurring || false,
           note: item.note || undefined,
           tag: item.tag || null,
         };

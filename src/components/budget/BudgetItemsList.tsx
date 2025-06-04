@@ -16,7 +16,7 @@ interface BudgetItemsListProps {
   onToggleSubItems: (itemId: string) => void;
   onNavigateToTracking: () => void;
   onEditNoteTag?: (type: 'item'|'subItem', id: string, parentId?: string) => void;
-  onSaveNoteTag?: (type: 'item'|'subItem', id: string, note: string, tag: string|null, parentId?: string) => void;
+  onSaveNoteTag?: (type: 'item'|'subItem', id: string, note: string, tag: string|null, isContinuous?: boolean, isRecurring?: boolean, parentId?: string) => void;
   editing?: { open: boolean; type: 'item' | 'subItem'; id: string; parentId?: string; };
   editingData?: { note: string; tag: string|null; };
 }
@@ -42,6 +42,8 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
     parentId?: string;
     note: string;
     tag: string|null;
+    isContinuous: boolean;
+    isRecurring: boolean;
   }>({
     open: false,
     type: 'item',
@@ -49,6 +51,8 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
     parentId: undefined,
     note: "",
     tag: null,
+    isContinuous: false,
+    isRecurring: false,
   });
 
   // Open note/tag editor for item or subItem
@@ -57,6 +61,8 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
     id: string,
     currentNote: string,
     currentTag: string|null,
+    isContinuous: boolean = false,
+    isRecurring: boolean = false,
     parentId?: string
   ) => {
     setNoteEditor({
@@ -66,14 +72,16 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
       parentId,
       note: currentNote,
       tag: currentTag ?? "",
+      isContinuous,
+      isRecurring,
     });
   };
 
-  const handleSaveNoteTag = (note: string, tag: string|null) => {
+  const handleSaveNoteTag = (note: string, tag: string|null, isContinuous: boolean, isRecurring: boolean) => {
     if (noteEditor.type === 'item') {
-      onSaveNoteTag && onSaveNoteTag('item', noteEditor.id, note, tag);
+      onSaveNoteTag && onSaveNoteTag('item', noteEditor.id, note, tag, isContinuous, isRecurring);
     } else if (noteEditor.type === 'subItem' && noteEditor.parentId) {
-      onSaveNoteTag && onSaveNoteTag('subItem', noteEditor.id, note, tag, noteEditor.parentId);
+      onSaveNoteTag && onSaveNoteTag('subItem', noteEditor.id, note, tag, false, false, noteEditor.parentId);
     }
     setNoteEditor({ ...noteEditor, open: false });
   };
@@ -96,7 +104,17 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
             onAddSubItem={onAddSubItem}
             onDeleteSubItem={onDeleteSubItem}
             onSetDeadline={onSetDeadline}
-            onEditNoteTag={handleEditNoteTag}
+            onEditNoteTag={(type, id, note, tag, parentId) => 
+              handleEditNoteTag(
+                type, 
+                id, 
+                note, 
+                tag, 
+                type === 'item' ? item.isContinuous || false : false,
+                type === 'item' ? item.isRecurring || false : false,
+                parentId
+              )
+            }
           />
         ))}
       </div>
@@ -116,6 +134,8 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
           open={noteEditor.open}
           initialNote={noteEditor.note}
           initialTag={noteEditor.tag}
+          initialIsContinuous={noteEditor.isContinuous}
+          initialIsRecurring={noteEditor.isRecurring}
           isSubItem={noteEditor.type === 'subItem'}
           onClose={() => setNoteEditor({ ...noteEditor, open: false })}
           onSave={handleSaveNoteTag}
