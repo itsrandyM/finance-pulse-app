@@ -90,8 +90,8 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
       dbUpdates.deadline = null;
     } else if (typeof deadlineValue === 'string') {
       dbUpdates.deadline = deadlineValue;
-    } else if (deadlineValue instanceof Date) {
-      dbUpdates.deadline = deadlineValue.toISOString();
+    } else if (deadlineValue && typeof deadlineValue === 'object' && 'toISOString' in deadlineValue) {
+      dbUpdates.deadline = (deadlineValue as Date).toISOString();
     } else {
       dbUpdates.deadline = null;
     }

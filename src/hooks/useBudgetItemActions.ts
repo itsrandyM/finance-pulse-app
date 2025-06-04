@@ -253,33 +253,6 @@ export const useBudgetItemActions = ({
     }
   };
 
-  // Add a new function to mark items as recurring
-  const markItemAsRecurring = async (itemId: string, isRecurring: boolean) => {
-    try {
-      setIsLoading(true);
-      const update: BudgetItemUpdate = { isRecurring };
-      await budgetService.updateBudgetItem(itemId, update);
-      
-      setBudgetItems(
-        budgetItems.map(item =>
-          item.id === itemId ? { ...item, isRecurring } : item
-        )
-      );
-      
-      toast({
-        title: isRecurring ? "Item will recur in next periods" : "Item will not recur in next periods",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error updating item recurrence",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return {
     addBudgetItem,
     updateBudgetItem,
@@ -289,7 +262,6 @@ export const useBudgetItemActions = ({
     updateSubItem,
     updateItemDeadline,
     markItemAsContinuous,
-    markItemAsRecurring,
     isLoading
   };
 };

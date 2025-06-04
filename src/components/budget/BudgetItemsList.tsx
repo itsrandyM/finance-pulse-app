@@ -15,10 +15,7 @@ interface BudgetItemsListProps {
   showSubItems: { [key: string]: boolean };
   onToggleSubItems: (itemId: string) => void;
   onNavigateToTracking: () => void;
-  onEditNoteTag?: (type: 'item'|'subItem', id: string, parentId?: string) => void;
   onSaveNoteTag?: (type: 'item'|'subItem', id: string, note: string, tag: string|null, isContinuous?: boolean, isRecurring?: boolean, parentId?: string) => void;
-  editing?: { open: boolean; type: 'item' | 'subItem'; id: string; parentId?: string; };
-  editingData?: { note: string; tag: string|null; };
 }
 
 const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
@@ -30,10 +27,7 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
   showSubItems,
   onToggleSubItems,
   onNavigateToTracking,
-  onEditNoteTag,
   onSaveNoteTag,
-  editing,
-  editingData,
 }) => {
   const [noteEditor, setNoteEditor] = useState<{
     open: boolean;
