@@ -48,13 +48,7 @@ const BudgetAllocation: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8 animate-fade-in">
-      {/* Header Section */}
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900">Budget Allocation</h1>
-        <p className="text-gray-600">Organize your expenses and track your spending</p>
-      </div>
-
+    <div className="space-y-6 animate-fade-in">
       <BudgetAllocationSummary
         totalBudget={totalBudget}
         totalAllocated={totalAllocated}
