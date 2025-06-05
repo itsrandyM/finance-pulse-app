@@ -55,9 +55,9 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
     id: string,
     currentNote: string,
     currentTag: string|null,
+    parentId?: string,
     isContinuous: boolean = false,
-    isRecurring: boolean = false,
-    parentId?: string
+    isRecurring: boolean = false
   ) => {
     setNoteEditor({
       open: true,
@@ -104,9 +104,9 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
                 id, 
                 note, 
                 tag, 
+                parentId,
                 type === 'item' ? item.isContinuous || false : false,
-                type === 'item' ? item.isRecurring || false : false,
-                parentId
+                type === 'item' ? item.isRecurring || false : false
               )
             }
           />
