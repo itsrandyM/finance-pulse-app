@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -28,7 +29,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [continuousBudgetItems, setContinuousBudgetItems] = useState<BudgetItem[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isLoadingBudget, setIsLoadingBudget } = useLoading();
+  const { isLoading, setIsLoading } = useLoading();
 
   // Custom hooks for budget functionality
   const budgetLoading = useBudgetLoading({
@@ -65,7 +66,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const budgetCalculations = useBudgetCalculations({
     budgetItems,
-    totalBudget
+    totalBudget: totalBudgetState
   });
 
   // Check if budget is expired when date range changes
@@ -123,7 +124,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const markItemAsContinuous = async (itemId: string, isContinuous: boolean) => {
     try {
-      setIsLoadingBudget(true);
+      setIsLoading(true);
       await budgetItemActions.updateBudgetItem(itemId, { isContinuous });
       toast({
         title: isContinuous 
@@ -137,7 +138,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         variant: "destructive"
       });
     } finally {
-      setIsLoadingBudget(false);
+      setIsLoading(false);
     }
   };
 
@@ -160,7 +161,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     getTotalSpent: budgetCalculations.getTotalSpent,
     getTotalAllocated: budgetCalculations.getTotalAllocated,
     updateItemDeadline: budgetItemActions.updateItemDeadline,
-    isLoading: isLoadingBudget || isAddingExpense,
+    isLoading: isLoading || expenseActions.isAddingExpense,
     currentBudgetId,
     initializeBudget: budgetLoading.initializeBudget,
     loadBudget: budgetLoading.loadBudget,
