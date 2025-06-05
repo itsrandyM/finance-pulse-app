@@ -90,7 +90,7 @@ export const useBudgetInitialization = ({
                 subItems: [],
                 isImpulse: newItem.is_impulse || false,
                 isContinuous: true,
-                isRecurring: (newItem as any).is_recurring || false,
+                isRecurring: newItem.is_recurring || false,
                 note: item.note,
                 tag: item.tag
               });

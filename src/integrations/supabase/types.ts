@@ -18,6 +18,7 @@ export type Database = {
           id: string
           is_continuous: boolean | null
           is_impulse: boolean | null
+          is_recurring: boolean | null
           name: string
           note: string | null
           spent: number
@@ -31,6 +32,7 @@ export type Database = {
           id?: string
           is_continuous?: boolean | null
           is_impulse?: boolean | null
+          is_recurring?: boolean | null
           name: string
           note?: string | null
           spent?: number
@@ -44,6 +46,7 @@ export type Database = {
           id?: string
           is_continuous?: boolean | null
           is_impulse?: boolean | null
+          is_recurring?: boolean | null
           name?: string
           note?: string | null
           spent?: number

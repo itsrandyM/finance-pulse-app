@@ -52,7 +52,7 @@ export const useBudgetItemActions = ({
           subItems: [],
           isImpulse: newItem.is_impulse || false,
           isContinuous: newItem.is_continuous || false,
-          isRecurring: (newItem as any).is_recurring || false
+          isRecurring: newItem.is_recurring || false
         }
       ]);
     } catch (error: any) {
