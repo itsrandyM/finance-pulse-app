@@ -55,10 +55,9 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
     id: string,
     currentNote: string,
     currentTag: string|null,
-    parentId?: string,
-    isContinuous: boolean = false,
-    isRecurring: boolean = false
+    parentId?: string
   ) => {
+    const item = budgetItems.find(item => item.id === id);
     setNoteEditor({
       open: true,
       type,
@@ -66,8 +65,8 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
       parentId,
       note: currentNote,
       tag: currentTag ?? "",
-      isContinuous,
-      isRecurring,
+      isContinuous: type === 'item' ? (item?.isContinuous || false) : false,
+      isRecurring: type === 'item' ? (item?.isRecurring || false) : false,
     });
   };
 
@@ -98,17 +97,7 @@ const BudgetItemsList: React.FC<BudgetItemsListProps> = ({
             onAddSubItem={onAddSubItem}
             onDeleteSubItem={onDeleteSubItem}
             onSetDeadline={onSetDeadline}
-            onEditNoteTag={(type, id, note, tag, parentId) => 
-              handleEditNoteTag(
-                type, 
-                id, 
-                note, 
-                tag, 
-                parentId,
-                type === 'item' ? item.isContinuous || false : false,
-                type === 'item' ? item.isRecurring || false : false
-              )
-            }
+            onEditNoteTag={handleEditNoteTag}
           />
         ))}
       </div>
