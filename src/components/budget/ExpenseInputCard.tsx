@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,6 +34,9 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
 
   const selectedItem = budgetItems.find(item => item.id === selectedItemId);
   const hasSubItems = selectedItem?.subItems.length > 0;
+  
+  // Check if the selected item is already fully tracked (spent >= amount)
+  const isItemFullyTracked = selectedItem ? selectedItem.spent >= selectedItem.amount : false;
 
   useEffect(() => {
     const fetchSubItemExpenses = async () => {
@@ -69,6 +71,17 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
       }
     }
   }, [budgetItems, selectedItemId]);
+
+  // Auto-fill expense amount when item is selected (for items without sub-items)
+  useEffect(() => {
+    if (selectedItem && !hasSubItems && selectedItemId !== 'new') {
+      // Calculate remaining amount to be tracked
+      const remainingAmount = Math.max(0, selectedItem.amount - selectedItem.spent);
+      setExpenseAmount(remainingAmount.toString());
+    } else if (!selectedItem || selectedItemId === 'new') {
+      setExpenseAmount('');
+    }
+  }, [selectedItem, hasSubItems, selectedItemId]);
 
   const handleSubItemChange = (subItemId: string, value: string) => {
     setSubItemExpenses(prev => ({
@@ -261,11 +274,19 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="new">+ Add New Expense</SelectItem>
-              {budgetItems.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.name}
-                </SelectItem>
-              ))}
+              {budgetItems.map((item) => {
+                const isFullyTracked = item.spent >= item.amount;
+                return (
+                  <SelectItem 
+                    key={item.id} 
+                    value={item.id}
+                    disabled={!item.subItems.length && isFullyTracked}
+                  >
+                    {item.name}
+                    {!item.subItems.length && isFullyTracked && " (Fully Tracked)"}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -275,7 +296,15 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
         ) : (
           selectedItem && (
             <div className="space-y-4">
-              {!hasSubItems && (
+              {isItemFullyTracked && !hasSubItems && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-sm text-green-700">
+                    This budget item has been fully tracked. The full amount of {selectedItem.amount} has already been spent.
+                  </p>
+                </div>
+              )}
+              
+              {!hasSubItems && !isItemFullyTracked && (
                 <div className="space-y-2">
                   <Label htmlFor="expense-amount">Expense Amount</Label>
                   <div className="relative">
@@ -288,14 +317,19 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
                       placeholder="0.00"
                       step="0.01"
                       min="0"
+                      max={selectedItem.amount - selectedItem.spent}
                       className="pl-12 border-0 border-b border-finance-primary rounded-none bg-transparent focus:ring-0 focus:border-finance-primary"
                       value={expenseAmount}
                       onChange={(e) => setExpenseAmount(e.target.value)}
                       disabled={isRefreshing}
                     />
                   </div>
+                  <p className="text-xs text-gray-500">
+                    Remaining to track: KSh {(selectedItem.amount - selectedItem.spent).toFixed(2)}
+                  </p>
                 </div>
               )}
+              
               {hasSubItems && (
                 <div className="space-y-2">
                   <Label className="block mb-2">Track Sub-items</Label>
@@ -427,7 +461,7 @@ const ExpenseInputCard: React.FC<ExpenseInputCardProps> = ({
           )
         )}
 
-        {selectedItemId && selectedItemId !== "new" && (
+        {selectedItemId && selectedItemId !== "new" && !isItemFullyTracked && (
           <Button
             type="submit"
             className="w-full md:w-auto bg-finance-primary hover:bg-finance-secondary"

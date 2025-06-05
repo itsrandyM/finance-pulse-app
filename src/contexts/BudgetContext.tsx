@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -19,8 +18,8 @@ import { useLoading } from './LoadingContext';
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [period, setPeriodState] = useState<BudgetPeriod | null>(null);
-  const [totalBudget, setTotalBudgetState] = useState<number>(0);
+  const [periodState, setPeriodState] = useState<BudgetPeriod | null>(null);
+  const [totalBudgetState, setTotalBudgetState] = useState<number>(0);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [currentBudgetId, setCurrentBudgetId] = useState<string | null>(null);
   const [budgetDateRange, setBudgetDateRange] = useState<BudgetDateRange | null>(null);
@@ -29,7 +28,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [continuousBudgetItems, setContinuousBudgetItems] = useState<BudgetItem[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isLoading, setIsLoading } = useLoading();
+  const { isLoadingBudget, setIsLoadingBudget } = useLoading();
 
   // Custom hooks for budget functionality
   const budgetLoading = useBudgetLoading({
@@ -60,7 +59,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     toast,
     loadBudget: budgetLoading.loadBudget,
     setBudgetItems,
-    currentBudgetId
+    currentBudgetId,
+    budgetItems
   });
 
   const budgetCalculations = useBudgetCalculations({
@@ -123,7 +123,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const markItemAsContinuous = async (itemId: string, isContinuous: boolean) => {
     try {
-      setIsLoading(true);
+      setIsLoadingBudget(true);
       await budgetItemActions.updateBudgetItem(itemId, { isContinuous });
       toast({
         title: isContinuous 
@@ -137,47 +137,43 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setIsLoadingBudget(false);
     }
   };
 
-  return (
-    <BudgetContext.Provider
-      value={{
-        period,
-        totalBudget,
-        budgetItems,
-        setPeriod,
-        setTotalBudget,
-        setBudgetItems,
-        addBudgetItem: budgetItemActions.addBudgetItem,
-        updateBudgetItem: budgetItemActions.updateBudgetItem,
-        deleteBudgetItem: budgetItemActions.deleteBudgetItem,
-        addSubItem: budgetItemActions.addSubItem,
-        deleteSubItem: budgetItemActions.deleteSubItem,
-        updateSubItem: budgetItemActions.updateSubItem,
-        addExpense: expenseActions.addExpense,
-        resetBudget,
-        getRemainingBudget: budgetCalculations.getRemainingBudget,
-        getTotalSpent: budgetCalculations.getTotalSpent,
-        getTotalAllocated: budgetCalculations.getTotalAllocated,
-        updateItemDeadline: budgetItemActions.updateItemDeadline,
-        isLoading,
-        currentBudgetId,
-        initializeBudget: budgetLoading.initializeBudget,
-        loadBudget: budgetLoading.loadBudget,
-        budgetDateRange,
-        isBudgetExpired,
-        createNewBudgetPeriod: budgetLoading.createNewBudgetPeriod,
-        previousRemainingBudget,
-        continuousBudgetItems,
-        markItemAsContinuous,
-        setPreviousRemainingBudget
-      }}
-    >
-      {children}
-    </BudgetContext.Provider>
-  );
+  const value = {
+    period: periodState,
+    totalBudget: totalBudgetState,
+    budgetItems,
+    setPeriod: setPeriodState,
+    setTotalBudget: setTotalBudgetState,
+    setBudgetItems,
+    addBudgetItem: budgetItemActions.addBudgetItem,
+    updateBudgetItem: budgetItemActions.updateBudgetItem,
+    deleteBudgetItem: budgetItemActions.deleteBudgetItem,
+    addSubItem: budgetItemActions.addSubItem,
+    deleteSubItem: budgetItemActions.deleteSubItem,
+    updateSubItem: budgetItemActions.updateSubItem,
+    addExpense: expenseActions.addExpense,
+    resetBudget,
+    getRemainingBudget: budgetCalculations.getRemainingBudget,
+    getTotalSpent: budgetCalculations.getTotalSpent,
+    getTotalAllocated: budgetCalculations.getTotalAllocated,
+    updateItemDeadline: budgetItemActions.updateItemDeadline,
+    isLoading: isLoadingBudget || isAddingExpense,
+    currentBudgetId,
+    initializeBudget: budgetLoading.initializeBudget,
+    loadBudget: budgetLoading.loadBudget,
+    budgetDateRange,
+    isBudgetExpired,
+    createNewBudgetPeriod: budgetLoading.createNewBudgetPeriod,
+    previousRemainingBudget,
+    continuousBudgetItems,
+    markItemAsContinuous,
+    setPreviousRemainingBudget
+  };
+
+  return <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>;
 };
 
 export const useBudget = () => {

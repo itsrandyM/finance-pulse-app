@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export const addExpense = async (
@@ -49,7 +50,18 @@ export const addExpense = async (
       budget_item_id: budgetItemId
     });
     
-    return true;
+    // Get the updated budget item to return the new spent amount
+    const { data: updatedItem, error: fetchError } = await supabase
+      .from('budget_items')
+      .select('spent')
+      .eq('id', budgetItemId)
+      .single();
+    
+    if (fetchError) {
+      throw new Error(`Error fetching updated item: ${fetchError.message}`);
+    }
+    
+    return { success: true, newSpent: updatedItem.spent };
   } catch (error: any) {
     throw new Error(`Failed to add expense: ${error.message}`);
   }

@@ -10,13 +10,15 @@ interface UseExpenseActionsProps {
   loadBudget: () => Promise<boolean>;
   setBudgetItems: React.Dispatch<React.SetStateAction<BudgetItem[]>>;
   currentBudgetId: string | null;
+  budgetItems: BudgetItem[];
 }
 
 export const useExpenseActions = ({
   toast,
   loadBudget,
   setBudgetItems,
-  currentBudgetId
+  currentBudgetId,
+  budgetItems
 }: UseExpenseActionsProps) => {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
 
@@ -25,44 +27,18 @@ export const useExpenseActions = ({
       setIsAddingExpense(true);
       console.log(`Adding expense: itemId=${itemId}, amount=${amount}, subItemIds=${subItemIds?.join(',')}`);
       
-      if (subItemIds && subItemIds.length > 0) {
-        await serviceAddExpense(itemId, amount, subItemIds);
-      } else {
-        await serviceAddExpense(itemId, amount);
-      }
+      const result = await serviceAddExpense(itemId, amount, subItemIds);
       
-      console.log("Expense added successfully, updating item data...");
+      console.log("Expense added successfully, updating local state...");
       
-      // Instead of full reload, just update the relevant budget item
-      if (currentBudgetId) {
-        const items = await budgetService.getBudgetItems(currentBudgetId);
-        
-        const processedItems: BudgetItem[] = items.map((item: any) => {
-          const subItems = item.sub_items.map((subItem: any) => ({
-            id: subItem.id,
-            name: subItem.name,
-            amount: subItem.amount,
-            note: subItem.note || undefined,
-            tag: subItem.tag || null,
-            hasExpenses: subItem.id && subItemIds?.includes(subItem.id) ? true : undefined
-          }));
-          
-          return {
-            id: item.id,
-            name: item.name,
-            amount: item.amount,
-            spent: item.spent,
-            subItems: subItems,
-            deadline: item.deadline ? new Date(item.deadline) : undefined,
-            isImpulse: item.is_impulse || false,
-            isContinuous: item.is_continuous || false,
-            note: item.note || undefined,
-            tag: item.tag || null,
-          };
-        });
-        
-        setBudgetItems(processedItems);
-      }
+      // Update the local budget items state immediately with the new spent amount
+      setBudgetItems(prevItems => 
+        prevItems.map(item => 
+          item.id === itemId 
+            ? { ...item, spent: result.newSpent }
+            : item
+        )
+      );
       
       console.log("Budget items updated after expense addition");
     } catch (error: any) {
