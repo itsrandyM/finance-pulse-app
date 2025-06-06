@@ -8,6 +8,7 @@ import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 import { BudgetProvider } from "./contexts/BudgetContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { LoadingProvider } from "./contexts/LoadingContext";
 import { useAuth } from "./contexts/AuthContext";
 import BudgetPeriodSelectPage from "./pages/BudgetPeriodSelectPage";
 import BudgetAmountInputPage from "./pages/BudgetAmountInputPage";
@@ -18,7 +19,6 @@ import IncomeTracking from "./components/IncomeTracking";
 import Auth from "./pages/Auth";
 import ProfilePage from "./pages/ProfilePage";
 import React from "react";
-import { LoadingProvider } from "./contexts/LoadingContext";
 
 const queryClient = new QueryClient();
 

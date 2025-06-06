@@ -66,6 +66,9 @@ export const addExpense = async (
     
     console.log("Spent amount updated via database function");
     
+    // Add a small delay to ensure database consistency
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     // Get the updated budget item to return the new spent amount
     const { data: updatedItem, error: fetchError } = await supabase
       .from('budget_items')
@@ -81,7 +84,10 @@ export const addExpense = async (
     console.log("Updated item spent amount from database:", updatedItem.spent);
     console.log("=== EXPENSE SERVICE COMPLETE ===");
     
-    return { success: true, newSpent: parseFloat(updatedItem.spent) || 0 };
+    // Ensure we return a proper number
+    const newSpent = parseFloat(updatedItem.spent?.toString() || '0') || 0;
+    
+    return { success: true, newSpent };
   } catch (error: any) {
     console.error("=== EXPENSE SERVICE ERROR ===", error);
     throw new Error(`Failed to add expense: ${error.message}`);
