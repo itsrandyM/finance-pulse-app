@@ -13,6 +13,8 @@ export const addExpense = async (
   }
   
   try {
+    console.log("Adding expense to database:", { budgetItemId, amount, subItemIds });
+    
     // If subItemIds are provided, add expenses for each sub-item
     if (subItemIds && subItemIds.length > 0) {
       for (const subItemId of subItemIds) {
@@ -26,6 +28,7 @@ export const addExpense = async (
           });
         
         if (error) {
+          console.error("Error adding sub-item expense:", error);
           throw new Error(`Error adding sub-item expense: ${error.message}`);
         }
       }
@@ -41,14 +44,24 @@ export const addExpense = async (
         });
       
       if (error) {
+        console.error("Error adding expense:", error);
         throw new Error(`Error adding expense: ${error.message}`);
       }
     }
     
-    // Update the spent amount for the budget item
-    await supabase.rpc('update_budget_item_spent', {
+    console.log("Expense inserted successfully, now updating spent amount...");
+    
+    // Update the spent amount for the budget item using the database function
+    const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
       budget_item_id: budgetItemId
     });
+    
+    if (updateError) {
+      console.error("Error updating spent amount:", updateError);
+      throw new Error(`Error updating spent amount: ${updateError.message}`);
+    }
+    
+    console.log("Spent amount updated successfully");
     
     // Get the updated budget item to return the new spent amount
     const { data: updatedItem, error: fetchError } = await supabase
@@ -58,11 +71,15 @@ export const addExpense = async (
       .single();
     
     if (fetchError) {
+      console.error("Error fetching updated item:", fetchError);
       throw new Error(`Error fetching updated item: ${fetchError.message}`);
     }
     
+    console.log("Updated item spent amount:", updatedItem.spent);
+    
     return { success: true, newSpent: updatedItem.spent };
   } catch (error: any) {
+    console.error("Failed to add expense:", error);
     throw new Error(`Failed to add expense: ${error.message}`);
   }
 };

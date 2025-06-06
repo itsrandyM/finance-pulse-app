@@ -41,7 +41,7 @@ export const useBudgetLoading = ({
   const { setIsLoading } = useLoading();
   const isLoadingRef = useRef(false);
   const lastLoadTimeRef = useRef<number>(0);
-  const MIN_LOAD_INTERVAL = 2000; // Prevent reloads within 2 seconds
+  const MIN_LOAD_INTERVAL = 1000; // Reduce minimum interval to 1 second for faster updates
   
   const { initializeBudget: initBudget } = useBudgetInitialization({
     setCurrentBudgetId,
@@ -77,7 +77,7 @@ export const useBudgetLoading = ({
       return false;
     }
     
-    // Prevent concurrent loading and throttle repeated calls
+    // Prevent concurrent loading but allow more frequent updates for expense tracking
     if (isLoadingRef.current) {
       console.log("Already loading budget, skipping duplicate call");
       return false;
@@ -111,9 +111,11 @@ export const useBudgetLoading = ({
       
       console.log("Fetching budget items for budget:", budget.id);
       const items = await budgetService.getBudgetItems(budget.id);
-      console.log("Budget items fetched:", items);
+      console.log("Raw budget items from database:", items);
       
       const processedItems: BudgetItem[] = items.map((item: any) => {
+        console.log(`Processing item ${item.name}: spent=${item.spent}, amount=${item.amount}`);
+        
         const subItems = item.sub_items.map((subItem: any) => ({
           id: subItem.id,
           name: subItem.name,
@@ -126,7 +128,7 @@ export const useBudgetLoading = ({
           id: item.id,
           name: item.name,
           amount: item.amount,
-          spent: item.spent,
+          spent: Number(item.spent) || 0, // Ensure spent is properly converted to number
           subItems: subItems,
           deadline: item.deadline ? new Date(item.deadline) : undefined,
           isImpulse: item.is_impulse || false,
@@ -137,7 +139,7 @@ export const useBudgetLoading = ({
         };
       });
       
-      console.log("Setting budget items:", processedItems);
+      console.log("Processed budget items:", processedItems);
       setBudgetItems(processedItems);
       
       const startDate = new Date(budget.created_at || new Date());
@@ -148,7 +150,7 @@ export const useBudgetLoading = ({
       const isExpired = now > dateRange.endDate;
       setIsBudgetExpired(isExpired);
       
-      console.log("Budget fully loaded");
+      console.log("Budget fully loaded with updated spent amounts");
       return true;
     } catch (error: any) {
       console.error("Error loading budget:", error);
