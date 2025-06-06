@@ -13,10 +13,12 @@ export const addExpense = async (
   }
   
   try {
+    console.log("=== EXPENSE SERVICE START ===");
     console.log("Adding expense to database:", { budgetItemId, amount, subItemIds });
     
     // If subItemIds are provided, add expenses for each sub-item
     if (subItemIds && subItemIds.length > 0) {
+      console.log("Adding expenses for sub-items:", subItemIds);
       for (const subItemId of subItemIds) {
         const { error } = await supabase
           .from('expenses')
@@ -35,6 +37,7 @@ export const addExpense = async (
     }
     // Otherwise, add expense for the budget item directly
     else {
+      console.log("Adding expense for budget item directly");
       const { error } = await supabase
         .from('expenses')
         .insert({
@@ -61,7 +64,7 @@ export const addExpense = async (
       throw new Error(`Error updating spent amount: ${updateError.message}`);
     }
     
-    console.log("Spent amount updated successfully");
+    console.log("Spent amount updated via database function");
     
     // Get the updated budget item to return the new spent amount
     const { data: updatedItem, error: fetchError } = await supabase
@@ -75,11 +78,12 @@ export const addExpense = async (
       throw new Error(`Error fetching updated item: ${fetchError.message}`);
     }
     
-    console.log("Updated item spent amount:", updatedItem.spent);
+    console.log("Updated item spent amount from database:", updatedItem.spent);
+    console.log("=== EXPENSE SERVICE COMPLETE ===");
     
-    return { success: true, newSpent: updatedItem.spent };
+    return { success: true, newSpent: parseFloat(updatedItem.spent) || 0 };
   } catch (error: any) {
-    console.error("Failed to add expense:", error);
+    console.error("=== EXPENSE SERVICE ERROR ===", error);
     throw new Error(`Failed to add expense: ${error.message}`);
   }
 };
