@@ -41,7 +41,7 @@ export const useBudgetLoading = ({
   const { setIsLoading } = useLoading();
   const isLoadingRef = useRef(false);
   const lastLoadTimeRef = useRef<number>(0);
-  const MIN_LOAD_INTERVAL = 500; // Reduce to 500ms for faster expense tracking updates
+  const MIN_LOAD_INTERVAL = 1000; // Increase to 1 second to prevent rapid loading
   
   const { initializeBudget: initBudget } = useBudgetInitialization({
     setCurrentBudgetId,
@@ -77,7 +77,7 @@ export const useBudgetLoading = ({
       return false;
     }
     
-    // Prevent concurrent loading but allow more frequent updates for expense tracking
+    // Prevent concurrent loading
     if (isLoadingRef.current) {
       console.log("Already loading budget, skipping duplicate call");
       return false;
@@ -99,8 +99,6 @@ export const useBudgetLoading = ({
       
       if (!budget) {
         console.log("No budget found");
-        setIsLoading(false);
-        isLoadingRef.current = false;
         return false;
       }
       
@@ -115,7 +113,7 @@ export const useBudgetLoading = ({
       
       const processedItems: BudgetItem[] = items.map((item: any) => {
         // Convert spent to number explicitly and add detailed logging
-        const spentAmount = parseFloat(item.spent) || 0;
+        const spentAmount = parseFloat(item.spent?.toString() || '0') || 0;
         console.log(`Processing item "${item.name}": raw spent="${item.spent}", parsed spent=${spentAmount}, amount=${item.amount}`);
         
         const subItems = item.sub_items.map((subItem: any) => ({
@@ -130,7 +128,7 @@ export const useBudgetLoading = ({
           id: item.id,
           name: item.name,
           amount: item.amount,
-          spent: spentAmount, // Use the explicitly parsed amount
+          spent: spentAmount,
           subItems: subItems,
           deadline: item.deadline ? new Date(item.deadline) : undefined,
           isImpulse: item.is_impulse || false,

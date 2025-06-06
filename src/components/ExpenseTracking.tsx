@@ -22,19 +22,23 @@ const ExpenseTracking: React.FC = () => {
   
   const { toast } = useToast();
   const [isAddingExpense, setIsAddingExpense] = useState(false);
+  const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
 
-  // Load budget data when component mounts
+  // Load budget data when component mounts (only once)
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        await loadBudget();
-      } catch (error) {
-        console.error("Failed to load budget:", error);
-      }
-    };
-    
-    loadData();
-  }, [loadBudget]);
+    if (!hasLoadedInitial) {
+      const loadData = async () => {
+        try {
+          await loadBudget();
+          setHasLoadedInitial(true);
+        } catch (error) {
+          console.error("Failed to load budget:", error);
+        }
+      };
+      
+      loadData();
+    }
+  }, [loadBudget, hasLoadedInitial]);
 
   const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     try {
@@ -48,11 +52,6 @@ const ExpenseTracking: React.FC = () => {
         description: `Expense of ${formatCurrency(amount)} added successfully.`,
       });
       
-      // Reload budget to get updated data
-      setTimeout(() => {
-        loadBudget();
-      }, 500);
-      
     } catch (error: any) {
       console.error('Error adding expense:', error);
       toast({
@@ -65,7 +64,7 @@ const ExpenseTracking: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !hasLoadedInitial) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
