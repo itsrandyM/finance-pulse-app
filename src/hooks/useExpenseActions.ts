@@ -29,18 +29,25 @@ export const useExpenseActions = ({
       
       const result = await serviceAddExpense(itemId, amount, subItemIds);
       
-      console.log("Expense added successfully, updating local state...");
+      console.log("Expense added successfully, reloading budget data...");
       
-      // Update the local budget items state immediately with the new spent amount
-      setBudgetItems(prevItems => 
-        prevItems.map(item => 
-          item.id === itemId 
-            ? { ...item, spent: result.newSpent }
-            : item
-        )
-      );
+      // Instead of updating local state, reload the entire budget to ensure consistency
+      const reloadSuccess = await loadBudget();
       
-      console.log("Budget items updated after expense addition");
+      if (reloadSuccess) {
+        console.log("Budget data reloaded successfully after expense addition");
+      } else {
+        console.warn("Failed to reload budget data after expense addition");
+        // Fallback: update local state if reload fails
+        setBudgetItems(prevItems => 
+          prevItems.map(item => 
+            item.id === itemId 
+              ? { ...item, spent: result.newSpent }
+              : item
+          )
+        );
+      }
+      
     } catch (error: any) {
       console.error("Error adding expense:", error);
       toast({
