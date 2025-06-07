@@ -54,9 +54,9 @@ export const addExpense = async (
     
     console.log("Expense inserted successfully, now updating spent amount...");
     
-    // Update the spent amount for the budget item using the database function
+    // Update the spent amount for the budget item using the database function with correct parameter name
     const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
-      budget_item_id: budgetItemId
+      p_budget_item_id: budgetItemId
     });
     
     if (updateError) {

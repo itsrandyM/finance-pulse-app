@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { BudgetItem } from '@/types/budget';
 
 interface SimpleSpendingProgressProps {
@@ -14,6 +16,18 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
   budgetItems,
   formatCurrency,
 }) => {
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (itemId: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId);
+    } else {
+      newExpanded.add(itemId);
+    }
+    setExpandedItems(newExpanded);
+  };
+
   if (budgetItems.length === 0) {
     return (
       <Card>
@@ -40,6 +54,8 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
             const progressPercent = item.amount > 0 ? (item.spent / item.amount) * 100 : 0;
             const isOverBudget = item.spent > item.amount;
             const remaining = item.amount - item.spent;
+            const isExpanded = expandedItems.has(item.id);
+            const hasSubItems = item.subItems && item.subItems.length > 0;
 
             return (
               <div key={item.id} className="space-y-3">
@@ -56,6 +72,20 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
                         <Badge variant="outline" className="text-xs">
                           Continuous
                         </Badge>
+                      )}
+                      {hasSubItems && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleExpanded(item.id)}
+                          className="h-6 w-6 p-0 hover:bg-gray-100"
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="h-3 w-3" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3" />
+                          )}
+                        </Button>
                       )}
                     </div>
                     <div className="text-sm text-gray-600">
@@ -81,24 +111,24 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
                   </span>
                 </div>
 
-                {item.subItems && item.subItems.length > 0 && (
-                  <div className="ml-2 mt-3 space-y-2">
-                    <div className="text-xs font-medium text-gray-700 uppercase tracking-wide">
+                {hasSubItems && isExpanded && (
+                  <div className="ml-4 mt-3 p-3 bg-gray-50 rounded-lg border-l-2 border-blue-200">
+                    <div className="text-xs font-medium text-gray-700 uppercase tracking-wide mb-3">
                       Sub-categories:
                     </div>
                     <div className="grid grid-cols-1 gap-2">
                       {item.subItems.map((subItem) => (
-                        <div key={subItem.id} className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm border-l-2 border-blue-200">
+                        <div key={subItem.id} className="flex justify-between items-center p-2 bg-white rounded border shadow-sm">
                           <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                            <span>{subItem.name}</span>
+                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            <span className="text-sm font-medium">{subItem.name}</span>
                             {subItem.tag && (
                               <Badge variant="outline" className="text-xs">
                                 {subItem.tag}
                               </Badge>
                             )}
                           </div>
-                          <span className="font-medium text-gray-700">
+                          <span className="text-sm font-medium text-gray-700">
                             {formatCurrency(subItem.amount)}
                           </span>
                         </div>
