@@ -235,7 +235,7 @@ export type Database = {
     }
     Functions: {
       update_budget_item_spent: {
-        Args: { budget_item_id: string }
+        Args: { p_budget_item_id: string }
         Returns: undefined
       }
     }

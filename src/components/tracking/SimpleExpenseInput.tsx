@@ -5,8 +5,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { BudgetItem } from '@/types/budget';
 import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/formatters';
 
 interface SimpleExpenseInputProps {
   budgetItems: BudgetItem[];
@@ -26,6 +28,44 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
 
   const selectedItem = budgetItems.find(item => item.id === selectedItemId);
   const hasSubItems = selectedItem?.subItems && selectedItem.subItems.length > 0;
+
+  const handleItemChange = (value: string) => {
+    setSelectedItemId(value);
+    setSelectedSubItems([]);
+    
+    // Prepopulate amount with remaining budget for the item
+    const item = budgetItems.find(item => item.id === value);
+    if (item) {
+      const remaining = item.amount - item.spent;
+      setAmount(remaining > 0 ? remaining.toString() : '');
+    }
+  };
+
+  const handleSubItemToggle = (subItemId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSubItems([...selectedSubItems, subItemId]);
+    } else {
+      setSelectedSubItems(selectedSubItems.filter(id => id !== subItemId));
+    }
+
+    // Update amount based on selected sub-items
+    if (selectedItem) {
+      const selectedSubs = checked 
+        ? [...selectedSubItems, subItemId]
+        : selectedSubItems.filter(id => id !== subItemId);
+      
+      if (selectedSubs.length > 0) {
+        const totalSubAmount = selectedSubs.reduce((sum, id) => {
+          const subItem = selectedItem.subItems.find(sub => sub.id === id);
+          return sum + (subItem?.amount || 0);
+        }, 0);
+        setAmount(totalSubAmount.toString());
+      } else {
+        const remaining = selectedItem.amount - selectedItem.spent;
+        setAmount(remaining > 0 ? remaining.toString() : '');
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,50 +116,63 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
             <Label>Budget Category</Label>
             <Select 
               value={selectedItemId} 
-              onValueChange={(value) => {
-                setSelectedItemId(value);
-                setSelectedSubItems([]);
-              }}
+              onValueChange={handleItemChange}
               disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {budgetItems.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.name} - {item.amount - item.spent} remaining
-                  </SelectItem>
-                ))}
+                {budgetItems.map((item) => {
+                  const remaining = item.amount - item.spent;
+                  return (
+                    <SelectItem key={item.id} value={item.id}>
+                      <div className="flex justify-between items-center w-full">
+                        <span>{item.name}</span>
+                        <span className="text-sm text-gray-500 ml-2">
+                          {formatCurrency(remaining)} remaining
+                        </span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
 
           {hasSubItems && (
-            <div className="space-y-2">
-              <Label>Sub-items (optional)</Label>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
+            <div className="space-y-3">
+              <Label>Sub-categories (optional)</Label>
+              <div className="border rounded-lg p-3 space-y-3 max-h-40 overflow-y-auto">
                 {selectedItem?.subItems.map((subItem) => (
-                  <div key={subItem.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={`sub-${subItem.id}`}
-                      checked={selectedSubItems.includes(subItem.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedSubItems([...selectedSubItems, subItem.id]);
-                        } else {
-                          setSelectedSubItems(selectedSubItems.filter(id => id !== subItem.id));
+                  <div key={subItem.id} className="flex items-center justify-between space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`sub-${subItem.id}`}
+                        checked={selectedSubItems.includes(subItem.id)}
+                        onCheckedChange={(checked) => 
+                          handleSubItemToggle(subItem.id, checked as boolean)
                         }
-                      }}
-                      disabled={isLoading}
-                    />
-                    <Label htmlFor={`sub-${subItem.id}`} className="text-sm">
-                      {subItem.name} (KSh {subItem.amount})
-                    </Label>
+                        disabled={isLoading}
+                      />
+                      <Label 
+                        htmlFor={`sub-${subItem.id}`} 
+                        className="text-sm font-medium cursor-pointer"
+                      >
+                        {subItem.name}
+                      </Label>
+                    </div>
+                    <div className="text-sm text-gray-600 font-medium">
+                      {formatCurrency(subItem.amount)}
+                    </div>
                   </div>
                 ))}
               </div>
+              {selectedSubItems.length > 0 && (
+                <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                  {selectedSubItems.length} sub-item(s) selected
+                </div>
+              )}
             </div>
           )}
 
@@ -140,6 +193,13 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
                 disabled={isLoading}
               />
             </div>
+            {selectedItem && (
+              <div className="text-xs text-gray-500">
+                Budget: {formatCurrency(selectedItem.amount)} | 
+                Spent: {formatCurrency(selectedItem.spent)} | 
+                Remaining: {formatCurrency(selectedItem.amount - selectedItem.spent)}
+              </div>
+            )}
           </div>
 
           <Button 
