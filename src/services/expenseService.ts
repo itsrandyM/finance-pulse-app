@@ -94,6 +94,52 @@ export const addExpense = async (
   }
 };
 
+export const recalculateAllSpentAmounts = async () => {
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+  
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+  
+  try {
+    // Get all budget items for the current user
+    const { data: budgets, error: budgetError } = await supabase
+      .from('budgets')
+      .select('id')
+      .eq('user_id', userId);
+    
+    if (budgetError) {
+      throw new Error(`Error fetching budgets: ${budgetError.message}`);
+    }
+    
+    const { data: budgetItems, error: itemsError } = await supabase
+      .from('budget_items')
+      .select('id')
+      .in('budget_id', budgets.map(b => b.id));
+    
+    if (itemsError) {
+      throw new Error(`Error fetching budget items: ${itemsError.message}`);
+    }
+    
+    // Recalculate spent amount for each budget item
+    for (const item of budgetItems) {
+      const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
+        p_budget_item_id: item.id
+      });
+      
+      if (updateError) {
+        console.error(`Error updating spent amount for item ${item.id}:`, updateError);
+      }
+    }
+    
+    console.log("All spent amounts recalculated successfully");
+    return true;
+  } catch (error: any) {
+    console.error("Error recalculating spent amounts:", error);
+    throw error;
+  }
+};
+
 export const getExpensesByItem = async (budgetItemId: string) => {
   const { data, error } = await supabase
     .from('expenses')

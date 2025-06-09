@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react';
 import { BudgetPeriod, BudgetDateRange, BudgetItem } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
+import { recalculateAllSpentAmounts } from '@/services/expenseService';
 import { useBudgetDateRange } from './useBudgetDateRange';
 import { useBudgetInitialization } from './useBudgetInitialization';
 import { useLoading } from '@/contexts/LoadingContext';
@@ -106,6 +107,11 @@ export const useBudgetLoading = ({
       setCurrentBudgetId(budget.id);
       setPeriodState(budget.period as BudgetPeriod);
       setTotalBudgetState(budget.total_budget);
+      
+      // Recalculate all spent amounts to fix any incorrect data
+      console.log("Recalculating all spent amounts...");
+      await recalculateAllSpentAmounts();
+      console.log("Spent amounts recalculated");
       
       console.log("Fetching budget items for budget:", budget.id);
       const items = await budgetService.getBudgetItems(budget.id);
