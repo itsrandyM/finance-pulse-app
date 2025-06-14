@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileText, Tag, RefreshCw, ArrowRight } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const TAGS = [
   "Bills",
@@ -57,6 +58,20 @@ const NoteTagEditor: React.FC<NoteTagEditorProps> = ({
   const handleSave = () => {
     onSave(note, tag === "Custom" ? customTag : tag, isContinuous, isRecurring);
     onClose();
+  };
+
+  const handleContinuousChange = (checked: boolean) => {
+    setIsContinuous(checked);
+    if (checked) {
+      setIsRecurring(false);
+    }
+  };
+
+  const handleRecurringChange = (checked: boolean) => {
+    setIsRecurring(checked);
+    if (checked) {
+      setIsContinuous(false);
+    }
   };
 
   React.useEffect(() => {
@@ -124,19 +139,21 @@ const NoteTagEditor: React.FC<NoteTagEditorProps> = ({
 
           {!isSubItem && (
             <div className="space-y-3 pt-2 border-t">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="continuous" 
-                  checked={isContinuous}
-                  onCheckedChange={(checked) => setIsContinuous(checked as boolean)}
-                />
-                <div className="flex items-center gap-2">
-                  <ArrowRight className="h-4 w-4 text-blue-600" />
-                  <label htmlFor="continuous" className="text-sm font-medium cursor-pointer">
-                    Continuous Item
-                  </label>
+              <TooltipProvider>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="continuous" 
+                    checked={isContinuous}
+                    onCheckedChange={handleContinuousChange}
+                  />
+                  <div className="flex items-center gap-2">
+                    <ArrowRight className="h-4 w-4 text-blue-600" />
+                    <label htmlFor="continuous" className="text-sm font-medium cursor-pointer">
+                      Continuous Item
+                    </label>
+                  </div>
                 </div>
-              </div>
+              </TooltipProvider>
               <p className="text-xs text-gray-600 ml-6">
                 Continue tracking from where you left off in the next budget period
               </p>
@@ -145,7 +162,7 @@ const NoteTagEditor: React.FC<NoteTagEditorProps> = ({
                 <Checkbox 
                   id="recurring" 
                   checked={isRecurring}
-                  onCheckedChange={(checked) => setIsRecurring(checked as boolean)}
+                  onCheckedChange={handleRecurringChange}
                 />
                 <div className="flex items-center gap-2">
                   <RefreshCw className="h-4 w-4 text-green-600" />
@@ -157,6 +174,12 @@ const NoteTagEditor: React.FC<NoteTagEditorProps> = ({
               <p className="text-xs text-gray-600 ml-6">
                 Automatically add this item with the same amount to each new budget period
               </p>
+              
+              {(isContinuous || isRecurring) && (
+                 <p className="text-xs text-yellow-700 bg-yellow-50 p-2 rounded-md">
+                   An item can be either Continuous or Recurring, but not both.
+                 </p>
+              )}
             </div>
           )}
         </div>

@@ -144,3 +144,81 @@ export const deleteBudgetItem = async (id: string) => {
 
   return true;
 };
+
+export const getExpensesForRecurringItem = async (itemName: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  // Fetch all budgets for the user to get their IDs
+  const { data: budgets, error: budgetsError } = await supabase
+    .from('budgets')
+    .select('id')
+    .eq('user_id', user.id);
+  
+  if (budgetsError) {
+    console.error("Error fetching user budgets:", budgetsError);
+    throw new Error('Failed to retrieve user budgets.');
+  }
+
+  if (!budgets || budgets.length === 0) {
+    return []; // No budgets, so no expenses
+  }
+  const budgetIds = budgets.map(b => b.id);
+
+  // Fetch all budget items with the given name from those budgets
+  const { data: budgetItems, error: itemsError } = await supabase
+    .from('budget_items')
+    .select('id')
+    .in('budget_id', budgetIds)
+    .eq('name', itemName);
+    
+  if (itemsError) {
+    console.error("Error fetching budget items by name:", itemsError);
+    throw new Error('Failed to retrieve budget items.');
+  }
+
+  if (!budgetItems || budgetItems.length === 0) {
+    return []; // No items with that name
+  }
+  const budgetItemIds = budgetItems.map(item => item.id);
+
+  // Fetch all sub-items for these budget items to map their names later
+  const { data: subItems, error: subItemError } = await supabase
+    .from('budget_sub_items')
+    .select('id, name')
+    .in('budget_item_id', budgetItemIds);
+
+  if (subItemError) {
+    console.error("Error fetching sub-items:", subItemError);
+    // We can continue without sub-item names, but log the error
+  }
+  
+  const subItemMap = new Map(subItems?.map(s => [s.id, s.name]));
+
+  // Fetch all expenses for those budget items
+  const { data: expenses, error: expensesError } = await supabase
+    .from('expenses')
+    .select('*')
+    .in('budget_item_id', budgetItemIds)
+    .order('created_at', { ascending: false });
+
+  if (expensesError) {
+    console.error("Error fetching expenses:", expensesError);
+    throw new Error('Failed to retrieve expenses.');
+  }
+
+  if (!expenses) {
+    return [];
+  }
+
+  // Process expenses to add names
+  const processedExpenses = expenses.map(expense => ({
+    ...expense,
+    budget_item_name: itemName,
+    sub_item_name: expense.sub_item_id ? subItemMap.get(expense.sub_item_id) : undefined
+  }));
+
+  return processedExpenses;
+};

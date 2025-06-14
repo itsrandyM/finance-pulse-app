@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { BudgetPeriod, BudgetItem, BudgetDateRange } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
@@ -69,6 +70,8 @@ export const useBudgetInitialization = ({
       if (continuousBudgetItems.length > 0) {
         for (const item of continuousBudgetItems) {
           try {
+            let newItemData: BudgetItem | null = null;
+            
             // Handle continuous items - carry over with reduced amount
             if (item.isContinuous) {
               const remainingAmount = Math.max(0, item.amount - item.spent);
@@ -78,58 +81,61 @@ export const useBudgetInitialization = ({
                 remainingAmount,
                 item.isImpulse || false,
                 true, // Keep as continuous
-                item.isRecurring || false
+                false // Cannot be recurring
               );
               
-              newBudgetItems.push({
+              newItemData = {
                 id: newItem.id,
                 name: newItem.name,
                 amount: remainingAmount,
-                spent: item.spent, // Continue tracking from where we left off
+                spent: 0, // Fresh start for continuous items
                 subItems: [],
                 isImpulse: newItem.is_impulse || false,
                 isContinuous: true,
-                isRecurring: newItem.is_recurring || false,
+                isRecurring: false,
                 note: item.note,
                 tag: item.tag
-              });
+              };
             }
             
             // Handle recurring items - create fresh with original amount
-            if (item.isRecurring) {
+            else if (item.isRecurring) {
               const newItem = await budgetService.createBudgetItem(
                 budget.id,
                 item.name,
                 item.amount,
                 item.isImpulse || false,
-                item.isContinuous || false, // Preserve continuous status for items that are both
+                false, // Cannot be continuous
                 true // Keep as recurring
               );
               
-              newBudgetItems.push({
+              newItemData = {
                 id: newItem.id,
                 name: newItem.name,
                 amount: item.amount,
                 spent: 0, // Fresh start for recurring items
                 subItems: [],
                 isImpulse: newItem.is_impulse || false,
-                isContinuous: newItem.is_continuous || false,
+                isContinuous: false,
                 isRecurring: true,
                 note: item.note,
                 tag: item.tag
-              });
+              };
             }
             
-            // Recreate sub-items for all carried over items
-            if (item.subItems.length > 0) {
-              for (const subItem of item.subItems) {
-                await budgetService.createSubItem(
-                  newBudgetItems[newBudgetItems.length - 1].id,
-                  subItem.name,
-                  subItem.amount,
-                  subItem.note,
-                  subItem.tag
-                );
+            if (newItemData) {
+              newBudgetItems.push(newItemData);
+              // Recreate sub-items for all carried over items
+              if (item.subItems.length > 0) {
+                for (const subItem of item.subItems) {
+                  await budgetService.createSubItem(
+                    newItemData.id,
+                    subItem.name,
+                    subItem.amount,
+                    subItem.note,
+                    subItem.tag
+                  );
+                }
               }
             }
           } catch (error: any) {

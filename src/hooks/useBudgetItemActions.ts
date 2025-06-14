@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { BudgetItem, SubBudgetItem } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
@@ -77,6 +78,14 @@ export const useBudgetItemActions = ({
   const updateBudgetItem = async (id: string, updates: Partial<BudgetItem>) => {
     try {
       setIsLoading(true);
+      
+      // Ensure mutual exclusivity
+      if (updates.isContinuous === true) {
+        updates.isRecurring = false;
+      } else if (updates.isRecurring === true) {
+        updates.isContinuous = false;
+      }
+
       // Convert BudgetItem updates to BudgetItemUpdate format
       const itemUpdate: BudgetItemUpdate = {
         name: updates.name,
