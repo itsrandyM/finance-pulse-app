@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Zap, Coffee, Car, ShoppingCart, Home, Utensils } from 'lucide-react';
+import { Plus, Zap } from 'lucide-react';
 import { BudgetItem } from '@/types/budget';
 import { formatCurrency } from '@/lib/formatters';
 
@@ -28,6 +28,7 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
   const quickAmounts = [5, 10, 25, 50, 100];
   
   // Category-based quick expenses
+  /*
   const quickExpenseCategories = [
     { icon: Coffee, label: 'Coffee', amount: 5, category: 'food' },
     { icon: Utensils, label: 'Lunch', amount: 15, category: 'food' },
@@ -35,6 +36,7 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
     { icon: ShoppingCart, label: 'Groceries', amount: 100, category: 'food' },
     { icon: Home, label: 'Utilities', amount: 75, category: 'bills' },
   ];
+  */
 
   const selectedItem = budgetItems.find(item => item.id === selectedItemId);
 
@@ -42,6 +44,7 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
     setAmount(quickAmount.toString());
   };
 
+  /*
   const handleQuickExpense = async (quickExpense: typeof quickExpenseCategories[0]) => {
     // Try to find a matching budget item
     const matchingItem = budgetItems.find(item => 
@@ -61,6 +64,7 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
       setAmount(quickExpense.amount.toString());
     }
   };
+  */
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +93,8 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Quick Expense Buttons */}
+        {/* Quick Expense Buttons - Commented out for now */}
+        {/*
         <div>
           <h4 className="text-sm font-medium mb-3">Common Expenses</h4>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
@@ -111,6 +116,7 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
             ))}
           </div>
         </div>
+        */}
 
         {/* Manual Entry Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
