@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +12,7 @@ import QuickExpenseInput from './tracking/QuickExpenseInput';
 import SimpleSpendingProgress from './tracking/SimpleSpendingProgress';
 import BudgetAlertsDisplay from './budget/BudgetAlertsDisplay';
 import SimpleAnalyticsDashboard from './analytics/SimpleAnalyticsDashboard';
+import * as incomeService from '@/services/incomeService';
 
 const ExpenseTracking: React.FC = () => {
   const { 
@@ -27,12 +29,27 @@ const ExpenseTracking: React.FC = () => {
   const { toast } = useToast();
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
+  const [totalIncome, setTotalIncome] = useState(0);
+
+  // Fetch total income
+  useEffect(() => {
+    const fetchIncome = async () => {
+      try {
+        const income = await incomeService.getTotalIncome();
+        setTotalIncome(income);
+      } catch (error) {
+        console.error("Failed to fetch total income:", error);
+      }
+    };
+    fetchIncome();
+  }, []);
 
   const budgetAlerts = useBudgetAlerts({
     budgetItems,
     totalBudget,
     getTotalSpent,
-    getRemainingBudget
+    getRemainingBudget,
+    totalIncome,
   });
 
   // Load budget data when component mounts (only once)
@@ -146,3 +163,4 @@ const ExpenseTracking: React.FC = () => {
 };
 
 export default ExpenseTracking;
+

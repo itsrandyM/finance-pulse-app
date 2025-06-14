@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { BudgetItem } from '@/types/budget';
 import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/formatters';
 
 interface BudgetAlert {
   id: string;
@@ -17,20 +17,22 @@ interface UseBudgetAlertsProps {
   totalBudget: number;
   getTotalSpent: () => number;
   getRemainingBudget: () => number;
+  totalIncome: number;
 }
 
 export const useBudgetAlerts = ({
   budgetItems,
   totalBudget,
   getTotalSpent,
-  getRemainingBudget
+  getRemainingBudget,
+  totalIncome,
 }: UseBudgetAlertsProps) => {
   const [alerts, setAlerts] = useState<BudgetAlert[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     checkForAlerts();
-  }, [budgetItems, totalBudget]);
+  }, [budgetItems, totalBudget, totalIncome]);
 
   const checkForAlerts = () => {
     const newAlerts: BudgetAlert[] = [];
@@ -105,6 +107,18 @@ export const useBudgetAlerts = ({
         message: `You've used ${totalSpentPercentage.toFixed(1)}% of your total budget`,
         itemId: 'total',
         percentage: totalSpentPercentage
+      });
+    }
+
+    // Check if budget exceeds income
+    if (totalIncome > 0 && totalBudget > totalIncome) {
+      newAlerts.push({
+        id: 'total-over-income',
+        type: 'warning',
+        title: 'Budget Exceeds Income',
+        message: `Your total budget of ${formatCurrency(totalBudget)} exceeds your recorded income of ${formatCurrency(totalIncome)}.`,
+        itemId: 'total',
+        percentage: (totalBudget / totalIncome) * 100,
       });
     }
 
