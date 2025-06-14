@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,12 +18,7 @@ const Navigation = () => {
   const { pathname } = useLocation();
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/auth');
-    } catch (error) {
-      console.error("Failed to sign out:", error);
-    }
+    await signOut();
   };
 
   if (isLoading) {

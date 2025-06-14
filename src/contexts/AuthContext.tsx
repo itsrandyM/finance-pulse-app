@@ -3,6 +3,7 @@ import React, { createContext, useState, useEffect, useContext, ReactNode } from
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { cleanupAuthState } from '@/lib/authUtils';
 
 interface AuthContextType {
   session: Session | null;
@@ -44,6 +45,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signIn = async (email: string, password: string) => {
     try {
+      cleanupAuthState();
+      // Attempt global sign out to prevent limbo states, ignore errors
+      await supabase.auth.signOut({ scope: 'global' }).catch(err => console.warn("Pre-signin global signout failed", err));
+
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     } catch (error: any) {
@@ -58,11 +63,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUp = async (email: string, password: string, name?: string) => {
     try {
+      const redirectUrl = `${window.location.origin}/`;
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { full_name: name }
+          data: { full_name: name },
+          emailRedirectTo: redirectUrl
         }
       });
       
@@ -84,14 +91,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      cleanupAuthState();
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (error) {
+        console.error("Global signout failed:", error);
+        // Still attempt to redirect
+      }
     } catch (error: any) {
       toast({
         title: "Sign out failed",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      // Force a full page reload to the auth page to ensure a clean state
+      window.location.href = '/auth';
     }
   };
 
