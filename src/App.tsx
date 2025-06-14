@@ -18,6 +18,7 @@ import BudgetPeriodSelectPage from '@/pages/BudgetPeriodSelectPage';
 import IncomeSetupPage from '@/pages/IncomeSetupPage';
 import BudgetAmountInputPage from '@/pages/BudgetAmountInputPage';
 import GlobalLoadingIndicator from '@/components/GlobalLoadingIndicator';
+import ErrorPage from '@/pages/ErrorPage';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ function App() {
               <GlobalLoadingIndicator />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/error" element={<ErrorPage />} />
                 <Route path="/" element={<Layout><Outlet /></Layout>}>
                   <Route index element={<Index />} />
                   <Route path="/budget-setup" element={<BudgetPeriodSelectPage />} />

@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBudget } from '@/contexts/BudgetContext';
@@ -26,6 +26,7 @@ const ExpenseTracking: React.FC = () => {
     isLoading
   } = useBudget();
   
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
@@ -61,12 +62,13 @@ const ExpenseTracking: React.FC = () => {
           setHasLoadedInitial(true);
         } catch (error) {
           console.error("Failed to load budget:", error);
+          navigate('/error', { state: { message: "Sorry we couldn't access your budget. We're fixing it." } });
         }
       };
       
       loadData();
     }
-  }, [loadBudget, hasLoadedInitial]);
+  }, [loadBudget, hasLoadedInitial, navigate]);
 
   const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     try {
@@ -163,4 +165,3 @@ const ExpenseTracking: React.FC = () => {
 };
 
 export default ExpenseTracking;
-
