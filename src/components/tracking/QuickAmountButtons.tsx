@@ -12,7 +12,7 @@ const QuickAmountButtons: React.FC<QuickAmountButtonsProps> = ({
   onSelectAmount,
   isLoading
 }) => {
-  const quickAmounts = [5, 10, 25, 50, 100];
+  const quickAmounts = [50, 100, 500, 1000, 2000];
 
   return (
     <div className="space-y-2">
@@ -26,9 +26,9 @@ const QuickAmountButtons: React.FC<QuickAmountButtonsProps> = ({
             size="sm"
             onClick={() => onSelectAmount(quickAmount)}
             disabled={isLoading}
-            className="text-xs px-3 py-1 h-8 flex-shrink-0"
+            className="text-xs px-2 py-1 h-8 flex-shrink-0 min-w-0 truncate"
           >
-            {formatCurrency(quickAmount)}
+            <span className="truncate">{formatCurrency(quickAmount)}</span>
           </Button>
         ))}
       </div>

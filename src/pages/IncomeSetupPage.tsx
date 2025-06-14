@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ArrowRight, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Plus, X } from 'lucide-react';
 import * as incomeService from '@/services/incomeService';
 import { formatCurrency } from '@/lib/formatters';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -174,11 +174,11 @@ const IncomeSetupPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-6 animate-fade-in">
       <div className="flex items-center mb-6">
-        <Button variant="ghost" onClick={handleBack} className="mr-4">
+        <Button variant="ghost" onClick={handleBack} className="mr-4 flex-shrink-0">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          <span className="hidden sm:inline">Back</span>
         </Button>
-        <h1 className="text-2xl font-bold">Income Setup</h1>
+        <h1 className="text-xl sm:text-2xl font-bold truncate">Income Setup</h1>
       </div>
 
       {/* Carry Over Items Editor */}
@@ -189,35 +189,36 @@ const IncomeSetupPage: React.FC = () => {
         onRemainingBudgetUpdate={handleCarryOverBudgetUpdate}
       />
       
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Add Income</CardTitle>
-            <CardDescription>
-              Enter your income sources for this {period} budget period
+            <CardTitle className="truncate">Add Income</CardTitle>
+            <CardDescription className="text-sm leading-relaxed">
+              Enter your income sources for this <span className="font-medium">{period}</span> budget period
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddIncome} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="incomeName">Income Source</Label>
+                <Label htmlFor="incomeName" className="text-sm font-medium">Income Source</Label>
                 <Input
                   id="incomeName"
                   placeholder="Salary, Freelancing, etc."
                   value={incomeName}
                   onChange={(e) => setIncomeName(e.target.value)}
                   disabled={isLoading}
+                  className="w-full"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="incomeAmount">Amount</Label>
+                <Label htmlFor="incomeAmount" className="text-sm font-medium">Amount</Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <span className="text-gray-500">KSh</span>
+                    <span className="text-gray-500 text-sm">KSh</span>
                   </div>
                   <Input
                     id="incomeAmount"
-                    className="pl-12"
+                    className="pl-12 w-full"
                     type="number"
                     placeholder="0.00"
                     step="0.01"
@@ -233,8 +234,8 @@ const IncomeSetupPage: React.FC = () => {
                   <LoadingSpinner variant="spinner" size="sm" theme="light" />
                 ) : (
                   <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Income
+                    <Plus className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">Add Income</span>
                   </>
                 )}
               </Button>
@@ -242,46 +243,49 @@ const IncomeSetupPage: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Income Summary</CardTitle>
-            <CardDescription>
-              Your total income: {formatCurrency(totalIncome)}
+            <CardTitle className="truncate">Income Summary</CardTitle>
+            <CardDescription className="text-sm space-y-1">
+              <div className="truncate">
+                <span className="font-medium">Total income:</span> {formatCurrency(totalIncome)}
+              </div>
               {carryOverBudget > 0 && (
-                <span className="block text-sm text-blue-600 mt-1">
-                  + {formatCurrency(carryOverBudget)} carried over from previous budget
-                </span>
+                <div className="text-blue-600 truncate">
+                  <span className="font-medium">+ Carried over:</span> {formatCurrency(carryOverBudget)}
+                </div>
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             {isLoading && incomeEntries.length === 0 ? (
               <div className="flex items-center justify-center py-8">
                 <LoadingSpinner variant="dots" size="md" theme="finance" />
               </div>
             ) : incomeEntries.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
+              <p className="text-center text-muted-foreground py-8 text-sm">
                 No income entries yet. Add your income sources to continue.
               </p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {incomeEntries.map((entry) => (
-                  <div key={entry.id} className="flex justify-between items-center border-b pb-2">
-                    <div>
-                      <p className="font-medium">{entry.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div key={entry.id} className="flex items-center justify-between border-b pb-3 last:border-b-0 min-w-0 gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate text-sm">{entry.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
                         {new Date(entry.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{formatCurrency(entry.amount)}</span>
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <span className="font-medium text-sm truncate">{formatCurrency(entry.amount)}</span>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="text-finance-danger h-8 w-8 p-0"
+                        className="text-finance-danger h-8 w-8 p-0 flex-shrink-0"
                         onClick={() => handleDeleteIncome(entry.id)}
+                        title="Delete income entry"
                       >
-                        <ArrowLeft className="h-4 w-4" />
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -294,8 +298,8 @@ const IncomeSetupPage: React.FC = () => {
               onClick={handleContinue} 
               className="w-full bg-finance-primary"
             >
-              Continue to Budget Amount
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <span className="truncate">Continue to Budget Amount</span>
+              <ArrowRight className="ml-2 h-4 w-4 flex-shrink-0" />
             </Button>
           </CardFooter>
         </Card>
