@@ -11,14 +11,14 @@ import { Badge } from '@/components/ui/badge';
 const SetupPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { currentBudget, budgetItems } = useBudget();
+  const { period, totalBudget, budgetItems } = useBudget();
 
   const setupSteps = [
     {
       id: 'budget-period',
       title: 'Choose Budget Period',
       description: 'Select how often you want to create budgets',
-      completed: !!currentBudget,
+      completed: !!period,
       action: () => navigate('/budget-setup'),
       icon: Wallet
     },
@@ -26,7 +26,7 @@ const SetupPage = () => {
       id: 'income-setup',
       title: 'Set Up Income',
       description: 'Add your income sources and amounts',
-      completed: !!currentBudget, // We can assume income was set if budget exists
+      completed: !!period && totalBudget > 0,
       action: () => navigate('/income-setup'),
       icon: DollarSign
     },
@@ -139,7 +139,7 @@ const SetupPage = () => {
         </Card>
       )}
 
-      {currentBudget && (
+      {period && totalBudget > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Current Budget Overview</CardTitle>
@@ -148,7 +148,7 @@ const SetupPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-blue-600">
-                  ${currentBudget.total_budget?.toLocaleString() || '0'}
+                  ${totalBudget?.toLocaleString() || '0'}
                 </div>
                 <div className="text-sm text-gray-500">Total Budget</div>
               </div>
@@ -160,7 +160,7 @@ const SetupPage = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-purple-600 capitalize">
-                  {currentBudget.period}
+                  {period}
                 </div>
                 <div className="text-sm text-gray-500">Budget Period</div>
               </div>
