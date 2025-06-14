@@ -11,18 +11,20 @@ import QuickAmountButtons from './QuickAmountButtons';
 
 interface QuickExpenseInputProps {
   budgetItems: BudgetItem[];
-  onAddExpense: (itemId: string, amount: number, subItemIds?: string[]) => Promise<void>;
+  onAddExpense: (itemId: string, amount: number, subItemId?: string) => Promise<void>;
   isLoading: boolean;
+  onAddSubItem: (budgetItemId: string, name: string, amount: number) => Promise<any>;
 }
 
 const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
   budgetItems,
   onAddExpense,
-  isLoading
+  isLoading,
+  onAddSubItem
 }) => {
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
-  const [selectedSubItems, setSelectedSubItems] = useState<string[]>([]);
+  const [selectedSubItemId, setSelectedSubItemId] = useState<string | null>(null);
 
   const selectedItem = budgetItems.find(item => item.id === selectedItemId);
 
@@ -30,12 +32,27 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
     setAmount(quickAmount.toString());
   };
 
-  const handleToggleSubItem = (subItemId: string) => {
-    setSelectedSubItems(prev =>
-      prev.includes(subItemId)
-        ? prev.filter(id => id !== subItemId)
-        : [...prev, subItemId]
-    );
+  const handleSelectItem = (itemId: string) => {
+    setSelectedItemId(itemId);
+    setSelectedSubItemId(null);
+    setAmount('');
+  };
+
+  const handleSelectSubItem = (subItemId: string, subItemAmount: number) => {
+    setSelectedSubItemId(subItemId);
+    setAmount(subItemAmount.toString());
+  };
+  
+  const handleDeselectSubItem = () => {
+    setSelectedSubItemId(null);
+    setAmount('');
+  };
+
+  const handleAddSubItemForSelectedItem = (name: string, amount: number) => {
+    if (!selectedItemId) {
+      return Promise.reject(new Error("Cannot add sub-item without a selected budget item."));
+    }
+    return onAddSubItem(selectedItemId, name, amount);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,11 +66,11 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
     await onAddExpense(
       selectedItemId, 
       numAmount, 
-      selectedSubItems.length > 0 ? selectedSubItems : undefined
+      selectedSubItemId || undefined
     );
     
     setAmount('');
-    setSelectedSubItems([]);
+    setSelectedSubItemId(null);
   };
 
   return (
@@ -69,14 +86,18 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
           <BudgetItemSelector
             budgetItems={budgetItems}
             selectedItemId={selectedItemId}
-            onSelectItem={setSelectedItemId}
+            onSelectItem={handleSelectItem}
           />
 
-          <SubItemsSelector
-            selectedItem={selectedItem}
-            selectedSubItems={selectedSubItems}
-            onToggleSubItem={handleToggleSubItem}
-          />
+          {selectedItem && (
+            <SubItemsSelector
+              selectedItem={selectedItem}
+              selectedSubItemId={selectedSubItemId}
+              onSelectSubItem={handleSelectSubItem}
+              onDeselectSubItem={handleDeselectSubItem}
+              onAddSubItem={handleAddSubItemForSelectedItem}
+            />
+          )}
 
           <div className="space-y-3">
             <label className="text-sm font-medium block">Amount</label>

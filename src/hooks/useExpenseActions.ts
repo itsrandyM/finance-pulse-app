@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { BudgetItem } from '@/types/budget';
 import * as expenseService from '@/services/expenseService';
@@ -20,7 +19,7 @@ export const useExpenseActions = ({
 }: UseExpenseActionsProps) => {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
 
-  const addExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
+  const addExpense = async (itemId: string, amount: number, subItemId?: string) => {
     if (!currentBudgetId) {
       toast({
         title: "Error adding expense",
@@ -32,9 +31,9 @@ export const useExpenseActions = ({
 
     try {
       setIsAddingExpense(true);
-      console.log('Adding expense to item:', itemId, 'Amount:', amount, 'SubItems:', subItemIds);
+      console.log('Adding expense to item:', itemId, 'Amount:', amount, 'SubItem:', subItemId);
       
-      await expenseService.addExpense(itemId, amount, subItemIds);
+      await expenseService.addExpense(itemId, amount, subItemId);
       console.log('Expense added successfully, reloading budget...');
       
       // Reload the budget to get updated spent amounts

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +17,7 @@ const ExpenseTracking: React.FC = () => {
     budgetItems, 
     totalBudget, 
     addExpense,
+    addSubItem,
     getTotalSpent,
     getRemainingBudget,
     loadBudget,
@@ -51,12 +51,12 @@ const ExpenseTracking: React.FC = () => {
     }
   }, [loadBudget, hasLoadedInitial]);
 
-  const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
+  const handleAddExpense = async (itemId: string, amount: number, subItemId?: string) => {
     try {
       setIsAddingExpense(true);
-      console.log('Adding expense:', { itemId, amount, subItemIds });
+      console.log('Adding expense:', { itemId, amount, subItemId });
       
-      await addExpense(itemId, amount, subItemIds);
+      await addExpense(itemId, amount, subItemId);
       
     } catch (error: any) {
       console.error('Error adding expense:', error);
@@ -68,6 +68,13 @@ const ExpenseTracking: React.FC = () => {
     } finally {
       setIsAddingExpense(false);
     }
+  };
+
+  const handleAddSubItem = async (budgetItemId: string, name: string, amount: number) => {
+    if (addSubItem) {
+      return await addSubItem(budgetItemId, name, amount);
+    }
+    return Promise.reject(new Error("Add sub-item function is not available."));
   };
 
   if (isLoading && !hasLoadedInitial) {
@@ -110,6 +117,7 @@ const ExpenseTracking: React.FC = () => {
             budgetItems={budgetItems}
             onAddExpense={handleAddExpense}
             isLoading={isAddingExpense}
+            onAddSubItem={handleAddSubItem}
           />
         </TabsContent>
 

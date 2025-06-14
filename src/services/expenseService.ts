@@ -1,10 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export const addExpense = async (
   budgetItemId: string,
   amount: number,
-  subItemIds?: string[]
+  subItemId?: string
 ) => {
   const userId = (await supabase.auth.getUser()).data.user?.id;
   
@@ -14,42 +13,21 @@ export const addExpense = async (
   
   try {
     console.log("=== EXPENSE SERVICE START ===");
-    console.log("Adding expense to database:", { budgetItemId, amount, subItemIds });
+    console.log("Adding expense to database:", { budgetItemId, amount, subItemId });
     
-    // If subItemIds are provided, add expenses for each sub-item
-    if (subItemIds && subItemIds.length > 0) {
-      console.log("Adding expenses for sub-items:", subItemIds);
-      for (const subItemId of subItemIds) {
-        const { error } = await supabase
-          .from('expenses')
-          .insert({
-            budget_item_id: budgetItemId,
-            sub_item_id: subItemId,
-            amount: amount / subItemIds.length, // Divide the amount equally
-            user_id: userId
-          });
-        
-        if (error) {
-          console.error("Error adding sub-item expense:", error);
-          throw new Error(`Error adding sub-item expense: ${error.message}`);
-        }
-      }
-    }
-    // Otherwise, add expense for the budget item directly
-    else {
-      console.log("Adding expense for budget item directly");
-      const { error } = await supabase
-        .from('expenses')
-        .insert({
-          budget_item_id: budgetItemId,
-          amount,
-          user_id: userId
-        });
+    // Logic is now simpler: insert one expense record with an optional sub_item_id
+    const { error } = await supabase
+      .from('expenses')
+      .insert({
+        budget_item_id: budgetItemId,
+        sub_item_id: subItemId, // This can be null
+        amount: amount,
+        user_id: userId
+      });
       
-      if (error) {
-        console.error("Error adding expense:", error);
-        throw new Error(`Error adding expense: ${error.message}`);
-      }
+    if (error) {
+      console.error("Error adding expense:", error);
+      throw new Error(`Error adding expense: ${error.message}`);
     }
     
     console.log("Expense inserted successfully, now updating spent amount...");

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,10 +9,11 @@ import { BudgetItem } from '@/types/budget';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { useBudget } from '@/contexts/BudgetContext';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface SimpleExpenseInputProps {
   budgetItems: BudgetItem[];
-  onAddExpense: (itemId: string, amount: number, subItemIds?: string[]) => Promise<void>;
+  onAddExpense: (itemId: string, amount: number, subItemId?: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -24,7 +24,7 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
 }) => {
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
-  const [selectedSubItems, setSelectedSubItems] = useState<string[]>([]);
+  const [selectedSubItemId, setSelectedSubItemId] = useState<string | null>(null);
   const [isNewItem, setIsNewItem] = useState<boolean>(false);
   const [newItemName, setNewItemName] = useState<string>('');
   const { toast } = useToast();
@@ -37,12 +37,12 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
     if (value === 'new-item') {
       setIsNewItem(true);
       setSelectedItemId('');
-      setSelectedSubItems([]);
+      setSelectedSubItemId(null);
       setAmount('');
     } else {
       setIsNewItem(false);
       setSelectedItemId(value);
-      setSelectedSubItems([]);
+      setSelectedSubItemId(null);
       
       // Prepopulate amount with remaining budget for the item
       const item = budgetItems.find(item => item.id === value);
@@ -53,28 +53,12 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
     }
   };
 
-  const handleSubItemToggle = (subItemId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedSubItems([...selectedSubItems, subItemId]);
-    } else {
-      setSelectedSubItems(selectedSubItems.filter(id => id !== subItemId));
-    }
-
-    // Update amount based on selected sub-items
+  const handleSubItemChange = (subItemId: string) => {
+    setSelectedSubItemId(subItemId);
     if (selectedItem) {
-      const selectedSubs = checked 
-        ? [...selectedSubItems, subItemId]
-        : selectedSubItems.filter(id => id !== subItemId);
-      
-      if (selectedSubs.length > 0) {
-        const totalSubAmount = selectedSubs.reduce((sum, id) => {
-          const subItem = selectedItem.subItems.find(sub => sub.id === id);
-          return sum + (subItem?.amount || 0);
-        }, 0);
-        setAmount(totalSubAmount.toString());
-      } else {
-        const remaining = selectedItem.amount - selectedItem.spent;
-        setAmount(remaining > 0 ? remaining.toString() : '');
+      const subItem = selectedItem.subItems.find(sub => sub.id === subItemId);
+      if (subItem) {
+        setAmount(subItem.amount.toString());
       }
     }
   };
@@ -119,12 +103,8 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
           description: `"${newItemName.trim()}" added as an unbudgeted expense of ${formatCurrency(numericAmount)}.`,
         });
       } else {
-        // Add expense to existing item
-        if (hasSubItems && selectedSubItems.length > 0) {
-          await onAddExpense(selectedItemId, numericAmount, selectedSubItems);
-        } else {
-          await onAddExpense(selectedItemId, numericAmount);
-        }
+        // Add expense to existing item, with optional single sub-item
+        await onAddExpense(selectedItemId, numericAmount, selectedSubItemId || undefined);
         
         toast({
           title: "Expense Added",
@@ -135,7 +115,7 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
       // Reset form
       setSelectedItemId('');
       setAmount('');
-      setSelectedSubItems([]);
+      setSelectedSubItemId(null);
       setIsNewItem(false);
       setNewItemName('');
     } catch (error) {
@@ -202,20 +182,20 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
           {!isNewItem && hasSubItems && (
             <div className="space-y-3">
               <Label>Sub-categories (optional)</Label>
-              <div className="border rounded-lg p-3 space-y-3 max-h-40 overflow-y-auto">
+              <RadioGroup
+                value={selectedSubItemId || ""}
+                onValueChange={handleSubItemChange}
+                className="border rounded-lg p-3 space-y-3 max-h-40 overflow-y-auto"
+              >
                 {selectedItem?.subItems.map((subItem) => (
                   <div key={subItem.id} className="flex items-center justify-between space-x-3">
                     <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`sub-${subItem.id}`}
-                        checked={selectedSubItems.includes(subItem.id)}
-                        onCheckedChange={(checked) => 
-                          handleSubItemToggle(subItem.id, checked as boolean)
-                        }
-                        disabled={isLoading}
+                       <RadioGroupItem
+                        value={subItem.id}
+                        id={`simple-sub-${subItem.id}`}
                       />
                       <Label 
-                        htmlFor={`sub-${subItem.id}`} 
+                        htmlFor={`simple-sub-${subItem.id}`} 
                         className="text-sm font-medium cursor-pointer"
                       >
                         {subItem.name}
@@ -226,10 +206,10 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
                     </div>
                   </div>
                 ))}
-              </div>
-              {selectedSubItems.length > 0 && (
+              </RadioGroup>
+              {selectedSubItemId && (
                 <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                  {selectedSubItems.length} sub-item(s) selected
+                  1 sub-item selected
                 </div>
               )}
             </div>
