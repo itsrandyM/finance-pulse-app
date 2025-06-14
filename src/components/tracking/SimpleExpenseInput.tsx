@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { BudgetItem } from '@/types/budget';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { useBudget } from '@/contexts/BudgetContext';
 
 interface SimpleExpenseInputProps {
   budgetItems: BudgetItem[];
@@ -24,20 +25,31 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
   const [selectedSubItems, setSelectedSubItems] = useState<string[]>([]);
+  const [isNewItem, setIsNewItem] = useState<boolean>(false);
+  const [newItemName, setNewItemName] = useState<string>('');
   const { toast } = useToast();
+  const { addBudgetItem } = useBudget();
 
   const selectedItem = budgetItems.find(item => item.id === selectedItemId);
   const hasSubItems = selectedItem?.subItems && selectedItem.subItems.length > 0;
 
   const handleItemChange = (value: string) => {
-    setSelectedItemId(value);
-    setSelectedSubItems([]);
-    
-    // Prepopulate amount with remaining budget for the item
-    const item = budgetItems.find(item => item.id === value);
-    if (item) {
-      const remaining = item.amount - item.spent;
-      setAmount(remaining > 0 ? remaining.toString() : '');
+    if (value === 'new-item') {
+      setIsNewItem(true);
+      setSelectedItemId('');
+      setSelectedSubItems([]);
+      setAmount('');
+    } else {
+      setIsNewItem(false);
+      setSelectedItemId(value);
+      setSelectedSubItems([]);
+      
+      // Prepopulate amount with remaining budget for the item
+      const item = budgetItems.find(item => item.id === value);
+      if (item) {
+        const remaining = item.amount - item.spent;
+        setAmount(remaining > 0 ? remaining.toString() : '');
+      }
     }
   };
 
@@ -70,7 +82,16 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedItemId || !amount) {
+    if (isNewItem && (!newItemName.trim() || !amount)) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a name and amount for the new expense.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!isNewItem && (!selectedItemId || !amount)) {
       toast({
         title: "Missing Information",
         description: "Please select an item and enter an amount.",
@@ -90,16 +111,33 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
     }
 
     try {
-      if (hasSubItems && selectedSubItems.length > 0) {
-        await onAddExpense(selectedItemId, numericAmount, selectedSubItems);
+      if (isNewItem) {
+        // Create new impulse item and add expense to it
+        await addBudgetItem(newItemName.trim(), numericAmount, true);
+        toast({
+          title: "New Expense Added",
+          description: `"${newItemName.trim()}" added as an unbudgeted expense of ${formatCurrency(numericAmount)}.`,
+        });
       } else {
-        await onAddExpense(selectedItemId, numericAmount);
+        // Add expense to existing item
+        if (hasSubItems && selectedSubItems.length > 0) {
+          await onAddExpense(selectedItemId, numericAmount, selectedSubItems);
+        } else {
+          await onAddExpense(selectedItemId, numericAmount);
+        }
+        
+        toast({
+          title: "Expense Added",
+          description: `Expense of ${formatCurrency(numericAmount)} added successfully.`,
+        });
       }
       
       // Reset form
       setSelectedItemId('');
       setAmount('');
       setSelectedSubItems([]);
+      setIsNewItem(false);
+      setNewItemName('');
     } catch (error) {
       console.error('Error in form submission:', error);
     }
@@ -115,12 +153,12 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
           <div className="space-y-2">
             <Label>Budget Category</Label>
             <Select 
-              value={selectedItemId} 
+              value={isNewItem ? 'new-item' : selectedItemId} 
               onValueChange={handleItemChange}
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder="Select category or add new" />
               </SelectTrigger>
               <SelectContent>
                 {budgetItems.map((item) => {
@@ -136,11 +174,32 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
                     </SelectItem>
                   );
                 })}
+                <SelectItem value="new-item">
+                  <div className="flex items-center">
+                    <span className="text-blue-600 font-medium">+ Add New Unbudgeted Expense</span>
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {hasSubItems && (
+          {isNewItem && (
+            <div className="space-y-2">
+              <Label>Expense Name</Label>
+              <Input
+                type="text"
+                placeholder="e.g., Emergency repair, Unexpected purchase"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                disabled={isLoading}
+              />
+              <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                This will be added as an unbudgeted expense
+              </div>
+            </div>
+          )}
+
+          {!isNewItem && hasSubItems && (
             <div className="space-y-3">
               <Label>Sub-categories (optional)</Label>
               <div className="border rounded-lg p-3 space-y-3 max-h-40 overflow-y-auto">
@@ -193,7 +252,7 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
                 disabled={isLoading}
               />
             </div>
-            {selectedItem && (
+            {!isNewItem && selectedItem && (
               <div className="text-xs text-gray-500">
                 Budget: {formatCurrency(selectedItem.amount)} | 
                 Spent: {formatCurrency(selectedItem.spent)} | 
@@ -205,9 +264,9 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
           <Button 
             type="submit" 
             className="w-full"
-            disabled={isLoading || !selectedItemId || !amount}
+            disabled={isLoading || (!isNewItem && !selectedItemId) || !amount || (isNewItem && !newItemName.trim())}
           >
-            {isLoading ? 'Adding...' : 'Add Expense'}
+            {isLoading ? 'Adding...' : isNewItem ? 'Add New Expense' : 'Add Expense'}
           </Button>
         </form>
       </CardContent>

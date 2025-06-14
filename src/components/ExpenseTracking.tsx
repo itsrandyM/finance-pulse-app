@@ -47,11 +47,6 @@ const ExpenseTracking: React.FC = () => {
       
       await addExpense(itemId, amount, subItemIds);
       
-      toast({
-        title: "Expense Added",
-        description: `Expense of ${formatCurrency(amount)} added successfully.`,
-      });
-      
     } catch (error: any) {
       console.error('Error adding expense:', error);
       toast({
