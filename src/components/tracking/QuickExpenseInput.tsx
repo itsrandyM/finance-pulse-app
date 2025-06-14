@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,10 +84,10 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
     const item = budgetItems.find(i => i.id === itemId);
     if (!item) return false;
 
-    // Check if this is a single item (no sub-items) and if it was recently tracked
-    // For simplicity, we'll check if the item has any expenses (spent > 0)
-    // In a real implementation, you might want to check timestamps or more sophisticated logic
-    return item.subItems.length === 0 && item.spent > 0;
+    // Only check for single items (no sub-items) that have been previously tracked
+    // AND where adding this expense would exceed the allocated amount
+    const remainingBudget = item.amount - item.spent;
+    return item.subItems.length === 0 && item.spent > 0 && expenseAmount > remainingBudget;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,7 +103,7 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
       ? selectedSubItems.map(item => item.id)
       : undefined;
 
-    // Check for duplicate expenses on single items (no sub-items)
+    // Check for duplicate expenses on single items that would exceed budget
     if (!subItemIds && checkForDuplicateExpense(selectedItemId, numAmount)) {
       setExpenseToConfirm({ itemId: selectedItemId, amount: numAmount, subItemIds });
       setShowDuplicateDialog(true);
@@ -135,19 +134,14 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
 
   const handleConfirmDuplicate = async () => {
     if (expenseToConfirm) {
-      const remainingBudget = selectedItem ? selectedItem.amount - selectedItem.spent : 0;
-      
-      if (selectedItem && expenseToConfirm.amount > remainingBudget) {
-        setShowDuplicateDialog(false);
-        setShowConfirmation(true);
-      } else {
-        await proceedWithAddExpense(
-          expenseToConfirm.itemId,
-          expenseToConfirm.amount,
-          expenseToConfirm.subItemIds
-        );
-        setExpenseToConfirm(null);
-      }
+      // Since we already know this exceeds the budget (that's why the duplicate dialog showed),
+      // we can proceed directly to add the expense
+      await proceedWithAddExpense(
+        expenseToConfirm.itemId,
+        expenseToConfirm.amount,
+        expenseToConfirm.subItemIds
+      );
+      setExpenseToConfirm(null);
     }
   };
 

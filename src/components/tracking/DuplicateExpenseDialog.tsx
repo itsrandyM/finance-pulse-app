@@ -36,13 +36,13 @@ export const DuplicateExpenseDialog: React.FC<DuplicateExpenseDialogProps> = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Duplicate Expense Detected</AlertDialogTitle>
+          <AlertDialogTitle>Budget Exceeded - Multiple Expenses Detected</AlertDialogTitle>
           <AlertDialogDescription>
             You're about to add another expense of{' '}
             <span className="font-semibold">{formatCurrency(amount)}</span> to "
-            {itemName}".
+            {itemName}", which will exceed its allocated budget.
             <br /><br />
-            This item was recently tracked. Are you sure you want to add this expense again?
+            This item was previously tracked and this additional expense would put you over budget. Are you sure you want to continue?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
