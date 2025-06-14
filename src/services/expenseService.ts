@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export const addExpense = async (
@@ -5,65 +6,23 @@ export const addExpense = async (
   amount: number,
   subItemId?: string
 ) => {
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-  
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+  const userId = await getUserId();
   
   try {
     console.log("=== EXPENSE SERVICE START ===");
     console.log("Adding expense to database:", { budgetItemId, amount, subItemId });
     
-    // Logic is now simpler: insert one expense record with an optional sub_item_id
-    const { error } = await supabase
-      .from('expenses')
-      .insert({
-        budget_item_id: budgetItemId,
-        sub_item_id: subItemId, // This can be null
-        amount: amount,
-        user_id: userId
-      });
-      
-    if (error) {
-      console.error("Error adding expense:", error);
-      throw new Error('Could not add expense due to a database error.');
-    }
-    
+    await insertExpenseRecord(budgetItemId, amount, userId, subItemId);
     console.log("Expense inserted successfully, now updating spent amount...");
     
-    // Update the spent amount for the budget item using the database function with correct parameter name
-    const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
-      p_budget_item_id: budgetItemId
-    });
-    
-    if (updateError) {
-      console.error("Error updating spent amount:", updateError);
-      throw new Error('Could not update spent amount.');
-    }
-    
+    await updateBudgetItemSpent(budgetItemId);
     console.log("Spent amount updated via database function");
     
-    // Add a small delay to ensure database consistency
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitForDatabaseConsistency();
     
-    // Get the updated budget item to return the new spent amount
-    const { data: updatedItem, error: fetchError } = await supabase
-      .from('budget_items')
-      .select('spent')
-      .eq('id', budgetItemId)
-      .single();
-    
-    if (fetchError) {
-      console.error("Error fetching updated item:", fetchError);
-      throw new Error('Could not fetch updated item information.');
-    }
-    
-    console.log("Updated item spent amount from database:", updatedItem.spent);
+    const newSpent = await getUpdatedSpentAmount(budgetItemId);
+    console.log("Updated item spent amount from database:", newSpent);
     console.log("=== EXPENSE SERVICE COMPLETE ===");
-    
-    // Ensure we return a proper number
-    const newSpent = parseFloat(updatedItem.spent?.toString() || '0') || 0;
     
     return { success: true, newSpent };
   } catch (error: any) {
@@ -76,66 +35,23 @@ export const addMultipleExpenses = async (
   budgetItemId: string,
   subItemAmounts: { subItemId: string; amount: number }[]
 ) => {
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-  
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+  const userId = await getUserId();
   
   try {
     console.log("=== MULTIPLE EXPENSES SERVICE START ===");
     console.log("Adding multiple expenses:", { budgetItemId, subItemAmounts });
     
-    // Insert multiple expense records in a single transaction
-    const expenseRecords = subItemAmounts.map(({ subItemId, amount }) => ({
-      budget_item_id: budgetItemId,
-      sub_item_id: subItemId,
-      amount: amount,
-      user_id: userId
-    }));
-    
-    const { error } = await supabase
-      .from('expenses')
-      .insert(expenseRecords);
-      
-    if (error) {
-      console.error("Error adding multiple expenses:", error);
-      throw new Error(`Error adding expenses: ${error.message}`);
-    }
-    
+    await insertMultipleExpenseRecords(budgetItemId, subItemAmounts, userId);
     console.log("Multiple expenses inserted successfully, now updating spent amount...");
     
-    // Update the spent amount for the budget item
-    const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
-      p_budget_item_id: budgetItemId
-    });
-    
-    if (updateError) {
-      console.error("Error updating spent amount:", updateError);
-      throw new Error(`Error updating spent amount: ${updateError.message}`);
-    }
-    
+    await updateBudgetItemSpent(budgetItemId);
     console.log("Spent amount updated via database function");
     
-    // Add a small delay to ensure database consistency
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitForDatabaseConsistency();
     
-    // Get the updated budget item to return the new spent amount
-    const { data: updatedItem, error: fetchError } = await supabase
-      .from('budget_items')
-      .select('spent')
-      .eq('id', budgetItemId)
-      .single();
-    
-    if (fetchError) {
-      console.error("Error fetching updated item:", fetchError);
-      throw new Error(`Error fetching updated item: ${fetchError.message}`);
-    }
-    
-    console.log("Updated item spent amount from database:", updatedItem.spent);
+    const newSpent = await getUpdatedSpentAmount(budgetItemId);
+    console.log("Updated item spent amount from database:", newSpent);
     console.log("=== MULTIPLE EXPENSES SERVICE COMPLETE ===");
-    
-    const newSpent = parseFloat(updatedItem.spent?.toString() || '0') || 0;
     
     return { success: true, newSpent };
   } catch (error: any) {
@@ -145,42 +61,15 @@ export const addMultipleExpenses = async (
 };
 
 export const recalculateAllSpentAmounts = async () => {
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-  
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+  const userId = await getUserId();
   
   try {
-    // Get all budget items for the current user
-    const { data: budgets, error: budgetError } = await supabase
-      .from('budgets')
-      .select('id')
-      .eq('user_id', userId);
+    const budgets = await getUserBudgets(userId);
+    const budgetItems = await getBudgetItemsForBudgets(budgets.map(b => b.id));
     
-    if (budgetError) {
-      throw new Error(`Error fetching budgets: ${budgetError.message}`);
-    }
-    
-    const { data: budgetItems, error: itemsError } = await supabase
-      .from('budget_items')
-      .select('id')
-      .in('budget_id', budgets.map(b => b.id));
-    
-    if (itemsError) {
-      throw new Error(`Error fetching budget items: ${itemsError.message}`);
-    }
-    
-    // Recalculate spent amount for each budget item
-    for (const item of budgetItems) {
-      const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
-        p_budget_item_id: item.id
-      });
-      
-      if (updateError) {
-        console.error(`Error updating spent amount for item ${item.id}:`, updateError);
-      }
-    }
+    await Promise.all(
+      budgetItems.map(item => updateBudgetItemSpent(item.id))
+    );
     
     console.log("All spent amounts recalculated successfully");
     return true;
