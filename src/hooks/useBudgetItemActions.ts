@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { BudgetItem, SubBudgetItem } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
@@ -9,7 +8,7 @@ interface UseBudgetItemActionsProps {
   budgetItems: BudgetItem[];
   setBudgetItems: React.Dispatch<React.SetStateAction<BudgetItem[]>>;
   toast: any;
-  loadBudget: () => Promise<boolean>;
+  loadBudget: () => Promise<void>; // Changed from Promise<boolean> to Promise<void>
 }
 
 export const useBudgetItemActions = ({
