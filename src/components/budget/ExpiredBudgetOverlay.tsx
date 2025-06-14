@@ -20,12 +20,13 @@ const ExpiredBudgetOverlay: React.FC<ExpiredBudgetOverlayProps> = ({ className =
     budgetDateRange,
     createNewBudgetPeriod,
     getRemainingBudget,
-    setPreviousRemainingBudget
+    setPreviousRemainingBudget,
+    totalBudget
   } = useBudget();
   const [isCreatingNewBudget, setIsCreatingNewBudget] = React.useState(false);
   const navigate = useNavigate();
   
-  if (!isBudgetExpired || !budgetDateRange) {
+  if (!isBudgetExpired || !budgetDateRange || !period) {
     return null;
   }
   
@@ -41,7 +42,7 @@ const ExpiredBudgetOverlay: React.FC<ExpiredBudgetOverlayProps> = ({ className =
         setPreviousRemainingBudget(currentRemainingBudget);
       }
       
-      await createNewBudgetPeriod();
+      await createNewBudgetPeriod(period, totalBudget);
       navigate('/income-setup');
     } finally {
       setIsCreatingNewBudget(false);

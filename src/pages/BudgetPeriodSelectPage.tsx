@@ -17,7 +17,8 @@ const BudgetPeriodSelectPage = () => {
     currentBudgetId, 
     budgetDateRange, 
     isBudgetExpired,
-    createNewBudgetPeriod
+    createNewBudgetPeriod,
+    totalBudget
   } = useBudget();
   const [isCreatingNewBudget, setIsCreatingNewBudget] = useState(false);
 
@@ -33,9 +34,11 @@ const BudgetPeriodSelectPage = () => {
   };
 
   const handleCreateNewBudget = async () => {
+    if (!period) return;
+    
     setIsCreatingNewBudget(true);
     try {
-      await createNewBudgetPeriod();
+      await createNewBudgetPeriod(period, totalBudget);
       navigate('/income-setup'); // Navigate to income setup for a new budget period
     } finally {
       setIsCreatingNewBudget(false);
@@ -47,7 +50,7 @@ const BudgetPeriodSelectPage = () => {
       <h1 className="text-3xl font-bold mb-6">Budget Setup</h1>
       
       {/* Show expired budget warning if applicable */}
-      {isBudgetExpired && budgetDateRange && (
+      {isBudgetExpired && budgetDateRange && period && (
         <Card className="mb-8 border-yellow-300 bg-yellow-50">
           <CardHeader>
             <CardTitle className="text-xl text-yellow-800">Budget Period Expired</CardTitle>

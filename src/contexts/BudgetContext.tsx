@@ -142,6 +142,14 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
+  const createNewBudgetPeriod = async (period: BudgetPeriod, amount: number): Promise<void> => {
+    return await budgetLoading.createNewBudgetPeriod(period, amount);
+  };
+
+  const loadBudget = async (): Promise<void> => {
+    await budgetLoading.loadBudget();
+  };
+
   const value = {
     period: periodState,
     totalBudget: totalBudgetState,
@@ -164,10 +172,10 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     isLoading: isLoading || expenseActions.isAddingExpense,
     currentBudgetId,
     initializeBudget: budgetLoading.initializeBudget,
-    loadBudget: budgetLoading.loadBudget,
+    loadBudget,
     budgetDateRange,
     isBudgetExpired,
-    createNewBudgetPeriod: budgetLoading.createNewBudgetPeriod,
+    createNewBudgetPeriod,
     previousRemainingBudget,
     continuousBudgetItems,
     markItemAsContinuous,

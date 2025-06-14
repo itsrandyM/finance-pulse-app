@@ -58,36 +58,38 @@ export const useBudgetLoading = ({
     toast
   });
 
-  const createNewBudgetPeriod = async (): Promise<void> => {
-    if (!budgetDateRange?.startDate) {
+  const createNewBudgetPeriod = async (period: BudgetPeriod, amount: number): Promise<void> => {
+    try {
+      setIsLoading(true);
+      await initBudget(period, amount);
+    } catch (error: any) {
       toast({
-        title: "Missing budget information",
-        description: "Cannot create a new budget period without period information.",
+        title: "Error creating new budget period",
+        description: error.message,
         variant: "destructive"
       });
-      return;
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-    
-    // Load the current budget to get period and check for continuous items
-    await loadBudget();
   };
 
-  const loadBudget = async (): Promise<boolean> => {
+  const loadBudget = async (): Promise<void> => {
     if (!user) {
       console.log("No user found, cannot load budget");
-      return false;
+      return;
     }
     
     // Prevent concurrent loading
     if (isLoadingRef.current) {
       console.log("Already loading budget, skipping duplicate call");
-      return false;
+      return;
     }
     
     const now = Date.now();
     if (now - lastLoadTimeRef.current < MIN_LOAD_INTERVAL) {
       console.log("Budget was loaded recently, skipping duplicate call");
-      return false;
+      return;
     }
     
     try {
@@ -100,7 +102,7 @@ export const useBudgetLoading = ({
       
       if (!budget) {
         console.log("No budget found");
-        return false;
+        return;
       }
       
       console.log("Budget found:", budget);
@@ -162,7 +164,6 @@ export const useBudgetLoading = ({
       setIsBudgetExpired(isExpired);
       
       console.log("=== BUDGET LOADED SUCCESSFULLY ===");
-      return true;
     } catch (error: any) {
       console.error("Error loading budget:", error);
       toast({
@@ -170,7 +171,7 @@ export const useBudgetLoading = ({
         description: error.message,
         variant: "destructive"
       });
-      return false;
+      throw error;
     } finally {
       setIsLoading(false);
       isLoadingRef.current = false;
