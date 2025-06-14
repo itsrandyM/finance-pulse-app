@@ -27,6 +27,18 @@ export const addExpense = async (
     await updateBudgetItemSpent(budgetItemId);
     console.log("Spent amount updated via database function");
     
+    // Update budget metrics after adding expense
+    const { data: budgetItem } = await supabase
+      .from('budget_items')
+      .select('budget_id')
+      .eq('id', budgetItemId)
+      .single();
+    
+    if (budgetItem) {
+      await supabase.rpc('update_budget_metrics', { p_budget_id: budgetItem.budget_id });
+      console.log("Budget metrics updated");
+    }
+    
     await waitForDatabaseConsistency();
     
     const newSpent = await getUpdatedSpentAmount(budgetItemId);
@@ -56,6 +68,18 @@ export const addMultipleExpenses = async (
     await updateBudgetItemSpent(budgetItemId);
     console.log("Spent amount updated via database function");
     
+    // Update budget metrics after adding expenses
+    const { data: budgetItem } = await supabase
+      .from('budget_items')
+      .select('budget_id')
+      .eq('id', budgetItemId)
+      .single();
+    
+    if (budgetItem) {
+      await supabase.rpc('update_budget_metrics', { p_budget_id: budgetItem.budget_id });
+      console.log("Budget metrics updated");
+    }
+    
     await waitForDatabaseConsistency();
     
     const newSpent = await getUpdatedSpentAmount(budgetItemId);
@@ -80,7 +104,14 @@ export const recalculateAllSpentAmounts = async () => {
       budgetItems.map(item => updateBudgetItemSpent(item.id))
     );
     
-    console.log("All spent amounts recalculated successfully");
+    // Update all budget metrics
+    await Promise.all(
+      budgets.map(budget => 
+        supabase.rpc('update_budget_metrics', { p_budget_id: budget.id })
+      )
+    );
+    
+    console.log("All spent amounts and budget metrics recalculated successfully");
     return true;
   } catch (error: any) {
     console.error("Error recalculating spent amounts:", error);

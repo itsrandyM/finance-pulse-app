@@ -102,25 +102,37 @@ export type Database = {
       }
       budgets: {
         Row: {
+          actual_end_date: string | null
           created_at: string | null
           id: string
           period: string
+          status: Database["public"]["Enums"]["budget_status"] | null
           total_budget: number
+          total_transactions: number | null
           user_id: string
+          utilization_percentage: number | null
         }
         Insert: {
+          actual_end_date?: string | null
           created_at?: string | null
           id?: string
           period: string
+          status?: Database["public"]["Enums"]["budget_status"] | null
           total_budget: number
+          total_transactions?: number | null
           user_id: string
+          utilization_percentage?: number | null
         }
         Update: {
+          actual_end_date?: string | null
           created_at?: string | null
           id?: string
           period?: string
+          status?: Database["public"]["Enums"]["budget_status"] | null
           total_budget?: number
+          total_transactions?: number | null
           user_id?: string
+          utilization_percentage?: number | null
         }
         Relationships: []
       }
@@ -234,13 +246,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_budget_status: {
+        Args: {
+          p_budget_id: string
+          p_period: string
+          p_created_at: string
+          p_total_budget: number
+          p_total_spent: number
+          p_total_transactions: number
+        }
+        Returns: Database["public"]["Enums"]["budget_status"]
+      }
       update_budget_item_spent: {
         Args: { p_budget_item_id: string }
         Returns: undefined
       }
+      update_budget_metrics: {
+        Args: { p_budget_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      budget_status:
+        | "active"
+        | "completed"
+        | "abandoned"
+        | "overspent"
+        | "interrupted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -355,6 +387,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      budget_status: [
+        "active",
+        "completed",
+        "abandoned",
+        "overspent",
+        "interrupted",
+      ],
+    },
   },
 } as const
