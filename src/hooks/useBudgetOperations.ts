@@ -1,13 +1,15 @@
+
 import { useState } from 'react';
 import { BudgetItem, SubBudgetItem } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
+import * as expenseService from '@/services/expenseService';
 
 interface UseBudgetOperationsProps {
   currentBudgetId: string | null;
   budgetItems: BudgetItem[];
   setBudgetItems: React.Dispatch<React.SetStateAction<BudgetItem[]>>;
   toast: any;
-  loadBudget: () => Promise<boolean>;
+  loadBudget: () => Promise<void>;
 }
 
 export const useBudgetOperations = ({
@@ -191,10 +193,28 @@ export const useBudgetOperations = ({
     try {
       console.log(`Adding expense: itemId=${itemId}, amount=${amount}, subItemIds=${subItemIds?.join(',')}`);
       
-      if (subItemIds && subItemIds.length > 0) {
-        await budgetService.addExpense(itemId, amount, subItemIds);
+      if (subItemIds && subItemIds.length > 1) {
+        // Handle multiple sub-items using the new expenseService
+        const selectedItem = budgetItems.find(item => item.id === itemId);
+        if (!selectedItem) {
+          throw new Error("Selected budget item not found");
+        }
+        
+        const selectedSubItems = selectedItem.subItems.filter(sub => subItemIds.includes(sub.id));
+        const totalBudgetedAmount = selectedSubItems.reduce((total, sub) => total + sub.amount, 0);
+        
+        const subItemAmounts = selectedSubItems.map(subItem => ({
+          subItemId: subItem.id,
+          amount: totalBudgetedAmount > 0 ? (subItem.amount / totalBudgetedAmount) * amount : amount / selectedSubItems.length
+        }));
+        
+        await expenseService.addMultipleExpenses(itemId, subItemAmounts);
+      } else if (subItemIds && subItemIds.length === 1) {
+        // Handle single sub-item
+        await expenseService.addExpense(itemId, amount, subItemIds[0]);
       } else {
-        await budgetService.addExpense(itemId, amount);
+        // Handle no sub-item
+        await expenseService.addExpense(itemId, amount);
       }
       
       console.log("Expense added successfully, reloading budget data...");
