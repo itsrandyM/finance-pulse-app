@@ -16,6 +16,7 @@ interface ExpiredBudgetOverlayProps {
 const ExpiredBudgetOverlay: React.FC<ExpiredBudgetOverlayProps> = ({ className = '' }) => {
   const { 
     isBudgetExpired, 
+    budgetStatus,
     period, 
     budgetDateRange,
     createNewBudgetPeriod,
@@ -51,17 +52,47 @@ const ExpiredBudgetOverlay: React.FC<ExpiredBudgetOverlayProps> = ({ className =
   
   const remainingBudget = getRemainingBudget();
   const carryOverAmount = remainingBudget > 0 ? remainingBudget : 0;
+
+  const getStatusMessage = () => {
+    switch (budgetStatus) {
+      case 'completed':
+        return 'Your budget was completed successfully!';
+      case 'abandoned':
+        return 'This budget period was abandoned.';
+      case 'overspent':
+        return 'You went over budget this period.';
+      case 'interrupted':
+        return 'This budget period was interrupted.';
+      default:
+        return 'Your budget period has ended.';
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (budgetStatus) {
+      case 'completed':
+        return 'text-green-800 bg-green-50 border-green-200';
+      case 'abandoned':
+        return 'text-gray-800 bg-gray-50 border-gray-200';
+      case 'overspent':
+        return 'text-red-800 bg-red-50 border-red-200';
+      case 'interrupted':
+        return 'text-orange-800 bg-orange-50 border-orange-200';
+      default:
+        return 'text-yellow-800 bg-yellow-50 border-yellow-200';
+    }
+  };
   
   return (
     <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ${className}`}>
       <Card className="w-full max-w-lg bg-white shadow-lg">
-        <CardHeader className="bg-yellow-50 border-b border-yellow-200">
-          <CardTitle className="flex items-center text-xl text-yellow-800">
+        <CardHeader className={`border-b ${getStatusColor()}`}>
+          <CardTitle className="flex items-center text-xl">
             <AlertCircle className="mr-2 h-5 w-5" />
-            Budget Period Expired
+            Budget Period Ended
           </CardTitle>
-          <CardDescription className="text-yellow-700">
-            Your {period} budget has ended. It was active from {' '}
+          <CardDescription className={budgetStatus ? 'text-current' : 'text-yellow-700'}>
+            {getStatusMessage()} It was active from {' '}
             {format(budgetDateRange.startDate, 'MMMM dd, yyyy')} to {' '}
             {format(budgetDateRange.endDate, 'MMMM dd, yyyy')}.
           </CardDescription>

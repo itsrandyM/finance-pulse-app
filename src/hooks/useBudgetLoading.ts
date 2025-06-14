@@ -6,6 +6,7 @@ import { recalculateAllSpentAmounts } from '@/services/expenseService';
 import { useBudgetDateRange } from './useBudgetDateRange';
 import { useBudgetInitialization } from './useBudgetInitialization';
 import { useLoading } from '@/contexts/LoadingContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseBudgetLoadingProps {
   user: any;
@@ -16,6 +17,7 @@ interface UseBudgetLoadingProps {
   setCurrentBudgetId: React.Dispatch<React.SetStateAction<string | null>>;
   setBudgetDateRange: React.Dispatch<React.SetStateAction<BudgetDateRange | null>>;
   setIsBudgetExpired: React.Dispatch<React.SetStateAction<boolean>>;
+  setBudgetStatus: React.Dispatch<React.SetStateAction<string | null>>;
   toast: any;
   previousRemainingBudget: number;
   setPreviousRemainingBudget: React.Dispatch<React.SetStateAction<number>>;
@@ -32,6 +34,7 @@ export const useBudgetLoading = ({
   setCurrentBudgetId,
   setBudgetDateRange,
   setIsBudgetExpired,
+  setBudgetStatus,
   toast,
   previousRemainingBudget,
   setPreviousRemainingBudget,
@@ -42,7 +45,7 @@ export const useBudgetLoading = ({
   const { setIsLoading } = useLoading();
   const isLoadingRef = useRef(false);
   const lastLoadTimeRef = useRef<number>(0);
-  const MIN_LOAD_INTERVAL = 1000; // Increase to 1 second to prevent rapid loading
+  const MIN_LOAD_INTERVAL = 1000;
   
   const { initializeBudget: initBudget } = useBudgetInitialization({
     setCurrentBudgetId,
@@ -51,6 +54,7 @@ export const useBudgetLoading = ({
     setBudgetItems,
     setBudgetDateRange,
     setIsBudgetExpired,
+    setBudgetStatus,
     previousRemainingBudget,
     setPreviousRemainingBudget,
     continuousBudgetItems,
@@ -80,7 +84,6 @@ export const useBudgetLoading = ({
       return;
     }
     
-    // Prevent concurrent loading
     if (isLoadingRef.current) {
       console.log("Already loading budget, skipping duplicate call");
       return;
@@ -109,6 +112,21 @@ export const useBudgetLoading = ({
       setCurrentBudgetId(budget.id);
       setPeriodState(budget.period as BudgetPeriod);
       setTotalBudgetState(budget.total_budget);
+
+      // Update budget metrics to ensure we have the latest calculated status
+      await supabase.rpc('update_budget_metrics', { p_budget_id: budget.id });
+      
+      // Fetch the updated budget with calculated status
+      const { data: updatedBudget } = await supabase
+        .from('budgets')
+        .select('status, utilization_percentage, total_transactions')
+        .eq('id', budget.id)
+        .single();
+
+      if (updatedBudget) {
+        setBudgetStatus(updatedBudget.status);
+        console.log("Budget status synced:", updatedBudget.status);
+      }
       
       // Recalculate all spent amounts to fix any incorrect data
       console.log("Recalculating all spent amounts...");
@@ -120,7 +138,6 @@ export const useBudgetLoading = ({
       console.log("Raw budget items from database:", items);
       
       const processedItems: BudgetItem[] = items.map((item: any) => {
-        // Convert spent to number explicitly and add detailed logging
         const spentAmount = parseFloat(item.spent?.toString() || '0') || 0;
         console.log(`Processing item "${item.name}": raw spent="${item.spent}", parsed spent=${spentAmount}, amount=${item.amount}`);
         
@@ -159,8 +176,8 @@ export const useBudgetLoading = ({
       const dateRange = calculateDateRange(startDate, budget.period as BudgetPeriod);
       setBudgetDateRange(dateRange);
       
-      const nowDate = new Date();
-      const isExpired = nowDate > dateRange.endDate;
+      // Use database-calculated status instead of frontend calculation
+      const isExpired = updatedBudget?.status !== 'active';
       setIsBudgetExpired(isExpired);
       
       console.log("=== BUDGET LOADED SUCCESSFULLY ===");
