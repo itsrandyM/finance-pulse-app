@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
@@ -21,7 +20,8 @@ export const getBudgetItems = async (budgetId: string) => {
     .order('created_at', { ascending: false });
 
   if (itemsError) {
-    throw new Error(`Failed to get budget items: ${itemsError.message}`);
+    console.error("Error getting budget items:", itemsError);
+    throw new Error('Failed to retrieve budget items.');
   }
 
   console.log(`Found ${itemsData.length} budget items`);
@@ -35,7 +35,9 @@ export const getBudgetItems = async (budgetId: string) => {
       .order('created_at', { ascending: false });
 
     if (subItemsError) {
-      throw new Error(`Failed to get sub-items: ${subItemsError.message}`);
+      console.error(`Failed to get sub-items for item ${item.id}:`, subItemsError);
+      // Continue without sub-items for this item, but log the error
+      return { ...item, sub_items: [] };
     }
 
     return { 
@@ -73,7 +75,8 @@ export const createBudgetItem = async (
     .single();
 
   if (error) {
-    throw new Error(`Failed to create budget item: ${error.message}`);
+    console.error("Error creating budget item:", error);
+    throw new Error('Could not create the budget item. Please try again.');
   }
 
   return data;
@@ -121,7 +124,8 @@ export const updateBudgetItem = async (id: string, updates: BudgetItemUpdate) =>
     .eq('id', id);
 
   if (error) {
-    throw new Error(`Failed to update budget item: ${error.message}`);
+    console.error("Error updating budget item:", error);
+    throw new Error('Could not update the budget item. Please try again.');
   }
 
   return true;
@@ -134,7 +138,8 @@ export const deleteBudgetItem = async (id: string) => {
     .eq('id', id);
 
   if (error) {
-    throw new Error(`Failed to delete budget item: ${error.message}`);
+    console.error("Error deleting budget item:", error);
+    throw new Error('Could not delete the budget item. Please try again.');
   }
 
   return true;

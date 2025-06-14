@@ -21,6 +21,15 @@ export const useBudgetItemActions = ({
   const [isLoading, setIsLoading] = useState(false);
   
   const addBudgetItem = async (name: string, amount: number, isImpulse: boolean = false) => {
+    if (!name || name.trim().length === 0) {
+      toast({ title: "Invalid Name", description: "Budget item name cannot be empty.", variant: "destructive" });
+      return;
+    }
+    if (amount <= 0) {
+      toast({ title: "Invalid Amount", description: "Amount must be a positive number.", variant: "destructive" });
+      return;
+    }
+    
     if (!currentBudgetId) {
       toast({
         title: "Error adding budget item",
@@ -115,6 +124,15 @@ export const useBudgetItemActions = ({
   };
 
   const addSubItem = async (budgetItemId: string, name: string, amount: number) => {
+    if (!name || name.trim().length === 0) {
+      toast({ title: "Invalid Name", description: "Sub-item name cannot be empty.", variant: "destructive" });
+      return;
+    }
+    if (amount <= 0) {
+      toast({ title: "Invalid Amount", description: "Amount must be a positive number.", variant: "destructive" });
+      return;
+    }
+
     try {
       setIsLoading(true);
       const newSubItem = await budgetService.createSubItem(budgetItemId, name, amount);

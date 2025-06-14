@@ -27,7 +27,7 @@ export const addExpense = async (
       
     if (error) {
       console.error("Error adding expense:", error);
-      throw new Error(`Error adding expense: ${error.message}`);
+      throw new Error('Could not add expense due to a database error.');
     }
     
     console.log("Expense inserted successfully, now updating spent amount...");
@@ -39,7 +39,7 @@ export const addExpense = async (
     
     if (updateError) {
       console.error("Error updating spent amount:", updateError);
-      throw new Error(`Error updating spent amount: ${updateError.message}`);
+      throw new Error('Could not update spent amount.');
     }
     
     console.log("Spent amount updated via database function");
@@ -56,7 +56,7 @@ export const addExpense = async (
     
     if (fetchError) {
       console.error("Error fetching updated item:", fetchError);
-      throw new Error(`Error fetching updated item: ${fetchError.message}`);
+      throw new Error('Could not fetch updated item information.');
     }
     
     console.log("Updated item spent amount from database:", updatedItem.spent);
@@ -68,7 +68,7 @@ export const addExpense = async (
     return { success: true, newSpent };
   } catch (error: any) {
     console.error("=== EXPENSE SERVICE ERROR ===", error);
-    throw new Error(`Failed to add expense: ${error.message}`);
+    throw error;
   }
 };
 
@@ -197,7 +197,8 @@ export const getExpensesByItem = async (budgetItemId: string) => {
     .eq('budget_item_id', budgetItemId);
   
   if (error) {
-    throw new Error(`Failed to get expenses: ${error.message}`);
+    console.error("Error getting expenses:", error);
+    throw new Error('Could not retrieve expenses for this item.');
   }
   
   return data;
@@ -210,7 +211,8 @@ export const getExpensesBySubItem = async (subItemId: string) => {
     .eq('sub_item_id', subItemId);
   
   if (error) {
-    throw new Error(`Failed to get sub-item expenses: ${error.message}`);
+    console.error("Error getting sub-item expenses:", error);
+    throw new Error('Could not retrieve expenses for this sub-item.');
   }
   
   return data;

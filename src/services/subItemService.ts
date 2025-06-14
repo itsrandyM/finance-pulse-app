@@ -22,7 +22,8 @@ export const createSubItem = async (
     .single();
 
   if (error) {
-    throw new Error(`Failed to create sub-item: ${error.message}`);
+    console.error("Error creating sub-item:", error);
+    throw new Error('Could not create the sub-item. Please try again.');
   }
 
   return data;
@@ -38,7 +39,8 @@ export const updateSubItem = async (
     .eq('id', id);
 
   if (error) {
-    throw new Error(`Failed to update sub-item: ${error.message}`);
+    console.error("Error updating sub-item:", error);
+    throw new Error('Could not update the sub-item. Please try again.');
   }
 
   return true;
@@ -51,7 +53,8 @@ export const deleteSubItem = async (id: string) => {
     .eq('id', id);
 
   if (error) {
-    throw new Error(`Failed to delete sub-item: ${error.message}`);
+    console.error("Error deleting sub-item:", error);
+    throw new Error('Could not delete the sub-item. Please try again.');
   }
 
   return true;

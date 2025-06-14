@@ -15,7 +15,8 @@ export const createBudget = async (period: BudgetPeriod, totalBudget: number) =>
     .single();
 
   if (error) {
-    throw new Error(`Failed to create budget: ${error.message}`);
+    console.error("Error creating budget:", error);
+    throw new Error('Could not create the new budget. Please try again.');
   }
 
   return data;
@@ -30,7 +31,8 @@ export const getCurrentBudget = async () => {
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to get current budget: ${error.message}`);
+    console.error("Error getting current budget:", error);
+    throw new Error('Could not retrieve budget information. Please try again.');
   }
 
   return data;

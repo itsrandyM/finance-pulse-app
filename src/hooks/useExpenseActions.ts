@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { BudgetItem } from '@/types/budget';
 import * as expenseService from '@/services/expenseService';
@@ -21,6 +20,15 @@ export const useExpenseActions = ({
   const [isAddingExpense, setIsAddingExpense] = useState(false);
 
   const addExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
+    if (amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Expense amount must be a positive number.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!currentBudgetId) {
       toast({
         title: "Error adding expense",

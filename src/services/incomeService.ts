@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export type IncomeEntry = {
@@ -16,7 +15,8 @@ export const getIncomeEntries = async () => {
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw new Error(`Failed to get income entries: ${error.message}`);
+    console.error("Error getting income entries:", error);
+    throw new Error('Could not retrieve income entries.');
   }
 
   return data as IncomeEntry[];
@@ -42,7 +42,8 @@ export const createIncomeEntry = async (name: string, amount: number) => {
     .single();
 
   if (error) {
-    throw new Error(`Failed to create income entry: ${error.message}`);
+    console.error("Error creating income entry:", error);
+    throw new Error('Could not create the income entry. Please try again.');
   }
 
   return data as IncomeEntry;
@@ -56,7 +57,8 @@ export const deleteIncomeEntry = async (id: string) => {
     .eq('id', id);
 
   if (error) {
-    throw new Error(`Failed to delete income entry: ${error.message}`);
+    console.error("Error deleting income entry:", error);
+    throw new Error('Could not delete the income entry. Please try again.');
   }
 
   return true;
