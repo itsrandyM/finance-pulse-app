@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { BudgetItem } from '@/types/budget';
 import * as expenseService from '@/services/expenseService';
@@ -19,7 +20,7 @@ export const useExpenseActions = ({
 }: UseExpenseActionsProps) => {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
 
-  const addExpense = async (itemId: string, amount: number, subItemId?: string) => {
+  const addExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     if (!currentBudgetId) {
       toast({
         title: "Error adding expense",
@@ -31,6 +32,9 @@ export const useExpenseActions = ({
 
     try {
       setIsAddingExpense(true);
+      // For now, we only handle the first sub-item to align with the simplified UI.
+      const subItemId = subItemIds && subItemIds.length > 0 ? subItemIds[0] : undefined;
+      
       console.log('Adding expense to item:', itemId, 'Amount:', amount, 'SubItem:', subItemId);
       
       await expenseService.addExpense(itemId, amount, subItemId);

@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface SimpleExpenseInputProps {
   budgetItems: BudgetItem[];
-  onAddExpense: (itemId: string, amount: number, subItemId?: string) => Promise<void>;
+  onAddExpense: (itemId: string, amount: number, subItemIds?: string[]) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -104,7 +104,7 @@ const SimpleExpenseInput: React.FC<SimpleExpenseInputProps> = ({
         });
       } else {
         // Add expense to existing item, with optional single sub-item
-        await onAddExpense(selectedItemId, numericAmount, selectedSubItemId || undefined);
+        await onAddExpense(selectedItemId, numericAmount, selectedSubItemId ? [selectedSubItemId] : undefined);
         
         toast({
           title: "Expense Added",

@@ -43,7 +43,7 @@ export interface BudgetContextType {
   addSubItem: (budgetItemId: string, name: string, amount: number, note?: string, tag?: TagOption) => Promise<any>;
   deleteSubItem: (budgetItemId: string, subItemId: string) => Promise<void>;
   updateSubItem: (budgetItemId: string, subItemId: string, updates: Partial<SubBudgetItem>) => Promise<void>;
-  addExpense: (budgetItemId: string, amount: number, subItemId?: string) => Promise<void>;
+  addExpense: (budgetItemId: string, amount: number, subItemIds?: string[]) => Promise<void>;
   resetBudget: () => void;
   getRemainingBudget: () => number;
   getTotalSpent: () => number;

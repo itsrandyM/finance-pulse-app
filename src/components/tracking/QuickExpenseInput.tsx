@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import QuickAmountButtons from './QuickAmountButtons';
 
 interface QuickExpenseInputProps {
   budgetItems: BudgetItem[];
-  onAddExpense: (itemId: string, amount: number, subItemId?: string) => Promise<void>;
+  onAddExpense: (itemId: string, amount: number, subItemIds?: string[]) => Promise<void>;
   isLoading: boolean;
   onAddSubItem: (budgetItemId: string, name: string, amount: number) => Promise<any>;
 }
@@ -66,7 +65,7 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
     await onAddExpense(
       selectedItemId, 
       numAmount, 
-      selectedSubItemId || undefined
+      selectedSubItemId ? [selectedSubItemId] : undefined
     );
     
     setAmount('');
