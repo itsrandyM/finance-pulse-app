@@ -93,9 +93,9 @@ const Navigation = () => {
               History
             </Link>
             <Link 
-              to="/income" 
+              to="/income-setup" 
               className={`px-3 py-2 rounded-md transition-colors ${
-                isActive('/income') 
+                isActive('/income-setup') 
                   ? 'bg-finance-primary text-white' 
                   : 'text-gray-600 hover:text-finance-primary'
               }`}
