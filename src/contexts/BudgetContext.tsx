@@ -171,7 +171,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     previousRemainingBudget,
     continuousBudgetItems,
     markItemAsContinuous,
-    setPreviousRemainingBudget
+    setPreviousRemainingBudget,
+    setContinuousBudgetItems
   };
 
   return <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>;
