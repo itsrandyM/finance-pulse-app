@@ -1,13 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBudget } from '@/contexts/BudgetContext';
 import { formatCurrency } from '@/lib/formatters';
 import { useToast } from '@/hooks/use-toast';
+import { useBudgetAlerts } from '@/hooks/useBudgetAlerts';
 import VisualSummaryCard from './budget/VisualSummaryCard';
 import SimpleBudgetSummary from './tracking/SimpleBudgetSummary';
-import SimpleExpenseInput from './tracking/SimpleExpenseInput';
+import QuickExpenseInput from './tracking/QuickExpenseInput';
 import SimpleSpendingProgress from './tracking/SimpleSpendingProgress';
+import BudgetAlertsDisplay from './budget/BudgetAlertsDisplay';
+import SimpleAnalyticsDashboard from './analytics/SimpleAnalyticsDashboard';
 
 const ExpenseTracking: React.FC = () => {
   const { 
@@ -23,6 +27,13 @@ const ExpenseTracking: React.FC = () => {
   const { toast } = useToast();
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
+
+  const budgetAlerts = useBudgetAlerts({
+    budgetItems,
+    totalBudget,
+    getTotalSpent,
+    getRemainingBudget
+  });
 
   // Load budget data when component mounts (only once)
   useEffect(() => {
@@ -79,21 +90,49 @@ const ExpenseTracking: React.FC = () => {
         formatCurrency={formatCurrency}
       />
 
-      <SimpleExpenseInput
-        budgetItems={budgetItems}
-        onAddExpense={handleAddExpense}
-        isLoading={isAddingExpense}
-      />
+      {/* Budget Alerts */}
+      {budgetAlerts.hasAlerts && (
+        <BudgetAlertsDisplay
+          alerts={budgetAlerts.alerts}
+          onDismissAlert={budgetAlerts.dismissAlert}
+        />
+      )}
 
-      <SimpleSpendingProgress
-        budgetItems={budgetItems}
-        formatCurrency={formatCurrency}
-      />
+      <Tabs defaultValue="expense-entry" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="expense-entry">Add Expense</TabsTrigger>
+          <TabsTrigger value="progress">Progress</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="expense-entry" className="space-y-6">
+          <QuickExpenseInput
+            budgetItems={budgetItems}
+            onAddExpense={handleAddExpense}
+            isLoading={isAddingExpense}
+          />
+        </TabsContent>
 
-      <VisualSummaryCard 
-        budgetItems={budgetItems} 
-        formatCurrency={formatCurrency} 
-      />
+        <TabsContent value="progress" className="space-y-6">
+          <SimpleSpendingProgress
+            budgetItems={budgetItems}
+            formatCurrency={formatCurrency}
+          />
+
+          <VisualSummaryCard 
+            budgetItems={budgetItems} 
+            formatCurrency={formatCurrency} 
+          />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <SimpleAnalyticsDashboard
+            budgetItems={budgetItems}
+            totalBudget={totalBudget}
+            formatCurrency={formatCurrency}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

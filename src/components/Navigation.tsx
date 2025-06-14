@@ -1,37 +1,137 @@
-
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { DollarSign, BarChart, PieChart, BadgeDollarSign } from 'lucide-react';
-import { useBudget } from '@/contexts/BudgetContext';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
-const Navigation: React.FC = () => {
-  const location = useLocation();
-  const { isBudgetExpired } = useBudget();
-  
-  const navItems = [
-    { path: '/', label: 'Setup', icon: <DollarSign className="h-5 w-5" /> },
-    { path: '/budget', label: 'Budget', icon: <BarChart className="h-5 w-5" /> },
-    { path: '/income', label: 'Income', icon: <BadgeDollarSign className="h-5 w-5" /> },
-    { path: '/tracking', label: 'Tracking', icon: <PieChart className="h-5 w-5" /> },
-  ];
+const Navigation = () => {
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white shadow-md p-4">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-xl font-bold text-finance-primary">Finance Pulse</h1>
+          <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="bg-white shadow-md p-4">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-xl font-bold text-finance-primary">Finance Pulse</h1>
+          <Link to="/auth">
+            <Button variant="outline">Sign In</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const isActive = (path: string) => pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10 md:static md:top-0 md:left-auto md:right-auto md:border-t-0 md:border-r md:h-screen md:w-64">
-      <div className="flex justify-around md:flex-col md:h-full md:p-4">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={cn(
-              "flex items-center justify-center md:justify-start p-4 text-gray-500 transition-colors duration-200 hover:text-finance-primary",
-              location.pathname === item.path && "text-finance-primary"
-            )}
-          >
-            {item.icon}
-            <span className="hidden md:block ml-2">{item.label}</span>
+    <div className="bg-white shadow-md">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center py-4">
+          <Link to="/">
+            <h1 className="text-xl font-bold text-finance-primary">Finance Pulse</h1>
           </Link>
-        ))}
+          
+          <nav className="hidden md:flex space-x-6">
+            <Link 
+              to="/budget" 
+              className={`px-3 py-2 rounded-md transition-colors ${
+                isActive('/budget') 
+                  ? 'bg-finance-primary text-white' 
+                  : 'text-gray-600 hover:text-finance-primary'
+              }`}
+            >
+              Budget
+            </Link>
+            <Link 
+              to="/tracking" 
+              className={`px-3 py-2 rounded-md transition-colors ${
+                isActive('/tracking') 
+                  ? 'bg-finance-primary text-white' 
+                  : 'text-gray-600 hover:text-finance-primary'
+              }`}
+            >
+              Tracking
+            </Link>
+            <Link 
+              to="/expense-history" 
+              className={`px-3 py-2 rounded-md transition-colors ${
+                isActive('/expense-history') 
+                  ? 'bg-finance-primary text-white' 
+                  : 'text-gray-600 hover:text-finance-primary'
+              }`}
+            >
+              History
+            </Link>
+            <Link 
+              to="/income" 
+              className={`px-3 py-2 rounded-md transition-colors ${
+                isActive('/income') 
+                  ? 'bg-finance-primary text-white' 
+                  : 'text-gray-600 hover:text-finance-primary'
+              }`}
+            >
+              Income
+            </Link>
+          </nav>
+
+          <div className="flex items-center space-x-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>
+                      {user.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </div>
     </div>
   );
