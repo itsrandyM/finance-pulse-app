@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -25,7 +24,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [currentBudgetId, setCurrentBudgetId] = useState<string | null>(null);
   const [budgetDateRange, setBudgetDateRange] = useState<BudgetDateRange | null>(null);
   const [isBudgetExpired, setIsBudgetExpired] = useState<boolean>(false);
-  const [budgetStatus, setBudgetStatus] = useState<string | null>(null);
   const [previousRemainingBudget, setPreviousRemainingBudget] = useState<number>(0);
   const [continuousBudgetItems, setContinuousBudgetItems] = useState<BudgetItem[]>([]);
   const { toast } = useToast();
@@ -42,7 +40,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCurrentBudgetId,
     setBudgetDateRange,
     setIsBudgetExpired,
-    setBudgetStatus,
     toast,
     previousRemainingBudget,
     setPreviousRemainingBudget,
@@ -71,11 +68,14 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     totalBudget: totalBudgetState
   });
 
-  // Check if budget is expired based on database status instead of date calculation
+  // Check if budget is expired when date range changes
   useEffect(() => {
-    if (budgetStatus && budgetStatus !== 'active') {
-      if (!isBudgetExpired) {
-        console.log(`Budget status changed to ${budgetStatus} - handling budget expiration`);
+    if (budgetDateRange && budgetDateRange.endDate) {
+      const now = new Date();
+      const isExpired = now > budgetDateRange.endDate;
+      
+      if (isExpired && !isBudgetExpired) {
+        console.log("Budget has expired - the ExpiredBudgetOverlay will handle storing the remaining budget");
         
         // Store budget items that should be continued (both continuous and recurring)
         const itemsToContinue = budgetItems.filter(item => item.isContinuous || item.isRecurring);
@@ -83,11 +83,9 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setContinuousBudgetItems(itemsToContinue);
       }
       
-      setIsBudgetExpired(true);
-    } else if (budgetStatus === 'active') {
-      setIsBudgetExpired(false);
+      setIsBudgetExpired(isExpired);
     }
-  }, [budgetStatus, budgetItems, isBudgetExpired]);
+  }, [budgetDateRange, budgetItems, isBudgetExpired]);
 
   // Load budget when user changes
   useEffect(() => {
@@ -116,7 +114,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCurrentBudgetId(null);
     setBudgetDateRange(null);
     setIsBudgetExpired(false);
-    setBudgetStatus(null);
     setPreviousRemainingBudget(0);
     setContinuousBudgetItems([]);
   };
@@ -174,7 +171,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     loadBudget,
     budgetDateRange,
     isBudgetExpired,
-    budgetStatus,
     createNewBudgetPeriod,
     previousRemainingBudget,
     continuousBudgetItems,

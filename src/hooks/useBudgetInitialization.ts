@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { BudgetPeriod, BudgetItem, BudgetDateRange } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
@@ -12,7 +11,6 @@ interface UseBudgetInitializationProps {
   setBudgetItems: React.Dispatch<React.SetStateAction<BudgetItem[]>>;
   setBudgetDateRange: React.Dispatch<React.SetStateAction<BudgetDateRange | null>>;
   setIsBudgetExpired: React.Dispatch<React.SetStateAction<boolean>>;
-  setBudgetStatus: React.Dispatch<React.SetStateAction<string | null>>;
   previousRemainingBudget: number;
   setPreviousRemainingBudget: React.Dispatch<React.SetStateAction<number>>;
   continuousBudgetItems: BudgetItem[];
@@ -27,7 +25,6 @@ export const useBudgetInitialization = ({
   setBudgetItems,
   setBudgetDateRange,
   setIsBudgetExpired,
-  setBudgetStatus,
   previousRemainingBudget,
   setPreviousRemainingBudget,
   continuousBudgetItems,
@@ -53,7 +50,6 @@ export const useBudgetInitialization = ({
       setCurrentBudgetId(budget.id);
       setPeriodState(budgetPeriod);
       setTotalBudgetState(finalAmount);
-      setBudgetStatus('active'); // New budgets start as active
       
       // Reset the previous remaining budget after using it
       if (previousRemainingBudget > 0) {
