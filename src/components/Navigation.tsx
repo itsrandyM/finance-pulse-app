@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +14,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 const Navigation = () => {
-  const { user, loading, signOut } = useAuth();
+  const { user, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -26,7 +27,7 @@ const Navigation = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="bg-white shadow-md p-4">
         <div className="container mx-auto flex justify-between items-center">

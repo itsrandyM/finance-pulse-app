@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
@@ -33,7 +33,7 @@ function App() {
               <GlobalLoadingIndicator />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={<Layout />}>
+                <Route path="/" element={<Layout><Outlet /></Layout>}>
                   <Route index element={<Index />} />
                   <Route path="/budget-setup" element={<BudgetPeriodSelectPage />} />
                   <Route path="/income-setup" element={<IncomeSetupPage />} />
