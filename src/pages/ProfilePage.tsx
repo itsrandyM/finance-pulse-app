@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { LogOut, User, Lock } from 'lucide-react';
 import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/formatters';
 
 interface ProfileData {
   id: string;
@@ -283,11 +283,11 @@ const ProfilePage = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Budget</p>
-                    <p className="text-lg font-semibold">${budget.total_budget.toFixed(2)}</p>
+                    <p className="text-lg font-semibold">{formatCurrency(budget.total_budget)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Spent</p>
-                    <p className="text-lg font-semibold">${budget.total_spent.toFixed(2)}</p>
+                    <p className="text-lg font-semibold">{formatCurrency(budget.total_spent)}</p>
                   </div>
                 </div>
               </CardContent>
