@@ -1,5 +1,14 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import {
+  getUserId,
+  insertExpenseRecord,
+  insertMultipleExpenseRecords,
+  updateBudgetItemSpent,
+  waitForDatabaseConsistency,
+  getUpdatedSpentAmount,
+  getUserBudgets,
+  getBudgetItemsForBudgets
+} from './expenseHelpers';
 
 export const addExpense = async (
   budgetItemId: string,
