@@ -1,0 +1,57 @@
+
+import React from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { formatCurrency } from '@/lib/formatters';
+
+interface DuplicateExpenseDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  itemName: string;
+  amount: number;
+}
+
+export const DuplicateExpenseDialog: React.FC<DuplicateExpenseDialogProps> = ({
+  open,
+  onOpenChange,
+  onConfirm,
+  itemName,
+  amount,
+}) => {
+  const handleConfirm = () => {
+    onConfirm();
+    onOpenChange(false);
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Duplicate Expense Detected</AlertDialogTitle>
+          <AlertDialogDescription>
+            You're about to add another expense of{' '}
+            <span className="font-semibold">{formatCurrency(amount)}</span> to "
+            {itemName}".
+            <br /><br />
+            This item was recently tracked. Are you sure you want to add this expense again?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirm}>
+            Yes, Add Expense
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};

@@ -6,8 +6,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import SetupPage from './SetupPage';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Target, DollarSign, ArrowRight, Calendar, Plus } from 'lucide-react';
+import { TrendingUp, Target, DollarSign, ArrowRight, Calendar, Plus, PlusCircle } from 'lucide-react';
 import { CreateNewBudgetDialog } from '@/components/budget/CreateNewBudgetDialog';
+import { AddIncomeToBudgetDialog } from '@/components/budget/AddIncomeToBudgetDialog';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const Index = () => {
     budgetDateRange 
   } = useBudget();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showIncomeDialog, setShowIncomeDialog] = useState(false);
 
   // Show setup page if user doesn't have a budget configured
   const hasExistingBudget = period && totalBudget > 0;
@@ -70,15 +72,26 @@ const Index = () => {
                   Current {period} Budget Period
                 </CardTitle>
               </div>
-              <Button 
-                onClick={() => setShowCreateDialog(true)}
-                variant="outline"
-                size="sm"
-                className="border-blue-300 text-blue-700 hover:bg-blue-100"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Create New Budget
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => setShowIncomeDialog(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-green-300 text-green-700 hover:bg-green-100"
+                >
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  Add Income
+                </Button>
+                <Button 
+                  onClick={() => setShowCreateDialog(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create New Budget
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -99,7 +112,7 @@ const Index = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalBudget.toLocaleString()}</div>
+            <div className="text-2xl font-bold">Ksh {totalBudget.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground capitalize">
               {period} budget period
             </p>
@@ -112,7 +125,7 @@ const Index = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalSpent.toLocaleString()}</div>
+            <div className="text-2xl font-bold">Ksh {totalSpent.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
               {spentPercentage.toFixed(1)}% of budget
             </p>
@@ -126,7 +139,7 @@ const Index = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${remainingBudget < 0 ? 'text-red-600' : 'text-green-600'}`}>
-              ${remainingBudget.toLocaleString()}
+              Ksh {remainingBudget.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
               {remainingBudget < 0 ? 'Over budget' : 'Available to spend'}
@@ -177,7 +190,7 @@ const Index = () => {
                   <div key={item.id} className="p-3 border rounded-lg">
                     <div className="font-medium">{item.name}</div>
                     <div className="text-sm text-gray-600">
-                      ${item.spent.toLocaleString()} / ${item.amount.toLocaleString()}
+                      Ksh {item.spent.toLocaleString()} / Ksh {item.amount.toLocaleString()}
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                       <div 
@@ -207,6 +220,11 @@ const Index = () => {
       <CreateNewBudgetDialog 
         open={showCreateDialog} 
         onOpenChange={setShowCreateDialog}
+      />
+      
+      <AddIncomeToBudgetDialog 
+        open={showIncomeDialog} 
+        onOpenChange={setShowIncomeDialog}
       />
     </div>
   );

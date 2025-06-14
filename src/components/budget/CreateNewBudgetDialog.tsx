@@ -25,6 +25,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Calendar, DollarSign, Repeat, ArrowRight } from 'lucide-react';
+import { formatCurrency } from '@/lib/formatters';
 
 interface CreateNewBudgetDialogProps {
   open: boolean;
@@ -77,6 +78,10 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
           : [...prev, itemId]
       );
     }
+  };
+
+  const handleRemainingAmountChange = (checked: boolean) => {
+    setIncludeRemainingAmount(checked);
   };
 
   const handleConfirmCreate = async () => {
@@ -150,16 +155,16 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
                   </div>
                   <div>
                     <span className="text-gray-600">Total Budget:</span>
-                    <div className="font-medium">${totalBudget.toLocaleString()}</div>
+                    <div className="font-medium">{formatCurrency(totalBudget)}</div>
                   </div>
                   <div>
                     <span className="text-gray-600">Total Spent:</span>
-                    <div className="font-medium">${totalSpent.toLocaleString()}</div>
+                    <div className="font-medium">{formatCurrency(totalSpent)}</div>
                   </div>
                   <div>
                     <span className="text-gray-600">Remaining:</span>
                     <div className={`font-medium ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ${remainingBudget.toLocaleString()}
+                      {formatCurrency(remainingBudget)}
                     </div>
                   </div>
                 </div>
@@ -200,7 +205,13 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
                             <Checkbox
                               id={`continuous-${item.id}`}
                               checked={selectedContinuousItems.includes(item.id)}
-                              onCheckedChange={() => handleItemSelection(item.id, 'continuous')}
+                              onCheckedChange={(checked) => {
+                                if (checked === true) {
+                                  handleItemSelection(item.id, 'continuous');
+                                } else if (checked === false) {
+                                  setSelectedContinuousItems(prev => prev.filter(id => id !== item.id));
+                                }
+                              }}
                             />
                             <label 
                               htmlFor={`continuous-${item.id}`}
@@ -208,7 +219,7 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
                             >
                               <span>{item.name}</span>
                               <span className="text-sm text-gray-600">
-                                ${remaining.toLocaleString()} remaining
+                                {formatCurrency(remaining)} remaining
                               </span>
                             </label>
                           </div>
@@ -239,7 +250,13 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
                           <Checkbox
                             id={`recurring-${item.id}`}
                             checked={selectedRecurringItems.includes(item.id)}
-                            onCheckedChange={() => handleItemSelection(item.id, 'recurring')}
+                            onCheckedChange={(checked) => {
+                              if (checked === true) {
+                                handleItemSelection(item.id, 'recurring');
+                              } else if (checked === false) {
+                                setSelectedRecurringItems(prev => prev.filter(id => id !== item.id));
+                              }
+                            }}
                           />
                           <label 
                             htmlFor={`recurring-${item.id}`}
@@ -247,7 +264,7 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
                           >
                             <span>{item.name}</span>
                             <span className="text-sm text-gray-600">
-                              ${item.amount.toLocaleString()} full amount
+                              {formatCurrency(item.amount)} full amount
                             </span>
                           </label>
                         </div>
@@ -274,7 +291,7 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
                       <Checkbox
                         id="remaining-amount"
                         checked={includeRemainingAmount}
-                        onCheckedChange={setIncludeRemainingAmount}
+                        onCheckedChange={handleRemainingAmountChange}
                       />
                       <label 
                         htmlFor="remaining-amount"
@@ -282,7 +299,7 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
                       >
                         <span>Include remaining budget</span>
                         <span className="text-sm font-medium text-green-600">
-                          +${remainingBudget.toLocaleString()}
+                          +{formatCurrency(remainingBudget)}
                         </span>
                       </label>
                     </div>
@@ -307,7 +324,7 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
                         <div key={item.id} className="flex justify-between text-sm">
                           <span>{item.name}</span>
                           <span className="text-gray-600">
-                            ${item.spent.toLocaleString()} / ${item.amount.toLocaleString()}
+                            {formatCurrency(item.spent)} / {formatCurrency(item.amount)}
                           </span>
                         </div>
                       ))}
@@ -343,7 +360,7 @@ export const CreateNewBudgetDialog: React.FC<CreateNewBudgetDialogProps> = ({
                 <li>End your current budget period and archive all data</li>
                 <li>Carry over {selectedContinuousItems.length + selectedRecurringItems.length} selected items</li>
                 {includeRemainingAmount && remainingBudget > 0 && (
-                  <li>Add ${remainingBudget.toLocaleString()} remaining budget to your new period</li>
+                  <li>Add {formatCurrency(remainingBudget)} remaining budget to your new period</li>
                 )}
                 <li>Start a fresh budget setup process</li>
               </ul>

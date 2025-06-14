@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { BudgetItem } from '@/types/budget';
 import BudgetItemSelector from './BudgetItemSelector';
 import MultiSubItemsSelector from './MultiSubItemsSelector';
 import QuickAmountButtons from './QuickAmountButtons';
+import { DuplicateExpenseDialog } from './DuplicateExpenseDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { formatCurrency } from '@/lib/formatters';
 
@@ -38,6 +40,7 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
   const [amount, setAmount] = useState<string>('');
   const [selectedSubItems, setSelectedSubItems] = useState<SubItemAmount[]>([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [expenseToConfirm, setExpenseToConfirm] = useState<ExpenseToConfirm | null>(null);
 
   const selectedItem = budgetItems.find(item => item.id === selectedItemId);
@@ -78,6 +81,16 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
     setSelectedSubItems([]);
   };
 
+  const checkForDuplicateExpense = (itemId: string, expenseAmount: number): boolean => {
+    const item = budgetItems.find(i => i.id === itemId);
+    if (!item) return false;
+
+    // Check if this is a single item (no sub-items) and if it was recently tracked
+    // For simplicity, we'll check if the item has any expenses (spent > 0)
+    // In a real implementation, you might want to check timestamps or more sophisticated logic
+    return item.subItems.length === 0 && item.spent > 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -90,6 +103,13 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
     const subItemIds = selectedSubItems.length > 0 
       ? selectedSubItems.map(item => item.id)
       : undefined;
+
+    // Check for duplicate expenses on single items (no sub-items)
+    if (!subItemIds && checkForDuplicateExpense(selectedItemId, numAmount)) {
+      setExpenseToConfirm({ itemId: selectedItemId, amount: numAmount, subItemIds });
+      setShowDuplicateDialog(true);
+      return;
+    }
 
     const remainingBudget = selectedItem ? selectedItem.amount - selectedItem.spent : 0;
 
@@ -111,6 +131,24 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
     }
     setShowConfirmation(false);
     setExpenseToConfirm(null);
+  };
+
+  const handleConfirmDuplicate = async () => {
+    if (expenseToConfirm) {
+      const remainingBudget = selectedItem ? selectedItem.amount - selectedItem.spent : 0;
+      
+      if (selectedItem && expenseToConfirm.amount > remainingBudget) {
+        setShowDuplicateDialog(false);
+        setShowConfirmation(true);
+      } else {
+        await proceedWithAddExpense(
+          expenseToConfirm.itemId,
+          expenseToConfirm.amount,
+          expenseToConfirm.subItemIds
+        );
+        setExpenseToConfirm(null);
+      }
+    }
   };
 
   return (
@@ -186,6 +224,16 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
         </CardContent>
       </Card>
       
+      {/* Duplicate Expense Dialog */}
+      <DuplicateExpenseDialog
+        open={showDuplicateDialog}
+        onOpenChange={setShowDuplicateDialog}
+        onConfirm={handleConfirmDuplicate}
+        itemName={selectedItem?.name || ''}
+        amount={expenseToConfirm?.amount || 0}
+      />
+      
+      {/* Budget Exceeded Dialog */}
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <AlertDialogContent>
           <AlertDialogHeader>
