@@ -40,10 +40,10 @@ export interface BudgetContextType {
   addBudgetItem: (name: string, amount: number, isImpulse?: boolean, isContinuous?: boolean, isRecurring?: boolean) => Promise<void>;
   updateBudgetItem: (id: string, updates: Partial<BudgetItem>) => Promise<void>;
   deleteBudgetItem: (id: string) => Promise<void>;
-  addSubItem: (budgetItemId: string, name: string, amount: number, note?: string, tag?: TagOption) => Promise<void>;
+  addSubItem: (budgetItemId: string, name: string, amount: number, note?: string, tag?: TagOption) => Promise<any>;
   deleteSubItem: (budgetItemId: string, subItemId: string) => Promise<void>;
   updateSubItem: (budgetItemId: string, subItemId: string, updates: Partial<SubBudgetItem>) => Promise<void>;
-  addExpense: (budgetItemId: string, amount: number, subItemIds?: string[]) => Promise<void>;
+  addExpense: (budgetItemId: string, amount: number, subItemId?: string) => Promise<void>;
   resetBudget: () => void;
   getRemainingBudget: () => number;
   getTotalSpent: () => number;
