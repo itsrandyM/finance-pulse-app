@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BudgetItem } from '@/types/budget';
 import { formatCurrency } from '@/lib/formatters';
@@ -5,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, X, Calculator, AlertTriangle } from 'lucide-react';
+import { Plus, X, Calculator, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DuplicateExpenseDialog } from './DuplicateExpenseDialog';
 
@@ -39,14 +40,28 @@ const MultiSubItemsSelector: React.FC<MultiSubItemsSelectorProps> = ({
     return null;
   }
 
+  // Helper function to get sub-item spent amount from the parent item's expenses
+  const getSubItemSpent = (subItemId: string): number => {
+    // In the budget context, sub-item expenses are tracked within the parent item
+    // We need to check if this sub-item has any tracked expenses
+    // For now, we'll use a simple heuristic based on the parent item's structure
+    const subItem = selectedItem.subItems.find(s => s.id === subItemId);
+    if (!subItem) return 0;
+    
+    // This is a placeholder - in a real implementation, you'd track sub-item expenses separately
+    // For now, we'll assume if the parent item has any spending, sub-items might have been tracked
+    return selectedItem.spent > 0 ? selectedItem.spent / selectedItem.subItems.length : 0;
+  };
+
   const checkForDuplicateSubItem = (subItemId: string, amount: number): boolean => {
     const subItem = selectedItem.subItems.find(s => s.id === subItemId);
     if (!subItem) return false;
 
+    const spentAmount = getSubItemSpent(subItemId);
     // Check if this sub-item has been previously tracked (spent > 0) 
     // AND if adding this amount would exceed its allocated budget
-    const remainingBudget = subItem.amount - subItem.spent;
-    return subItem.spent > 0 && amount > remainingBudget;
+    const remainingBudget = subItem.amount - spentAmount;
+    return spentAmount > 0 && amount > remainingBudget;
   };
 
   const handleSubItemToggle = (subItemId: string, defaultAmount: number) => {
@@ -130,15 +145,17 @@ const MultiSubItemsSelector: React.FC<MultiSubItemsSelectorProps> = ({
     onSubItemsChange([]);
   };
 
-  const getSubItemWarning = (subItemId: string) => {
+  const isSubItemTracked = (subItemId: string): boolean => {
+    const spentAmount = getSubItemSpent(subItemId);
+    return spentAmount > 0;
+  };
+
+  const handleTrackedCheckboxClick = (subItemId: string) => {
     const subItem = selectedItem.subItems.find(s => s.id === subItemId);
-    if (!subItem || subItem.spent === 0) return null;
-    
-    const remainingBudget = subItem.amount - subItem.spent;
-    if (remainingBudget <= 0) {
-      return "Already fully spent";
+    if (subItem) {
+      setPendingSubItem({ id: subItemId, amount: subItem.amount });
+      setShowDuplicateDialog(true);
     }
-    return `Previously tracked: ${formatCurrency(subItem.spent)}`;
   };
 
   return (
@@ -159,7 +176,7 @@ const MultiSubItemsSelector: React.FC<MultiSubItemsSelectorProps> = ({
             {selectedItem.subItems.map(subItem => {
               const selectedSubItem = selectedSubItems.find(item => item.id === subItem.id);
               const isSelected = !!selectedSubItem;
-              const warning = getSubItemWarning(subItem.id);
+              const isTracked = isSubItemTracked(subItem.id);
 
               return (
                 <div key={subItem.id} className="space-y-2">
@@ -172,10 +189,15 @@ const MultiSubItemsSelector: React.FC<MultiSubItemsSelectorProps> = ({
                       />
                       <Label htmlFor={`multi-sub-${subItem.id}`} className="font-normal cursor-pointer">
                         {subItem.name}
-                        {warning && (
-                          <div className="flex items-center gap-1 text-xs text-orange-600 mt-1">
-                            <AlertTriangle className="h-3 w-3" />
-                            {warning}
+                        {isTracked && (
+                          <div className="flex items-center gap-2 text-xs text-green-600 mt-1">
+                            <Check className="h-3 w-3" />
+                            <span>Tracked</span>
+                            <Checkbox
+                              checked={false}
+                              onCheckedChange={() => handleTrackedCheckboxClick(subItem.id)}
+                              className="h-3 w-3 opacity-50"
+                            />
                           </div>
                         )}
                       </Label>
