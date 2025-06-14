@@ -324,7 +324,32 @@ const ExpenseHistoryPage: React.FC = () => {
                 </div>
             </div>
           ) : (
-            recurringItems.length > 0 && renderExpenseList(recurringHistory, `All expenses for "${selectedRecurringItem}"`, `No expense history found for "${selectedRecurringItem}".`)
+            recurringItems.length > 0 && (
+              <>
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Total Spending
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold">
+                      {formatCurrency(getTotalExpenses(recurringHistory))}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Total spent on "{selectedRecurringItem}" across all periods.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {renderExpenseList(
+                  recurringHistory,
+                  `All expenses for "${selectedRecurringItem}"`,
+                  `No expense history found for "${selectedRecurringItem}".`
+                )}
+              </>
+            )
           )}
         </>
       )}
