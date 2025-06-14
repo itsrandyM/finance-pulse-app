@@ -1,17 +1,27 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBudget } from '@/contexts/BudgetContext';
 import { useAuth } from '@/contexts/AuthContext';
 import SetupPage from './SetupPage';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Target, DollarSign, ArrowRight } from 'lucide-react';
+import { TrendingUp, Target, DollarSign, ArrowRight, Calendar, Plus } from 'lucide-react';
+import { CreateNewBudgetDialog } from '@/components/budget/CreateNewBudgetDialog';
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { period, totalBudget, budgetItems, getTotalSpent, getRemainingBudget, isLoading: budgetLoading } = useBudget();
+  const { 
+    period, 
+    totalBudget, 
+    budgetItems, 
+    getTotalSpent, 
+    getRemainingBudget, 
+    isLoading: budgetLoading,
+    budgetDateRange 
+  } = useBudget();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Show setup page if user doesn't have a budget configured
   const hasExistingBudget = period && totalBudget > 0;
@@ -32,6 +42,14 @@ const Index = () => {
   const remainingBudget = getRemainingBudget();
   const spentPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="text-center space-y-2">
@@ -40,6 +58,38 @@ const Index = () => {
           Welcome back! Here's your budget overview
         </p>
       </div>
+
+      {/* Budget Period Information */}
+      {budgetDateRange && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                <CardTitle className="text-lg text-blue-900 capitalize">
+                  Current {period} Budget Period
+                </CardTitle>
+              </div>
+              <Button 
+                onClick={() => setShowCreateDialog(true)}
+                variant="outline"
+                size="sm"
+                className="border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Create New Budget
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-2 text-sm text-blue-700">
+              <span><strong>Start:</strong> {formatDate(budgetDateRange.startDate)}</span>
+              <span className="hidden sm:inline">•</span>
+              <span><strong>End:</strong> {formatDate(budgetDateRange.endDate)}</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Budget Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -153,6 +203,11 @@ const Index = () => {
           </CardContent>
         </Card>
       )}
+
+      <CreateNewBudgetDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog}
+      />
     </div>
   );
 };
