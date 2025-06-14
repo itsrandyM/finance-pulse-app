@@ -20,25 +20,27 @@ const SimpleBudgetSummary: React.FC<SimpleBudgetSummaryProps> = ({
   const isOverBudget = remainingBudget < 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl text-finance-text">Budget Overview</CardTitle>
-        <CardDescription>
+    <Card className="w-full">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl text-finance-text truncate">Budget Overview</CardTitle>
+        <CardDescription className="truncate">
           Total Budget: {formatCurrency(totalBudget)}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Spent: {formatCurrency(totalSpent)}</span>
-            <span className={`text-sm font-medium ${isOverBudget ? 'text-red-600' : 'text-green-600'}`}>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <span className="text-sm font-medium truncate">
+              Spent: {formatCurrency(totalSpent)}
+            </span>
+            <span className={`text-sm font-medium truncate ${isOverBudget ? 'text-red-600' : 'text-green-600'}`}>
               Remaining: {formatCurrency(Math.abs(remainingBudget))}
               {isOverBudget && ' (Over Budget)'}
             </span>
           </div>
           <Progress 
             value={Math.min(spentPercentage, 100)} 
-            className="h-3"
+            className="h-3 w-full"
           />
           <div className="text-xs text-gray-500 text-center">
             {spentPercentage.toFixed(1)}% of budget used

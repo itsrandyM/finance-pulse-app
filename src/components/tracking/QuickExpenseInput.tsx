@@ -26,45 +26,12 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
 
   // Common expense presets
   const quickAmounts = [5, 10, 25, 50, 100];
-  
-  // Category-based quick expenses
-  /*
-  const quickExpenseCategories = [
-    { icon: Coffee, label: 'Coffee', amount: 5, category: 'food' },
-    { icon: Utensils, label: 'Lunch', amount: 15, category: 'food' },
-    { icon: Car, label: 'Gas', amount: 50, category: 'transport' },
-    { icon: ShoppingCart, label: 'Groceries', amount: 100, category: 'food' },
-    { icon: Home, label: 'Utilities', amount: 75, category: 'bills' },
-  ];
-  */
 
   const selectedItem = budgetItems.find(item => item.id === selectedItemId);
 
   const handleQuickAmount = (quickAmount: number) => {
     setAmount(quickAmount.toString());
   };
-
-  /*
-  const handleQuickExpense = async (quickExpense: typeof quickExpenseCategories[0]) => {
-    // Try to find a matching budget item
-    const matchingItem = budgetItems.find(item => 
-      item.name.toLowerCase().includes(quickExpense.label.toLowerCase()) ||
-      (quickExpense.category === 'food' && item.name.toLowerCase().includes('food')) ||
-      (quickExpense.category === 'transport' && (item.name.toLowerCase().includes('transport') || item.name.toLowerCase().includes('car'))) ||
-      (quickExpense.category === 'bills' && item.name.toLowerCase().includes('bill'))
-    );
-
-    if (matchingItem) {
-      await onAddExpense(matchingItem.id, quickExpense.amount);
-      setAmount('');
-      setSelectedItemId('');
-      setSelectedSubItems([]);
-    } else {
-      // If no matching item, pre-fill the form
-      setAmount(quickExpense.amount.toString());
-    }
-  };
-  */
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,57 +52,32 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-finance-primary" />
-          Quick Expense Entry
+    <Card className="w-full">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Zap className="h-5 w-5 text-finance-primary flex-shrink-0" />
+          <span className="truncate">Quick Expense Entry</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Quick Expense Buttons - Commented out for now */}
-        {/*
-        <div>
-          <h4 className="text-sm font-medium mb-3">Common Expenses</h4>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-            {quickExpenseCategories.map((quickExpense) => (
-              <Button
-                key={quickExpense.label}
-                variant="outline"
-                size="sm"
-                className="flex flex-col items-center gap-1 h-auto py-3"
-                onClick={() => handleQuickExpense(quickExpense)}
-                disabled={isLoading}
-              >
-                <quickExpense.icon className="h-4 w-4" />
-                <span className="text-xs">{quickExpense.label}</span>
-                <span className="text-xs text-muted-foreground">
-                  {formatCurrency(quickExpense.amount)}
-                </span>
-              </Button>
-            ))}
-          </div>
-        </div>
-        */}
-
         {/* Manual Entry Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">Budget Item</label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium block">Budget Item</label>
             <Select value={selectedItemId} onValueChange={setSelectedItemId}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a budget item" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border shadow-lg z-50">
                 {budgetItems.map(item => {
                   const remaining = item.amount - item.spent;
                   const isOverBudget = remaining < 0;
                   
                   return (
-                    <SelectItem key={item.id} value={item.id}>
-                      <div className="flex items-center justify-between w-full">
-                        <span>{item.name}</span>
-                        <span className={`text-sm ml-2 ${isOverBudget ? 'text-red-500' : 'text-muted-foreground'}`}>
+                    <SelectItem key={item.id} value={item.id} className="cursor-pointer">
+                      <div className="flex items-center justify-between w-full min-w-0">
+                        <span className="truncate flex-1 mr-2">{item.name}</span>
+                        <span className={`text-xs flex-shrink-0 ${isOverBudget ? 'text-red-500' : 'text-muted-foreground'}`}>
                           {isOverBudget ? 'Over budget' : `${formatCurrency(remaining)} left`}
                         </span>
                       </div>
@@ -148,14 +90,14 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
 
           {/* Sub-items selection */}
           {selectedItem && selectedItem.subItems.length > 0 && (
-            <div>
-              <label className="text-sm font-medium mb-2 block">Sub-items (optional)</label>
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium block">Sub-items (optional)</label>
+              <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50">
                 {selectedItem.subItems.map(subItem => (
                   <Badge
                     key={subItem.id}
                     variant={selectedSubItems.includes(subItem.id) ? "default" : "outline"}
-                    className="cursor-pointer"
+                    className="cursor-pointer text-xs px-2 py-1 truncate max-w-full"
                     onClick={() => {
                       setSelectedSubItems(prev =>
                         prev.includes(subItem.id)
@@ -164,50 +106,55 @@ const QuickExpenseInput: React.FC<QuickExpenseInputProps> = ({
                       );
                     }}
                   >
-                    {subItem.name} ({formatCurrency(subItem.amount)})
+                    <span className="truncate">{subItem.name}</span>
+                    <span className="ml-1 flex-shrink-0">({formatCurrency(subItem.amount)})</span>
                   </Badge>
                 ))}
               </div>
             </div>
           )}
 
-          <div>
-            <label className="text-sm font-medium mb-2 block">Amount</label>
-            <div className="space-y-2">
+          <div className="space-y-3">
+            <label className="text-sm font-medium block">Amount</label>
+            <div className="space-y-3">
               <Input
                 type="number"
                 step="0.01"
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="text-lg"
+                className="text-lg w-full"
               />
               
               {/* Quick amount buttons */}
-              <div className="flex gap-2">
-                {quickAmounts.map(quickAmount => (
-                  <Button
-                    key={quickAmount}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickAmount(quickAmount)}
-                    disabled={isLoading}
-                  >
-                    {formatCurrency(quickAmount)}
-                  </Button>
-                ))}
+              <div className="space-y-2">
+                <div className="text-xs text-gray-600">Quick amounts:</div>
+                <div className="flex flex-wrap gap-2">
+                  {quickAmounts.map(quickAmount => (
+                    <Button
+                      key={quickAmount}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuickAmount(quickAmount)}
+                      disabled={isLoading}
+                      className="text-xs px-3 py-1 h-8 flex-shrink-0"
+                    >
+                      {formatCurrency(quickAmount)}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full h-10" 
             disabled={!selectedItemId || !amount || isLoading}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            {isLoading ? 'Adding...' : 'Add Expense'}
+            <Plus className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{isLoading ? 'Adding...' : 'Add Expense'}</span>
           </Button>
         </form>
       </CardContent>

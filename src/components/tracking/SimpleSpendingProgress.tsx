@@ -30,7 +30,7 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
 
   if (budgetItems.length === 0) {
     return (
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Spending Progress</CardTitle>
         </CardHeader>
@@ -44,7 +44,7 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Spending Progress</CardTitle>
       </CardHeader>
@@ -59,17 +59,17 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
 
             return (
               <div key={item.id} className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">{item.name}</span>
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-medium truncate">{item.name}</span>
                       {item.isImpulse && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs flex-shrink-0">
                           Impulse
                         </Badge>
                       )}
                       {item.isContinuous && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs flex-shrink-0">
                           Continuous
                         </Badge>
                       )}
@@ -78,7 +78,7 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => toggleExpanded(item.id)}
-                          className="h-6 w-6 p-0 hover:bg-gray-100"
+                          className="h-6 w-6 p-0 hover:bg-gray-100 flex-shrink-0"
                         >
                           {isExpanded ? (
                             <ChevronUp className="h-3 w-3" />
@@ -88,7 +88,7 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
                         </Button>
                       )}
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 break-words">
                       {formatCurrency(item.spent)} / {formatCurrency(item.amount)}
                     </div>
                   </div>
@@ -96,17 +96,17 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
                 
                 <Progress 
                   value={Math.min(progressPercent, 100)} 
-                  className="h-2"
+                  className="h-2 w-full"
                 />
                 
-                <div className="flex justify-between text-xs">
-                  <span className={`${isOverBudget ? 'text-red-600' : 'text-green-600'}`}>
+                <div className="flex justify-between text-xs flex-wrap gap-1">
+                  <span className={`${isOverBudget ? 'text-red-600' : 'text-green-600'} break-words`}>
                     {isOverBudget 
                       ? `Over by ${formatCurrency(Math.abs(remaining))}` 
                       : `${formatCurrency(remaining)} remaining`
                     }
                   </span>
-                  <span className="text-gray-500">
+                  <span className="text-gray-500 flex-shrink-0">
                     {progressPercent.toFixed(1)}%
                   </span>
                 </div>
@@ -118,17 +118,17 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
                     </div>
                     <div className="grid grid-cols-1 gap-2">
                       {item.subItems.map((subItem) => (
-                        <div key={subItem.id} className="flex justify-between items-center p-2 bg-white rounded border shadow-sm">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                            <span className="text-sm font-medium">{subItem.name}</span>
+                        <div key={subItem.id} className="flex justify-between items-center p-2 bg-white rounded border shadow-sm gap-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0"></div>
+                            <span className="text-sm font-medium truncate">{subItem.name}</span>
                             {subItem.tag && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-xs flex-shrink-0">
                                 {subItem.tag}
                               </Badge>
                             )}
                           </div>
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-sm font-medium text-gray-700 flex-shrink-0">
                             {formatCurrency(subItem.amount)}
                           </span>
                         </div>
@@ -138,13 +138,13 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
                 )}
                 
                 {item.note && (
-                  <div className="text-xs text-gray-600 italic bg-gray-50 p-2 rounded">
+                  <div className="text-xs text-gray-600 italic bg-gray-50 p-2 rounded break-words">
                     Note: {item.note}
                   </div>
                 )}
                 
                 {item.deadline && (
-                  <div className="text-xs text-orange-600">
+                  <div className="text-xs text-orange-600 break-words">
                     Deadline: {new Date(item.deadline).toLocaleDateString()}
                   </div>
                 )}
