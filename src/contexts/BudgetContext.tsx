@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -102,13 +101,10 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const setTotalBudget = (amount: number) => {
-    // Add the previous remaining budget if it exists
-    const finalAmount = previousRemainingBudget > 0 
-      ? amount + previousRemainingBudget 
-      : amount;
-    
-    console.log(`Setting total budget: ${amount} + previous remaining ${previousRemainingBudget} = ${finalAmount}`);
-    setTotalBudgetState(finalAmount);
+    // The amount from BudgetAmountInputPage already includes the previous remaining budget.
+    // We set the amount directly here to avoid double-counting.
+    console.log(`Setting total budget directly to: ${amount}`);
+    setTotalBudgetState(amount);
   };
 
   const resetBudget = () => {

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { BudgetPeriod, BudgetItem, BudgetDateRange } from '@/types/budget';
 import * as budgetService from '@/services/budgetService';
@@ -39,12 +38,12 @@ export const useBudgetInitialization = ({
     try {
       setIsLoading(true);
       
-      // Calculate the final amount (only add remaining budget once)
-      const finalAmount = previousRemainingBudget > 0 
-        ? amount + previousRemainingBudget 
-        : amount;
+      // The 'amount' coming from the budget input page already includes the previous remaining budget,
+      // as the input field is pre-filled with (total income + previous remaining).
+      // We use the amount directly to prevent double-counting.
+      const finalAmount = amount;
       
-      console.log(`Initializing budget with amount ${amount} + remaining ${previousRemainingBudget} = ${finalAmount}`);
+      console.log(`Initializing budget with final amount ${finalAmount}`);
       
       // Create the new budget
       const budget = await budgetService.createBudget(budgetPeriod, finalAmount);
