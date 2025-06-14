@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -98,14 +97,6 @@ const ExpenseTracking: React.FC = () => {
         formatCurrency={formatCurrency}
       />
 
-      {/* Budget Alerts */}
-      {budgetAlerts.hasAlerts && (
-        <BudgetAlertsDisplay
-          alerts={budgetAlerts.alerts}
-          onDismissAlert={budgetAlerts.dismissAlert}
-        />
-      )}
-
       <Tabs defaultValue="expense-entry" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="expense-entry">Add Expense</TabsTrigger>
@@ -120,6 +111,14 @@ const ExpenseTracking: React.FC = () => {
             isLoading={isAddingExpense}
             onAddSubItem={handleAddSubItem}
           />
+
+          {/* Budget Alerts moved here - below the quick expense entry card */}
+          {budgetAlerts.hasAlerts && (
+            <BudgetAlertsDisplay
+              alerts={budgetAlerts.alerts}
+              onDismissAlert={budgetAlerts.dismissAlert}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="progress" className="space-y-6">
