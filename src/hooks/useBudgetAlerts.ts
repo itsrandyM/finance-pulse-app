@@ -46,7 +46,7 @@ export const useBudgetAlerts = ({
           id: `${item.id}-exceeded`,
           type: 'danger',
           title: 'Budget Exceeded',
-          message: `You've exceeded your budget for "${item.name}" by ${((item.spent - item.amount) / item.amount * 100).toFixed(1)}%`,
+          message: `You've exceeded your budget for "${item.name}" by ${formatCurrency(item.spent - item.amount)}.`,
           itemId: item.id,
           percentage: spentPercentage
         });
@@ -55,7 +55,7 @@ export const useBudgetAlerts = ({
           id: `${item.id}-critical`,
           type: 'danger',
           title: 'Critical Budget Alert',
-          message: `You've used ${spentPercentage.toFixed(1)}% of your budget for "${item.name}"`,
+          message: `You've used ${formatCurrency(item.spent)} of ${formatCurrency(item.amount)} (${spentPercentage.toFixed(1)}%) for "${item.name}".`,
           itemId: item.id,
           percentage: spentPercentage
         });
@@ -64,7 +64,7 @@ export const useBudgetAlerts = ({
           id: `${item.id}-warning`,
           type: 'warning',
           title: 'Budget Warning',
-          message: `You've used ${spentPercentage.toFixed(1)}% of your budget for "${item.name}"`,
+          message: `You've used ${formatCurrency(item.spent)} of ${formatCurrency(item.amount)} (${spentPercentage.toFixed(1)}%) for "${item.name}".`,
           itemId: item.id,
           percentage: spentPercentage
         });
@@ -79,7 +79,7 @@ export const useBudgetAlerts = ({
             id: `${item.id}-deadline`,
             type: 'info',
             title: 'Deadline Approaching',
-            message: `"${item.name}" deadline is in ${daysUntilDeadline} day(s) and you've only used ${spentPercentage.toFixed(1)}% of the budget`,
+            message: `Deadline for "${item.name}" is in ${daysUntilDeadline} day(s). You've spent ${formatCurrency(item.spent)} of ${formatCurrency(item.amount)} (${spentPercentage.toFixed(1)}%).`,
             itemId: item.id,
             percentage: spentPercentage
           });
@@ -88,14 +88,15 @@ export const useBudgetAlerts = ({
     });
 
     // Check overall budget
-    const totalSpentPercentage = totalBudget > 0 ? (getTotalSpent() / totalBudget) * 100 : 0;
+    const totalSpent = getTotalSpent();
+    const totalSpentPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
     
     if (totalSpentPercentage >= 95) {
       newAlerts.push({
         id: 'total-critical',
         type: 'danger',
         title: 'Total Budget Critical',
-        message: `You've used ${totalSpentPercentage.toFixed(1)}% of your total budget`,
+        message: `You've used ${formatCurrency(totalSpent)} of your total ${formatCurrency(totalBudget)} budget (${totalSpentPercentage.toFixed(1)}%).`,
         itemId: 'total',
         percentage: totalSpentPercentage
       });
@@ -104,7 +105,7 @@ export const useBudgetAlerts = ({
         id: 'total-warning',
         type: 'warning',
         title: 'Total Budget Warning',
-        message: `You've used ${totalSpentPercentage.toFixed(1)}% of your total budget`,
+        message: `You've used ${formatCurrency(totalSpent)} of your total ${formatCurrency(totalBudget)} budget (${totalSpentPercentage.toFixed(1)}%).`,
         itemId: 'total',
         percentage: totalSpentPercentage
       });
