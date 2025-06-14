@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -97,18 +96,18 @@ const SimpleAnalyticsDashboard: React.FC<SimpleAnalyticsDashboardProps> = ({
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Avg. Spending</p>
-                <p className="text-2xl font-bold">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-muted-foreground mb-1">Avg. Spending</p>
+                <p className="text-lg font-bold break-words">
                   {budgetItems.length > 0 
                     ? formatCurrencyProp(totalSpent / budgetItems.length)
                     : formatCurrencyProp(0)
                   }
                 </p>
               </div>
-              <Calendar className="h-8 w-8 text-muted-foreground" />
+              <Calendar className="h-6 w-6 text-muted-foreground flex-shrink-0 ml-2" />
             </div>
           </CardContent>
         </Card>
