@@ -152,8 +152,10 @@ const IncomeTracking: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Income Summary</CardTitle>
-          <CardDescription>
-            Total Income: {formatCurrency(totalIncome)} | Total Budget: {formatCurrency(totalBudget)}
+          <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span className="truncate">Total Income: {formatCurrency(totalIncome)}</span>
+            <span className="hidden sm:inline">|</span>
+            <span className="truncate">Total Budget: {formatCurrency(totalBudget)}</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -173,14 +175,14 @@ const IncomeTracking: React.FC = () => {
               ) : (
                 incomeEntries.map((entry) => (
                   <div key={entry.id} className="flex justify-between items-center border-b pb-2">
-                    <div>
-                      <p className="font-medium">{entry.name}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{entry.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(entry.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <p className="font-medium">{formatCurrency(entry.amount)}</p>
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                      <p className="font-medium truncate">{formatCurrency(entry.amount)}</p>
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -203,18 +205,14 @@ const IncomeTracking: React.FC = () => {
           <CardTitle>Financial Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="border rounded-md p-4 text-center">
               <p className="text-sm text-muted-foreground">Total Income</p>
-              <p className="text-xl font-bold text-finance-primary">{formatCurrency(totalIncome)}</p>
+              <p className="text-lg sm:text-xl font-bold text-finance-primary break-words">{formatCurrency(totalIncome)}</p>
             </div>
             <div className="border rounded-md p-4 text-center">
               <p className="text-sm text-muted-foreground">Total Budget</p>
-              <p className="text-xl font-bold">{formatCurrency(totalBudget)}</p>
-            </div>
-            <div className="col-span-2 border rounded-md p-4 text-center bg-finance-accent/10">
-              <p className="text-sm text-muted-foreground">Combined Total</p>
-              <p className="text-2xl font-bold text-finance-accent">{formatCurrency(totalIncome + totalBudget)}</p>
+              <p className="text-lg sm:text-xl font-bold break-words">{formatCurrency(totalBudget)}</p>
             </div>
           </div>
         </CardContent>

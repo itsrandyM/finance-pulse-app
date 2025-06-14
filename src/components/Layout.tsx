@@ -2,7 +2,7 @@
 import React from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Link, useLocation } from "react-router-dom";
-import { Wallet, LayoutDashboard, TrendingUp, User } from "lucide-react";
+import { Wallet, LayoutDashboard, TrendingUp, User, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileNavBar from "./MobileNavBar";
@@ -86,6 +86,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       >
                         <TrendingUp />
                         <span className="hidden md:inline">Tracking</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === "/income"}
+                      tooltip="Income"
+                    >
+                      <Link
+                        to="/income"
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-2 hover:text-finance-primary",
+                          location.pathname === "/income" && "text-finance-primary font-semibold"
+                        )}
+                      >
+                        <DollarSign />
+                        <span className="hidden md:inline">Income</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
