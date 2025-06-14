@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBudget } from '@/contexts/BudgetContext';
@@ -11,6 +10,8 @@ import { ArrowLeft, ArrowRight, Plus } from 'lucide-react';
 import * as incomeService from '@/services/incomeService';
 import { formatCurrency } from '@/lib/formatters';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import CarryOverItemsEditor from '@/components/budget/CarryOverItemsEditor';
+import { BudgetItem } from '@/types/budget';
 
 const IncomeSetupPage: React.FC = () => {
   const [incomeName, setIncomeName] = useState('');
@@ -18,8 +19,16 @@ const IncomeSetupPage: React.FC = () => {
   const [incomeEntries, setIncomeEntries] = useState<incomeService.IncomeEntry[]>([]);
   const [totalIncome, setTotalIncome] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [carryOverItems, setCarryOverItems] = useState<BudgetItem[]>([]);
+  const [carryOverBudget, setCarryOverBudget] = useState(0);
   const { toast } = useToast();
-  const { period } = useBudget();
+  const { 
+    period, 
+    previousRemainingBudget, 
+    continuousBudgetItems,
+    setPreviousRemainingBudget,
+    setContinuousBudgetItems
+  } = useBudget();
   const navigate = useNavigate();
   
   // Check if we have a budget period selected
@@ -28,6 +37,19 @@ const IncomeSetupPage: React.FC = () => {
       navigate('/');
     }
   }, [period, navigate]);
+
+  // Initialize carry-over data
+  useEffect(() => {
+    if (previousRemainingBudget > 0 || continuousBudgetItems.length > 0) {
+      setCarryOverBudget(previousRemainingBudget);
+      // Create copies of items with unique IDs for editing
+      const itemsToEdit = continuousBudgetItems.map(item => ({
+        ...item,
+        id: `temp-${item.id}-${Date.now()}` // Temporary ID for editing
+      }));
+      setCarryOverItems(itemsToEdit);
+    }
+  }, [previousRemainingBudget, continuousBudgetItems]);
   
   // Load existing income entries
   useEffect(() => {
@@ -126,6 +148,21 @@ const IncomeSetupPage: React.FC = () => {
     }
   };
   
+  const handleCarryOverItemsUpdate = (updatedItems: BudgetItem[]) => {
+    setCarryOverItems(updatedItems);
+    // Update the context with the edited items (restore original IDs)
+    const itemsWithOriginalIds = updatedItems.map(item => ({
+      ...item,
+      id: item.id.startsWith('temp-') ? item.id.split('-')[1] : item.id
+    }));
+    setContinuousBudgetItems(itemsWithOriginalIds);
+  };
+
+  const handleCarryOverBudgetUpdate = (amount: number) => {
+    setCarryOverBudget(amount);
+    setPreviousRemainingBudget(amount);
+  };
+  
   const handleContinue = () => {
     navigate('/budget-amount');
   };
@@ -143,6 +180,14 @@ const IncomeSetupPage: React.FC = () => {
         </Button>
         <h1 className="text-2xl font-bold">Income Setup</h1>
       </div>
+
+      {/* Carry Over Items Editor */}
+      <CarryOverItemsEditor
+        items={carryOverItems}
+        remainingBudget={carryOverBudget}
+        onItemsUpdate={handleCarryOverItemsUpdate}
+        onRemainingBudgetUpdate={handleCarryOverBudgetUpdate}
+      />
       
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
@@ -168,11 +213,11 @@ const IncomeSetupPage: React.FC = () => {
                 <Label htmlFor="incomeAmount">Amount</Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <span className="text-gray-500">$</span>
+                    <span className="text-gray-500">KSh</span>
                   </div>
                   <Input
                     id="incomeAmount"
-                    className="pl-8"
+                    className="pl-12"
                     type="number"
                     placeholder="0.00"
                     step="0.01"
@@ -202,6 +247,11 @@ const IncomeSetupPage: React.FC = () => {
             <CardTitle>Income Summary</CardTitle>
             <CardDescription>
               Your total income: {formatCurrency(totalIncome)}
+              {carryOverBudget > 0 && (
+                <span className="block text-sm text-blue-600 mt-1">
+                  + {formatCurrency(carryOverBudget)} carried over from previous budget
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>

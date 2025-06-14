@@ -97,13 +97,13 @@ export const useBudgetInitialization = ({
             }
             
             // Handle recurring items - create fresh with original amount
-            if (item.isRecurring && !item.isContinuous) {
+            if (item.isRecurring) {
               const newItem = await budgetService.createBudgetItem(
                 budget.id,
                 item.name,
                 item.amount,
                 item.isImpulse || false,
-                false,
+                item.isContinuous || false, // Preserve continuous status for items that are both
                 true // Keep as recurring
               );
               
@@ -114,7 +114,7 @@ export const useBudgetInitialization = ({
                 spent: 0, // Fresh start for recurring items
                 subItems: [],
                 isImpulse: newItem.is_impulse || false,
-                isContinuous: false,
+                isContinuous: newItem.is_continuous || false,
                 isRecurring: true,
                 note: item.note,
                 tag: item.tag

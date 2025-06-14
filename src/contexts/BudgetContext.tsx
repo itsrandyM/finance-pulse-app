@@ -78,8 +78,8 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       if (isExpired && !isBudgetExpired) {
         console.log("Budget has expired - the ExpiredBudgetOverlay will handle storing the remaining budget");
         
-        // Store budget items that should be continued
-        const itemsToContinue = budgetItems.filter(item => item.isContinuous);
+        // Store budget items that should be continued (both continuous and recurring)
+        const itemsToContinue = budgetItems.filter(item => item.isContinuous || item.isRecurring);
         console.log(`Continuing ${itemsToContinue.length} items to next budget period`);
         setContinuousBudgetItems(itemsToContinue);
       }
