@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -51,12 +52,12 @@ const ExpenseTracking: React.FC = () => {
     }
   }, [loadBudget, hasLoadedInitial]);
 
-  const handleAddExpense = async (itemId: string, amount: number, subItemId?: string) => {
+  const handleAddExpense = async (itemId: string, amount: number, subItemIds?: string[]) => {
     try {
       setIsAddingExpense(true);
-      console.log('Adding expense:', { itemId, amount, subItemId });
+      console.log('Adding expense:', { itemId, amount, subItemIds });
       
-      await addExpense(itemId, amount, subItemId);
+      await addExpense(itemId, amount, subItemIds);
       
     } catch (error: any) {
       console.error('Error adding expense:', error);

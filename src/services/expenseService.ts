@@ -72,6 +72,78 @@ export const addExpense = async (
   }
 };
 
+export const addMultipleExpenses = async (
+  budgetItemId: string,
+  subItemAmounts: { subItemId: string; amount: number }[]
+) => {
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+  
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+  
+  try {
+    console.log("=== MULTIPLE EXPENSES SERVICE START ===");
+    console.log("Adding multiple expenses:", { budgetItemId, subItemAmounts });
+    
+    // Insert multiple expense records in a single transaction
+    const expenseRecords = subItemAmounts.map(({ subItemId, amount }) => ({
+      budget_item_id: budgetItemId,
+      sub_item_id: subItemId,
+      amount: amount,
+      user_id: userId
+    }));
+    
+    const { error } = await supabase
+      .from('expenses')
+      .insert(expenseRecords);
+      
+    if (error) {
+      console.error("Error adding multiple expenses:", error);
+      throw new Error(`Error adding expenses: ${error.message}`);
+    }
+    
+    console.log("Multiple expenses inserted successfully, now updating spent amount...");
+    
+    // Update the spent amount for the budget item
+    const { error: updateError } = await supabase.rpc('update_budget_item_spent', {
+      p_budget_item_id: budgetItemId
+    });
+    
+    if (updateError) {
+      console.error("Error updating spent amount:", updateError);
+      throw new Error(`Error updating spent amount: ${updateError.message}`);
+    }
+    
+    console.log("Spent amount updated via database function");
+    
+    // Add a small delay to ensure database consistency
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Get the updated budget item to return the new spent amount
+    const { data: updatedItem, error: fetchError } = await supabase
+      .from('budget_items')
+      .select('spent')
+      .eq('id', budgetItemId)
+      .single();
+    
+    if (fetchError) {
+      console.error("Error fetching updated item:", fetchError);
+      throw new Error(`Error fetching updated item: ${fetchError.message}`);
+    }
+    
+    console.log("Updated item spent amount from database:", updatedItem.spent);
+    console.log("=== MULTIPLE EXPENSES SERVICE COMPLETE ===");
+    
+    const newSpent = parseFloat(updatedItem.spent?.toString() || '0') || 0;
+    
+    return { success: true, newSpent };
+  } catch (error: any) {
+    console.error("=== MULTIPLE EXPENSES SERVICE ERROR ===", error);
+    throw new Error(`Failed to add multiple expenses: ${error.message}`);
+  }
+};
+
 export const recalculateAllSpentAmounts = async () => {
   const userId = (await supabase.auth.getUser()).data.user?.id;
   

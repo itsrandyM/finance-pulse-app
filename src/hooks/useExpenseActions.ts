@@ -32,13 +32,37 @@ export const useExpenseActions = ({
 
     try {
       setIsAddingExpense(true);
-      // For now, we only handle the first sub-item to align with the simplified UI.
-      const subItemId = subItemIds && subItemIds.length > 0 ? subItemIds[0] : undefined;
       
-      console.log('Adding expense to item:', itemId, 'Amount:', amount, 'SubItem:', subItemId);
+      if (subItemIds && subItemIds.length > 1) {
+        // Handle multiple sub-items - we need to get the individual amounts
+        // For now, split the total amount equally among sub-items
+        console.log('Adding multiple expenses:', { itemId, amount, subItemIds });
+        
+        // Get the selected item to find sub-item details
+        const selectedItem = budgetItems.find(item => item.id === itemId);
+        if (!selectedItem) {
+          throw new Error("Selected budget item not found");
+        }
+        
+        // Calculate individual amounts based on sub-item budgets
+        const selectedSubItems = selectedItem.subItems.filter(sub => subItemIds.includes(sub.id));
+        const totalBudgetedAmount = selectedSubItems.reduce((total, sub) => total + sub.amount, 0);
+        
+        const subItemAmounts = selectedSubItems.map(subItem => ({
+          subItemId: subItem.id,
+          amount: totalBudgetedAmount > 0 ? (subItem.amount / totalBudgetedAmount) * amount : amount / selectedSubItems.length
+        }));
+        
+        await expenseService.addMultipleExpenses(itemId, subItemAmounts);
+      } else {
+        // Handle single sub-item or no sub-item
+        const subItemId = subItemIds && subItemIds.length > 0 ? subItemIds[0] : undefined;
+        console.log('Adding single expense:', { itemId, amount, subItemId });
+        
+        await expenseService.addExpense(itemId, amount, subItemId);
+      }
       
-      await expenseService.addExpense(itemId, amount, subItemId);
-      console.log('Expense added successfully, reloading budget...');
+      console.log('Expense(s) added successfully, reloading budget...');
       
       // Reload the budget to get updated spent amounts
       await loadBudget();
