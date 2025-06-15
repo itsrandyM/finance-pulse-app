@@ -43,7 +43,7 @@ export const useBudgetLoading = ({
   const isLoadingRef = useRef(false);
   const lastLoadTimeRef = useRef<number>(0);
   const lastUserIdRef = useRef<string | null>(null);
-  const MIN_LOAD_INTERVAL = 1000; // Increase to 1 second to prevent rapid loading
+  const MIN_LOAD_INTERVAL = 1000;
   
   const { initializeBudget: initBudget } = useBudgetInitialization({
     setCurrentBudgetId,
@@ -115,6 +115,18 @@ export const useBudgetLoading = ({
       }
       
       console.log("Budget found for user:", user.email, budget);
+      
+      // Validate that this budget belongs to the current user
+      if (budget.user_id !== user.id) {
+        console.error("Budget user_id mismatch! Budget belongs to:", budget.user_id, "Current user:", user.id);
+        toast({
+          title: "Error loading budget",
+          description: "Budget data inconsistency detected. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       setCurrentBudgetId(budget.id);
       setPeriodState(budget.period as BudgetPeriod);
       setTotalBudgetState(budget.total_budget);
@@ -168,8 +180,20 @@ export const useBudgetLoading = ({
       const dateRange = calculateDateRange(startDate, budget.period as BudgetPeriod);
       setBudgetDateRange(dateRange);
       
-      const nowDate = new Date();
-      const isExpired = nowDate > dateRange.endDate;
+      // Check expiration immediately after setting date range
+      const now = new Date();
+      const endDate = new Date(dateRange.endDate);
+      now.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      const isExpired = now > endDate;
+      
+      console.log('Budget expiration check in loadBudget:', {
+        now: now.toISOString(),
+        endDate: endDate.toISOString(),
+        isExpired,
+        dateRange
+      });
+      
       setIsBudgetExpired(isExpired);
       
       console.log("=== BUDGET LOADED SUCCESSFULLY FOR USER ===", user.email);

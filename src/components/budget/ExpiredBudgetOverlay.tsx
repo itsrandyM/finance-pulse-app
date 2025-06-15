@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useBudget } from '@/contexts/BudgetContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,9 +25,33 @@ const ExpiredBudgetOverlay: React.FC<ExpiredBudgetOverlayProps> = ({ className =
   const [isCreatingNewBudget, setIsCreatingNewBudget] = React.useState(false);
   const navigate = useNavigate();
   
-  if (!isBudgetExpired || !budgetDateRange || !period) {
+  // Debug logging
+  React.useEffect(() => {
+    console.log('ExpiredBudgetOverlay render check:', {
+      isBudgetExpired,
+      period,
+      budgetDateRange,
+      shouldShow: isBudgetExpired && budgetDateRange && period
+    });
+  }, [isBudgetExpired, period, budgetDateRange]);
+  
+  // Early return with debug info
+  if (!isBudgetExpired) {
+    console.log('ExpiredBudgetOverlay: Budget not expired, not showing overlay');
     return null;
   }
+  
+  if (!budgetDateRange) {
+    console.log('ExpiredBudgetOverlay: No budget date range, not showing overlay');
+    return null;
+  }
+  
+  if (!period) {
+    console.log('ExpiredBudgetOverlay: No period set, not showing overlay');
+    return null;
+  }
+  
+  console.log('ExpiredBudgetOverlay: Showing expired budget overlay');
   
   const handleCreateNewBudget = async () => {
     setIsCreatingNewBudget(true);

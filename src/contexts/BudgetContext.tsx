@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -108,7 +107,20 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => {
     if (budgetDateRange && budgetDateRange.endDate) {
       const now = new Date();
-      const isExpired = now > budgetDateRange.endDate;
+      const endDate = new Date(budgetDateRange.endDate);
+      
+      // Clear time components for accurate date comparison
+      now.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      
+      const isExpired = now > endDate;
+      
+      console.log('Checking budget expiration:', {
+        now: now.toISOString(),
+        endDate: endDate.toISOString(),
+        isExpired,
+        currentIsBudgetExpired: isBudgetExpired
+      });
       
       if (isExpired && !isBudgetExpired) {
         console.log("Budget has expired - the ExpiredBudgetOverlay will handle storing the remaining budget");
@@ -117,9 +129,13 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const itemsToContinue = budgetItems.filter(item => item.isContinuous || item.isRecurring);
         console.log(`Continuing ${itemsToContinue.length} items to next budget period`);
         setContinuousBudgetItems(itemsToContinue);
+        
+        setIsBudgetExpired(true);
+      } else if (!isExpired && isBudgetExpired) {
+        // Budget is no longer expired (new budget was created)
+        console.log("Budget is no longer expired");
+        setIsBudgetExpired(false);
       }
-      
-      setIsBudgetExpired(isExpired);
     }
   }, [budgetDateRange, budgetItems, isBudgetExpired]);
 
