@@ -13,9 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Plus } from 'lucide-react';
+import { DollarSign, Plus, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import * as incomeService from '@/services/incomeService';
 
 interface AddIncomeToBudgetDialogProps {
@@ -27,7 +28,7 @@ export const AddIncomeToBudgetDialog: React.FC<AddIncomeToBudgetDialogProps> = (
   open,
   onOpenChange,
 }) => {
-  const { totalBudget, setTotalBudget } = useBudget();
+  const { totalBudget, setTotalBudget, budgetDateRange } = useBudget();
   const { toast } = useToast();
   const [incomeName, setIncomeName] = useState('');
   const [incomeAmount, setIncomeAmount] = useState('');
@@ -56,8 +57,13 @@ export const AddIncomeToBudgetDialog: React.FC<AddIncomeToBudgetDialogProps> = (
     try {
       setIsAdding(true);
       
-      // Add income to the database
-      await incomeService.createIncomeEntry(incomeName.trim(), amount);
+      // Use the current budget's start date as the budget period
+      const budgetPeriodStart = budgetDateRange?.startDate 
+        ? new Date(budgetDateRange.startDate).toISOString()
+        : new Date().toISOString();
+      
+      // Add income to the database with current budget period
+      await incomeService.createIncomeEntry(incomeName.trim(), amount, budgetPeriodStart);
       
       // Add the income amount to the current budget
       setTotalBudget(totalBudget + amount);
@@ -97,6 +103,13 @@ export const AddIncomeToBudgetDialog: React.FC<AddIncomeToBudgetDialogProps> = (
         </DialogHeader>
 
         <div className="space-y-4">
+          <Alert className="border-blue-200 bg-blue-50">
+            <AlertTriangle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              This income will be tagged to your current budget period and added to your available funds.
+            </AlertDescription>
+          </Alert>
+
           <Card className="border-green-200 bg-green-50">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm text-green-900 flex items-center gap-2">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBudget } from '@/contexts/BudgetContext';
@@ -6,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ArrowRight, Plus, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Plus, X, AlertTriangle } from 'lucide-react';
 import * as incomeService from '@/services/incomeService';
 import { formatCurrency } from '@/lib/formatters';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import CarryOverItemsEditor from '@/components/budget/CarryOverItemsEditor';
 import { BudgetItem } from '@/types/budget';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const IncomeSetupPage: React.FC = () => {
   const [incomeName, setIncomeName] = useState('');
@@ -21,6 +23,7 @@ const IncomeSetupPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [carryOverItems, setCarryOverItems] = useState<BudgetItem[]>([]);
   const [carryOverBudget, setCarryOverBudget] = useState(0);
+  const [budgetPeriodStart] = useState(new Date().toISOString()); // Current budget period
   const { toast } = useToast();
   const { 
     period, 
@@ -51,12 +54,13 @@ const IncomeSetupPage: React.FC = () => {
     }
   }, [previousRemainingBudget, continuousBudgetItems]);
   
-  // Load existing income entries
+  // Load income entries for current budget period only
   useEffect(() => {
     const fetchIncomeEntries = async () => {
       setIsLoading(true);
       try {
-        const entries = await incomeService.getIncomeEntries();
+        // Only get income entries for the current budget setup period
+        const entries = await incomeService.getIncomeEntriesForPeriod(budgetPeriodStart);
         setIncomeEntries(entries);
         const total = entries.reduce((sum, entry) => sum + Number(entry.amount), 0);
         setTotalIncome(total);
@@ -72,7 +76,7 @@ const IncomeSetupPage: React.FC = () => {
     };
     
     fetchIncomeEntries();
-  }, [toast]);
+  }, [budgetPeriodStart, toast]);
   
   const handleAddIncome = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +102,8 @@ const IncomeSetupPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await incomeService.createIncomeEntry(incomeName, parseFloat(incomeAmount));
+      // Create income entry with current budget period
+      await incomeService.createIncomeEntry(incomeName, parseFloat(incomeAmount), budgetPeriodStart);
       toast({
         title: "Income added",
         description: `${incomeName} added successfully`,
@@ -106,8 +111,8 @@ const IncomeSetupPage: React.FC = () => {
       setIncomeName('');
       setIncomeAmount('');
       
-      // Reload income entries
-      const entries = await incomeService.getIncomeEntries();
+      // Reload income entries for current period
+      const entries = await incomeService.getIncomeEntriesForPeriod(budgetPeriodStart);
       setIncomeEntries(entries);
       const total = entries.reduce((sum, entry) => sum + Number(entry.amount), 0);
       setTotalIncome(total);
@@ -127,8 +132,8 @@ const IncomeSetupPage: React.FC = () => {
     try {
       await incomeService.deleteIncomeEntry(id);
       
-      // Reload income entries
-      const entries = await incomeService.getIncomeEntries();
+      // Reload income entries for current period
+      const entries = await incomeService.getIncomeEntriesForPeriod(budgetPeriodStart);
       setIncomeEntries(entries);
       const total = entries.reduce((sum, entry) => sum + Number(entry.amount), 0);
       setTotalIncome(total);
@@ -181,6 +186,15 @@ const IncomeSetupPage: React.FC = () => {
         <h1 className="text-xl sm:text-2xl font-bold truncate">Income Setup</h1>
       </div>
 
+      {/* Income Period Notice */}
+      <Alert className="mb-6 border-blue-200 bg-blue-50">
+        <AlertTriangle className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-800">
+          <strong>New Budget Period:</strong> Only income added during this setup will be included in your new budget. 
+          Previously recorded income has already been accounted for in past budgets.
+        </AlertDescription>
+      </Alert>
+
       {/* Carry Over Items Editor */}
       <CarryOverItemsEditor
         items={carryOverItems}
@@ -192,9 +206,11 @@ const IncomeSetupPage: React.FC = () => {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle className="truncate">Add Income</CardTitle>
+            <CardTitle className="truncate">Add New Income</CardTitle>
             <CardDescription className="text-sm leading-relaxed">
-              Enter your income sources for this <span className="font-medium">{period}</span> budget period
+              Enter your income sources for this <span className="font-medium">{period}</span> budget period.
+              <br />
+              <span className="text-blue-600 font-medium">Only new income will be added to your budget.</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -235,7 +251,7 @@ const IncomeSetupPage: React.FC = () => {
                 ) : (
                   <>
                     <Plus className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="truncate">Add Income</span>
+                    <span className="truncate">Add New Income</span>
                   </>
                 )}
               </Button>
@@ -245,16 +261,19 @@ const IncomeSetupPage: React.FC = () => {
         
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle className="truncate">Income Summary</CardTitle>
+            <CardTitle className="truncate">New Budget Income</CardTitle>
             <CardDescription className="text-sm space-y-1">
               <div className="truncate">
-                <span className="font-medium">Total income:</span> {formatCurrency(totalIncome)}
+                <span className="font-medium">New income for this budget:</span> {formatCurrency(totalIncome)}
               </div>
               {carryOverBudget > 0 && (
                 <div className="text-blue-600 truncate">
                   <span className="font-medium">+ Carried over:</span> {formatCurrency(carryOverBudget)}
                 </div>
               )}
+              <div className="text-green-600 truncate font-medium">
+                <span>Total available:</span> {formatCurrency(totalIncome + carryOverBudget)}
+              </div>
             </CardDescription>
           </CardHeader>
           <CardContent className="min-w-0">
@@ -264,7 +283,7 @@ const IncomeSetupPage: React.FC = () => {
               </div>
             ) : incomeEntries.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
-                No income entries yet. Add your income sources to continue.
+                No new income added yet. Add income sources for this budget period.
               </p>
             ) : (
               <div className="space-y-3">
@@ -273,7 +292,7 @@ const IncomeSetupPage: React.FC = () => {
                     <div className="min-w-0 flex-1">
                       <p className="font-medium truncate text-sm">{entry.name}</p>
                       <p className="text-xs text-muted-foreground truncate">
-                        {new Date(entry.created_at).toLocaleDateString()}
+                        Added: {new Date(entry.created_at).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2 flex-shrink-0">

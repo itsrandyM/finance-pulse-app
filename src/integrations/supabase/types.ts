@@ -181,6 +181,7 @@ export type Database = {
       income_entries: {
         Row: {
           amount: number
+          budget_period_start: string
           created_at: string
           id: string
           name: string
@@ -188,6 +189,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          budget_period_start: string
           created_at?: string
           id?: string
           name: string
@@ -195,6 +197,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          budget_period_start?: string
           created_at?: string
           id?: string
           name?: string
