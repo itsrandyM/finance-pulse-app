@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,11 @@ const SimpleSpendingProgress: React.FC<SimpleSpendingProgressProps> = ({
         </CardHeader>
         <CardContent>
           <p className="text-gray-500 text-center py-8">
-            No budget items found. Create budget items to track your spending.
+            No budget items found.{' '}
+            <Link to="/budget" className="text-blue-600 hover:text-blue-800 underline">
+              Create budget items
+            </Link>{' '}
+            to track your spending.
           </p>
         </CardContent>
       </Card>
