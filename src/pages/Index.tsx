@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBudget } from '@/contexts/BudgetContext';
@@ -67,10 +68,10 @@ const Index = () => {
       {/* Expired Budget Overlay - should show when budget is expired */}
       {isBudgetExpired && <ExpiredBudgetOverlay />}
       
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-lg text-gray-600">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-base md:text-lg text-gray-600">
             Welcome back! Here's your budget overview
           </p>
         </div>
@@ -79,19 +80,19 @@ const Index = () => {
         {budgetDateRange && (
           <Card className="border-blue-200 bg-blue-50">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                  <CardTitle className="text-lg text-blue-900 capitalize">
+                  <Calendar className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                  <CardTitle className="text-base md:text-lg text-blue-900 capitalize">
                     Current {period} Budget Period
                   </CardTitle>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                   <Button 
                     onClick={() => setShowIncomeDialog(true)}
                     variant="outline"
                     size="sm"
-                    className="border-green-300 text-green-700 hover:bg-green-100"
+                    className="border-green-300 text-green-700 hover:bg-green-100 w-full sm:w-auto"
                   >
                     <PlusCircle className="h-4 w-4 mr-1" />
                     Add Income
@@ -100,7 +101,7 @@ const Index = () => {
                     onClick={() => setShowCreateDialog(true)}
                     variant="outline"
                     size="sm"
-                    className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                    className="border-blue-300 text-blue-700 hover:bg-blue-100 w-full sm:w-auto"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Create New Budget
@@ -109,7 +110,7 @@ const Index = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col sm:flex-row gap-2 text-sm text-blue-700">
+              <div className="flex flex-col sm:flex-row gap-2 text-xs sm:text-sm text-blue-700">
                 <span><strong>Start:</strong> {formatDate(budgetDateRange.startDate)}</span>
                 <span className="hidden sm:inline">•</span>
                 <span><strong>End:</strong> {formatDate(budgetDateRange.endDate)}</span>
@@ -119,14 +120,14 @@ const Index = () => {
         )}
 
         {/* Budget Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Ksh {totalBudget.toLocaleString()}</div>
+              <div className="text-xl md:text-2xl font-bold">Ksh {totalBudget.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground capitalize">
                 {period} budget period
               </p>
@@ -139,20 +140,20 @@ const Index = () => {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Ksh {totalSpent.toLocaleString()}</div>
+              <div className="text-xl md:text-2xl font-bold">Ksh {totalSpent.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 {spentPercentage.toFixed(1)}% of budget
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="sm:col-span-2 lg:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Remaining</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${remainingBudget < 0 ? 'text-red-600' : 'text-green-600'}`}>
+              <div className={`text-xl md:text-2xl font-bold ${remainingBudget < 0 ? 'text-red-600' : 'text-green-600'}`}>
                 Ksh {remainingBudget.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -165,23 +166,23 @@ const Index = () => {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
             <CardDescription>
               Manage your budget and track expenses
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-3">
-            <Button onClick={() => navigate('/tracking')}>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Button onClick={() => navigate('/tracking')} className="w-full">
               Track Expense
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
-            <Button onClick={() => navigate('/budget')} variant="outline">
+            <Button onClick={() => navigate('/budget')} variant="outline" className="w-full">
               View Budget
             </Button>
-            <Button onClick={() => navigate('/expense-history')} variant="outline">
+            <Button onClick={() => navigate('/expense-history')} variant="outline" className="w-full">
               Expense History
             </Button>
-            <Button onClick={() => navigate('/income-setup')} variant="outline">
+            <Button onClick={() => navigate('/income-setup')} variant="outline" className="w-full">
               Manage Income
             </Button>
           </CardContent>
@@ -191,18 +192,18 @@ const Index = () => {
         {budgetItems && budgetItems.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Budget Categories</CardTitle>
+              <CardTitle className="text-lg md:text-xl">Budget Categories</CardTitle>
               <CardDescription>
                 Your {budgetItems.length} budget categories
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {budgetItems.slice(0, 6).map((item) => {
                   const itemSpentPercentage = item.amount > 0 ? (item.spent / item.amount) * 100 : 0;
                   return (
                     <div key={item.id} className="p-3 border rounded-lg">
-                      <div className="font-medium">{item.name}</div>
+                      <div className="font-medium truncate">{item.name}</div>
                       <div className="text-sm text-gray-600">
                         Ksh {item.spent.toLocaleString()} / Ksh {item.amount.toLocaleString()}
                       </div>
