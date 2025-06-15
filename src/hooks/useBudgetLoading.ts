@@ -42,6 +42,7 @@ export const useBudgetLoading = ({
   const { setIsLoading } = useLoading();
   const isLoadingRef = useRef(false);
   const lastLoadTimeRef = useRef<number>(0);
+  const lastUserIdRef = useRef<string | null>(null);
   const MIN_LOAD_INTERVAL = 1000; // Increase to 1 second to prevent rapid loading
   
   const { initializeBudget: initBudget } = useBudgetInitialization({
@@ -80,6 +81,14 @@ export const useBudgetLoading = ({
       return;
     }
     
+    // Reset if user changed
+    if (lastUserIdRef.current && lastUserIdRef.current !== user.id) {
+      console.log("User changed, forcing budget reload");
+      lastLoadTimeRef.current = 0;
+      isLoadingRef.current = false;
+    }
+    lastUserIdRef.current = user.id;
+    
     // Prevent concurrent loading
     if (isLoadingRef.current) {
       console.log("Already loading budget, skipping duplicate call");
@@ -93,7 +102,7 @@ export const useBudgetLoading = ({
     }
     
     try {
-      console.log("=== LOADING BUDGET ===");
+      console.log("=== LOADING BUDGET FOR USER ===", user.email);
       isLoadingRef.current = true;
       setIsLoading(true);
       lastLoadTimeRef.current = Date.now();
@@ -101,11 +110,11 @@ export const useBudgetLoading = ({
       const budget = await budgetService.getCurrentBudget();
       
       if (!budget) {
-        console.log("No budget found");
+        console.log("No budget found for user:", user.email);
         return;
       }
       
-      console.log("Budget found:", budget);
+      console.log("Budget found for user:", user.email, budget);
       setCurrentBudgetId(budget.id);
       setPeriodState(budget.period as BudgetPeriod);
       setTotalBudgetState(budget.total_budget);
@@ -163,9 +172,9 @@ export const useBudgetLoading = ({
       const isExpired = nowDate > dateRange.endDate;
       setIsBudgetExpired(isExpired);
       
-      console.log("=== BUDGET LOADED SUCCESSFULLY ===");
+      console.log("=== BUDGET LOADED SUCCESSFULLY FOR USER ===", user.email);
     } catch (error: any) {
-      console.error("Error loading budget:", error);
+      console.error("Error loading budget for user:", user.email, error);
       toast({
         title: "Error loading budget",
         description: error.message,

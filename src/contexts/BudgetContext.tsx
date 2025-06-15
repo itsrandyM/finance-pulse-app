@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -27,8 +28,21 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [previousRemainingBudget, setPreviousRemainingBudget] = useState<number>(0);
   const [continuousBudgetItems, setContinuousBudgetItems] = useState<BudgetItem[]>([]);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { isLoading, setIsLoading } = useLoading();
+
+  // Reset all budget state when user changes
+  const resetBudgetState = () => {
+    console.log('Resetting budget state for user change');
+    setPeriodState(null);
+    setTotalBudgetState(0);
+    setBudgetItems([]);
+    setCurrentBudgetId(null);
+    setBudgetDateRange(null);
+    setIsBudgetExpired(false);
+    setPreviousRemainingBudget(0);
+    setContinuousBudgetItems([]);
+  };
 
   // Custom hooks for budget functionality
   const budgetLoading = useBudgetLoading({
@@ -68,6 +82,28 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     totalBudget: totalBudgetState
   });
 
+  // Reset budget data when user changes or signs out
+  useEffect(() => {
+    if (!user) {
+      console.log('No user found, resetting budget state');
+      resetBudgetState();
+      return;
+    }
+
+    // When user changes, reset state and load their budget
+    console.log('User changed, loading budget for:', user.email);
+    resetBudgetState();
+    
+    // Small delay to ensure state is cleared before loading new data
+    const timeoutId = setTimeout(() => {
+      budgetLoading.loadBudget().catch(error => {
+        console.error("Failed to load budget for user:", user.email, error);
+      });
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [user?.id]); // Only trigger when user ID changes
+
   // Check if budget is expired when date range changes
   useEffect(() => {
     if (budgetDateRange && budgetDateRange.endDate) {
@@ -87,15 +123,6 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [budgetDateRange, budgetItems, isBudgetExpired]);
 
-  // Load budget when user changes
-  useEffect(() => {
-    if (user) {
-      budgetLoading.loadBudget().catch(error => {
-        console.error("Failed to load budget:", error);
-      });
-    }
-  }, [user]);
-
   const setPeriod = (newPeriod: BudgetPeriod) => {
     setPeriodState(newPeriod);
   };
@@ -108,14 +135,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const resetBudget = () => {
-    setPeriodState(null);
-    setTotalBudgetState(0);
-    setBudgetItems([]);
-    setCurrentBudgetId(null);
-    setBudgetDateRange(null);
-    setIsBudgetExpired(false);
-    setPreviousRemainingBudget(0);
-    setContinuousBudgetItems([]);
+    resetBudgetState();
   };
 
   const markItemAsContinuous = async (itemId: string, isContinuous: boolean) => {
@@ -165,7 +185,7 @@ export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     getTotalSpent: budgetCalculations.getTotalSpent,
     getTotalAllocated: budgetCalculations.getTotalAllocated,
     updateItemDeadline: budgetItemActions.updateItemDeadline,
-    isLoading: isLoading || expenseActions.isAddingExpense,
+    isLoading: isLoading || expenseActions.isAddingExpense || authLoading,
     currentBudgetId,
     initializeBudget: budgetLoading.initializeBudget,
     loadBudget,
