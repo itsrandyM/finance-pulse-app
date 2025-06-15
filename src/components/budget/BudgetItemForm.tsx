@@ -65,7 +65,7 @@ const BudgetItemForm: React.FC<BudgetItemFormProps> = ({
               <Label htmlFor="item-amount">Amount</Label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="text-gray-500">$</span>
+                  <span className="text-gray-500">Ksh</span>
                 </div>
                 <Input
                   id="item-amount"
@@ -73,7 +73,7 @@ const BudgetItemForm: React.FC<BudgetItemFormProps> = ({
                   placeholder="0.00"
                   step="0.01"
                   min="0"
-                  className="pl-8"
+                  className="pl-12"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   required
