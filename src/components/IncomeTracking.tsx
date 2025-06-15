@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import * as incomeService from '@/services/incomeService';
@@ -215,6 +215,70 @@ const IncomeTracking: React.FC = () => {
               <p className="text-lg sm:text-xl font-bold break-words">{formatCurrency(totalBudget)}</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Income History</CardTitle>
+          <CardDescription>All your recorded income entries</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading && incomeEntries.length === 0 ? (
+            <div className="py-8 text-center">
+              <LoadingSpinner 
+                variant="wave" 
+                size="md" 
+                theme="finance" 
+                text="Loading income history..." 
+              />
+            </div>
+          ) : incomeEntries.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No income entries recorded yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Income Source</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Date Added</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {incomeEntries.map((entry) => (
+                    <TableRow key={entry.id}>
+                      <TableCell className="font-medium">{entry.name}</TableCell>
+                      <TableCell className="text-finance-primary font-semibold">
+                        {formatCurrency(entry.amount)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(entry.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteIncome(entry.id)}
+                          disabled={isLoading}
+                          className="text-finance-danger hover:text-finance-danger"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
